@@ -1,0 +1,286 @@
+import React, { useState } from 'react';
+import { X, PlusCircle, CheckCircle, Building2, MapPin, Phone, Image } from 'lucide-react';
+import { useData } from '../context/DataContext';
+import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+
+interface ListBusinessModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, onClose }) => {
+  const { categories, addBusiness } = useData();
+
+  const [name, setName] = useState('');
+  const [nameBn, setNameBn] = useState('');
+  const [category, setCategory] = useState(categories[0]?.slug || 'restaurants');
+  const [upazila, setUpazila] = useState(MYMENSINGH_UPAZILAS[0]);
+  const [unionWard, setUnionWard] = useState(MYMENSINGH_UNIONS_MAP[MYMENSINGH_UPAZILAS[0]][0]);
+  const [location, setLocation] = useState('');
+  const [phone, setPhone] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleUpazilaChange = (newUpazila: string) => {
+    setUpazila(newUpazila);
+    const unions = MYMENSINGH_UNIONS_MAP[newUpazila] || ['সদর'];
+    setUnionWard(unions[0]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const selectedCategoryObj = categories.find((c) => c.slug === category);
+
+    await addBusiness({
+      name,
+      name_bn: nameBn || name,
+      category: selectedCategoryObj?.name_en || 'Services',
+      category_slug: category,
+      rating: 5.0,
+      review_count: 1,
+      location: location || `${unionWard}, ${upazila}`,
+      district: 'ময়মনসিংহ',
+      upazila,
+      union_ward: unionWard,
+      phone: phone || '+880 1700-000000',
+      image_url:
+        imageUrl ||
+        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+      description,
+      is_featured: false,
+      latitude: 24.755,
+      longitude: 90.403,
+    });
+
+    setIsSubmitted(true);
+    setTimeout(() => {
+      setIsSubmitted(false);
+      onClose();
+    }, 2500);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+      <div className="fixed inset-0 -z-10" onClick={onClose} />
+
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 my-8 flex flex-col max-h-[92vh]">
+        {/* Header */}
+        <div className="px-6 py-4 bg-emerald-700 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-white/20">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black tracking-tight">
+                Mymensingh.top-এ আপনার ব্যবসা যুক্ত করুন
+              </h3>
+              <p className="text-xs text-emerald-100">
+                Grow Your Business & Reach Thousands of Local Customers
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {isSubmitted ? (
+          <div className="p-12 text-center space-y-4">
+            <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto animate-bounce" />
+            <h3 className="text-xl font-black text-slate-900">
+              অভিনন্দন! আপনার ব্যবসা সফলভাবে যুক্ত হয়েছে!
+            </h3>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">
+              আপনার লিস্টিংটি Mymensingh.top-এ যুক্ত করা হয়েছে এবং তাৎক্ষণিকভাবে প্রকাশিত হয়েছে।
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  ব্যবসার নাম (English) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Royal Cafe & Sweets"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  ব্যবসার নাম (বাংলা)
+                </label>
+                <input
+                  type="text"
+                  value={nameBn}
+                  onChange={(e) => setNameBn(e.target.value)}
+                  placeholder="যেমন: রয়্যাল ক্যাফে অ্যান্ড সুইটস"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  ক্যাটাগরি *
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white"
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {c.name_en} ({c.name_bn})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  যোগাযোগ ফোন নম্বর *
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="017xxxxxxxx"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Location Fields: Upazila & Union */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  জেলা
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  value="ময়মনসিংহ"
+                  className="w-full text-xs px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  উপজেলা *
+                </label>
+                <select
+                  value={upazila}
+                  onChange={(e) => handleUpazilaChange(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 outline-hidden focus:border-emerald-500"
+                >
+                  {MYMENSINGH_UPAZILAS.map((up) => (
+                    <option key={up} value={up}>
+                      {up}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  ইউনিয়ন / সিটি ওয়ার্ড *
+                </label>
+                <select
+                  value={unionWard}
+                  onChange={(e) => setUnionWard(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 outline-hidden focus:border-emerald-500"
+                >
+                  {(MYMENSINGH_UNIONS_MAP[upazila] || ['সদর']).map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                সুনির্দিষ্ট ঠিকানা ও রোড নম্বর
+              </label>
+              <div className="relative">
+                <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="যেমন: টাউন হল মোড়, কোর্ট রোড, ময়মনসিংহ সদর"
+                  className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                ছবি বা লোগোর লিংক (Image URL)
+              </label>
+              <div className="relative">
+                <Image className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                ব্যবসা ও সেবার বিবরণ
+              </label>
+              <textarea
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="আপনার ব্যবসার বিশেষত্ব ও গ্রাহক সুবিধাসমূহ বর্ণনা করুন..."
+                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+              />
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                বাতিল করুন
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>ব্যবসা সাবমিট করুন</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};

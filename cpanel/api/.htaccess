@@ -1,0 +1,24 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /api/
+
+    # Allow CORS preflight and headers
+    <IfModule mod_headers.c>
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    </IfModule>
+
+    # Block direct browser access to config.php
+    <Files "config.php">
+        Order allow,deny
+        Deny from all
+    </Files>
+
+    # If the requested file or directory exists, serve it
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Pass all remaining requests to index.php
+    RewriteRule ^(.*)$ index.php?action=$1 [QSA,L]
+</IfModule>
