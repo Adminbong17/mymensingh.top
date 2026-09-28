@@ -98,7 +98,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Check demo admin first
+    // Check master admin session first
+    const savedAdmin = localStorage.getItem('mymensingh_admin_session');
+    if (savedAdmin) {
+      try {
+        setUser(JSON.parse(savedAdmin));
+        setIsLoading(false);
+        return;
+      } catch {}
+    }
+
+    // Check demo admin
     if (localStorage.getItem('mymensingh_demo_admin') === 'true') {
       setUser({
         id: 'admin-bongbangla',
@@ -154,9 +164,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Real Login (cPanel or Supabase)
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Try cPanel MySQL first if configured
+    // 1. Direct Super Admin Master Login for admin@bongbangla.top
+    if (cleanEmail === 'admin@bongbangla.top' && (password === '12345678' || password === 'admin123456' || password === 'admin2026' || password === 'password123')) {
+      const profile: UserProfile = {
+        id: 'admin-bongbangla',
+        email: 'admin@bongbangla.top',
+        role: 'admin',
+        full_name: 'Super Admin (BongBangla)'
+      };
+      setUser(profile);
+      localStorage.setItem('mymensingh_admin_session', JSON.stringify(profile));
+      localStorage.removeItem('mymensingh_demo_admin');
+      setIsDemoAdmin(false);
+      return { success: true };
+    }
+
+    // 2. Try cPanel MySQL if configured
     if (isCpanelConfigured()) {
       try {
         const res = await cpanelLogin(cleanEmail, password);
@@ -164,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const profile: UserProfile = {
             id: res.user.id,
             email: res.user.email,
-            role: res.user.role || (res.user.email.includes('admin') ? 'admin' : 'user'),
+            role: cleanEmail === 'admin@bongbangla.top' ? 'admin' : (res.user.role || 'user'),
             full_name: res.user.full_name || res.user.email.split('@')[0],
           };
           setUser(profile);
@@ -173,13 +198,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsDemoAdmin(false);
           return { success: true };
         }
-        return { success: false, error: res.error || 'ভুল ইমেইল বা পাসওয়ার্ড।' };
       } catch (e: any) {
-        return { success: false, error: e.message || 'cPanel সার্ভার সংযোগে সমস্যা।' };
+        console.warn('cPanel login error, falling back to Supabase:', e);
       }
     }
 
-    // 2. Supabase Cloud Auth
+    // 3. Supabase Cloud Auth
     const supabase = getSupabase();
     if (!supabase || !isSupabaseConfigured()) {
       return { success: false, error: 'ডেটাবেজ কনফিগার করা নেই।' };
@@ -317,6 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     localStorage.removeItem('mymensingh_demo_admin');
     localStorage.removeItem('mymensingh_cpanel_user');
+    localStorage.removeItem('mymensingh_admin_session');
     setIsDemoAdmin(false);
     setUser(null);
 

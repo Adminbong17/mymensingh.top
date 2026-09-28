@@ -13,14 +13,6 @@ export const getCpanelApiUrl = (): string => {
     return import.meta.env.VITE_CPANEL_API_URL.trim().replace(/\/+$/, '');
   }
 
-  // If in production hosted on the same domain, default to /api
-  if (typeof window !== 'undefined' && window.location.origin) {
-    const host = window.location.hostname;
-    const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.');
-    if (!isLocal) {
-      return `${window.location.origin}/api`;
-    }
-  }
   return '';
 };
 
@@ -56,7 +48,17 @@ async function apiRequest<T = any>(endpoint: string, options: RequestInit = {}):
       }
     });
 
-    const json = await res.json();
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { success: false, error: 'সার্ভার থেকে সঠিক JSON রেসপন্স পাওয়া যায়নি।' };
+    }
+
+    const text = await res.text();
+    if (!text || !text.trim()) {
+      return { success: false, error: 'সার্ভার থেকে খালি রেসপন্স এসেছে।' };
+    }
+
+    const json = JSON.parse(text);
     return json;
   } catch (err: any) {
     return { success: false, error: err.message || 'Network request failed' };
