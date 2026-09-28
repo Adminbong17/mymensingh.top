@@ -34,6 +34,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const navLinks = [
     { id: 'home', path: '/', label: 'Home' },
     { id: 'categories', path: '/categories', label: 'Categories' },
+    { id: 'blood-bank', path: '/blood-bank', label: 'Blood Bank' },
+    { id: 'tuition-media', path: '/tuition-media', label: 'Tuition' },
+    { id: 'to-let', path: '/to-let', label: 'To-Let' },
     { id: 'news', path: '/news', label: 'News' },
     { id: 'events', path: '/events', label: 'Events' },
     { id: 'offers', path: '/offers', label: 'Offers' },

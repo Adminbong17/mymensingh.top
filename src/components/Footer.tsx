@@ -28,6 +28,11 @@ export const Footer: React.FC<FooterProps> = ({
   };
 
   const handleCategoryClick = (slug: string) => {
+    if (slug === 'blood-bank' || slug === 'tuition-media' || slug === 'to-let') {
+      navigate(`/${slug}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (onSelectCategory) onSelectCategory(slug);
     navigate(`/categories?category=${slug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });

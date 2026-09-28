@@ -26,10 +26,12 @@ import { BlogPage } from './pages/BlogPage';
 import { AboutPage } from './pages/AboutPage';
 import { AuthPage } from './pages/AuthPage';
 import { ListBusinessPage } from './pages/ListBusinessPage';
+import { BloodBankPage } from './pages/BloodBankPage';
+import { TuitionMediaPage } from './pages/TuitionMediaPage';
+import { ToLetPage } from './pages/ToLetPage';
 
 // Modals & Admin
 import { ListBusinessModal } from './components/ListBusinessModal';
-import { SpecialServicesModal } from './components/SpecialServicesModal';
 import { BusinessDetailModal } from './components/BusinessDetailModal';
 import { AdminLoginModal } from './components/admin/AdminLoginModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -55,10 +57,9 @@ const ScrollToTop: React.FC = () => {
 // Main Homepage Component
 // ============================================================================
 const HomePage: React.FC<{
-  onOpenSpecialService: (service: 'blood-bank' | 'tuition-media' | 'to-let') => void;
   onOpenListBusiness: () => void;
   onSelectBusiness: (biz: Business) => void;
-}> = ({ onOpenSpecialService, onOpenListBusiness, onSelectBusiness }) => {
+}> = ({ onOpenListBusiness, onSelectBusiness }) => {
   const navigate = useNavigate();
   const { businesses, categories, news, events, offers } = useData();
 
@@ -117,7 +118,7 @@ const HomePage: React.FC<{
 
   const handleQuickCategory = (categorySlug: string) => {
     if (categorySlug === 'blood-bank' || categorySlug === 'tuition-media' || categorySlug === 'to-let') {
-      onOpenSpecialService(categorySlug as 'blood-bank' | 'tuition-media' | 'to-let');
+      navigate(`/${categorySlug}`);
       return;
     }
     navigate(`/categories?category=${categorySlug}`);
@@ -203,7 +204,7 @@ const HomePage: React.FC<{
       )}
 
       {/* 3. Special Services (3 Big Cards) */}
-      <SpecialServices onSelectService={onOpenSpecialService} />
+      <SpecialServices onSelectService={(service) => navigate(`/${service}`)} />
 
       {/* 4. Explore Categories (20 categories) */}
       <ExploreCategories
@@ -248,7 +249,6 @@ const AppContent: React.FC = () => {
   // Modals state
   const [isListBusinessOpen, setIsListBusinessOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  const [activeSpecialService, setActiveSpecialService] = useState<'blood-bank' | 'tuition-media' | 'to-let' | null>(null);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
   return (
@@ -268,7 +268,6 @@ const AppContent: React.FC = () => {
             path="/"
             element={
               <HomePage
-                onOpenSpecialService={(srv) => setActiveSpecialService(srv)}
                 onOpenListBusiness={() => navigate('/list-business')}
                 onSelectBusiness={(biz) => setSelectedBusiness(biz)}
               />
@@ -282,6 +281,9 @@ const AppContent: React.FC = () => {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/list-business" element={<ListBusinessPage />} />
+          <Route path="/blood-bank" element={<BloodBankPage />} />
+          <Route path="/tuition-media" element={<TuitionMediaPage />} />
+          <Route path="/to-let" element={<ToLetPage />} />
           <Route
             path="/admin"
             element={
@@ -294,7 +296,6 @@ const AppContent: React.FC = () => {
             path="*"
             element={
               <HomePage
-                onOpenSpecialService={(srv) => setActiveSpecialService(srv)}
                 onOpenListBusiness={() => navigate('/list-business')}
                 onSelectBusiness={(biz) => setSelectedBusiness(biz)}
               />
@@ -322,11 +323,6 @@ const AppContent: React.FC = () => {
           setIsAdminLoginOpen(false);
           navigate('/admin');
         }}
-      />
-
-      <SpecialServicesModal
-        activeService={activeSpecialService}
-        onClose={() => setActiveSpecialService(null)}
       />
 
       {selectedBusiness && (
