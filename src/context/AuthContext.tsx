@@ -19,6 +19,11 @@ export interface SignUpMetadata {
 
 const STORAGE_ADMIN_EMAILS = 'mymensingh_admin_emails_v1';
 
+export const DEFAULT_ADMIN_EMAILS = [
+  'admin@bongbangla.top',
+  'admin@mymensingh.top'
+];
+
 interface AuthContextType {
   user: UserProfile | null;
   isAdmin: boolean;
@@ -51,9 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [adminEmails, setAdminEmails] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_ADMIN_EMAILS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const merged = Array.from(new Set([...DEFAULT_ADMIN_EMAILS, ...parsed]));
+        localStorage.setItem(STORAGE_ADMIN_EMAILS, JSON.stringify(merged));
+        return merged;
+      }
     } catch {}
-    return ['admin@mymensingh.top'];
+    localStorage.setItem(STORAGE_ADMIN_EMAILS, JSON.stringify(DEFAULT_ADMIN_EMAILS));
+    return DEFAULT_ADMIN_EMAILS;
   });
 
   // Helper to extract UserProfile from Supabase User
@@ -68,11 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
 
     const isEmailAdmin = Boolean(
-      cleanEmail.includes('admin') ||
-      localList.includes(cleanEmail)
+      cleanEmail === 'admin@bongbangla.top' ||
+      DEFAULT_ADMIN_EMAILS.includes(cleanEmail) ||
+      localList.includes(cleanEmail) ||
+      metaRole === 'admin'
     );
-    const role: 'admin' | 'user' = metaRole === 'admin' || isEmailAdmin ? 'admin' : 'user';
-    const fullName = (supabaseUser.user_metadata?.full_name as string) || supabaseUser.email?.split('@')[0] || 'User';
+    const role: 'admin' | 'user' = isEmailAdmin ? 'admin' : 'user';
+    const fullName = (supabaseUser.user_metadata?.full_name as string) || 
+      (cleanEmail === 'admin@bongbangla.top' ? 'Super Admin (BongBangla)' : supabaseUser.email?.split('@')[0]) || 
+      'User';
 
     return {
       id: supabaseUser.id,
@@ -86,10 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check demo admin first
     if (localStorage.getItem('mymensingh_demo_admin') === 'true') {
       setUser({
-        id: 'demo-admin-id',
-        email: 'admin@mymensingh.top',
+        id: 'admin-bongbangla',
+        email: 'admin@bongbangla.top',
         role: 'admin',
-        full_name: 'City Guide Admin (Demo)'
+        full_name: 'Super Admin (BongBangla)'
       });
       setIsLoading(false);
       return;
@@ -292,10 +307,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('mymensingh_demo_admin', 'true');
     setIsDemoAdmin(true);
     setUser({
-      id: 'demo-admin-id',
-      email: 'admin@mymensingh.top',
+      id: 'admin-bongbangla',
+      email: 'admin@bongbangla.top',
       role: 'admin',
-      full_name: 'City Guide Admin (Demo)'
+      full_name: 'Super Admin (BongBangla)'
     });
   };
 

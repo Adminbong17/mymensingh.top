@@ -116,7 +116,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
 
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{isDemoAdmin ? 'Demo Admin' : 'Supabase Admin'}</span>
+                <span>{user?.email === 'admin@bongbangla.top' ? '👑 Super Admin' : (isDemoAdmin ? 'Demo Admin' : 'Authorized Admin')}</span>
               </span>
             </div>
 

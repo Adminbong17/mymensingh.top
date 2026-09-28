@@ -105,7 +105,7 @@ export const AuthPage: React.FC = () => {
       const res = await signUp(email, password, {
         full_name: fullName,
         phone,
-        role: accountType === 'business' ? 'admin' : 'user',
+        role: email.toLowerCase().trim() === 'admin@bongbangla.top' ? 'admin' : 'user',
         business_name: businessName,
       });
 
