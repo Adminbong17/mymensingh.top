@@ -3,10 +3,18 @@ import {
   Users,
   UserPlus,
   Search,
-  ShieldCheck,
+  ChevronRight,
+  ChevronLeft,
+  Filter,
+  RotateCcw,
+  Eye,
+  Edit2,
   Trash2,
-  Download,
-  ChevronRight
+  Phone,
+  Mail,
+  Calendar,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 
 interface UserRecord {
@@ -14,79 +22,133 @@ interface UserRecord {
   name: string;
   email: string;
   phone: string;
-  role: 'Admin' | 'User' | 'Moderator';
-  status: 'Active' | 'Suspended';
-  joinedAt: string;
+  role: 'User' | 'Admin';
+  joinedDate: string;
+  joinedAgo: string;
+  status: 'Active' | 'Inactive';
   avatar: string;
 }
 
 const INITIAL_USERS: UserRecord[] = [
   {
     id: 'u1',
-    name: 'Mehedi Hasan',
-    email: 'admin@bongbangla.top',
-    phone: '01700-112233',
-    role: 'Admin',
-    status: 'Active',
-    joinedAt: '01 Jan 2026',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u2',
     name: 'Rakibul Hasan',
     email: 'rakib@gmail.com',
     phone: '01712-345678',
     role: 'User',
+    joinedDate: '26 Sep 2026',
+    joinedAgo: '2 minutes ago',
     status: 'Active',
-    joinedAt: '26 Sep 2026',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
   },
   {
-    id: 'u3',
+    id: 'u2',
     name: 'Tanjiha Afrin',
-    email: 'tanjiha@gmail.com',
+    email: 'tanjia@gmail.com',
     phone: '01823-456789',
     role: 'User',
+    joinedDate: '26 Sep 2026',
+    joinedAgo: '15 minutes ago',
     status: 'Active',
-    joinedAt: '26 Sep 2026',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80'
   },
   {
-    id: 'u4',
+    id: 'u3',
     name: 'Sabbir Ahmed',
     email: 'sabbir@gmail.com',
     phone: '01911-223344',
     role: 'Admin',
+    joinedDate: '25 Sep 2026',
+    joinedAgo: '1 hour ago',
     status: 'Active',
-    joinedAt: '25 Sep 2026',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80'
+    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
   },
   {
-    id: 'u5',
+    id: 'u4',
     name: 'Nusrat Jahan',
     email: 'nusrat@gmail.com',
     phone: '01678-556677',
     role: 'User',
+    joinedDate: '25 Sep 2026',
+    joinedAgo: '2 hours ago',
     status: 'Active',
-    joinedAt: '25 Sep 2026',
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80'
   },
   {
-    id: 'u6',
+    id: 'u5',
     name: 'Arif Hossain',
     email: 'arif@gmail.com',
     phone: '01890-112233',
     role: 'User',
+    joinedDate: '24 Sep 2026',
+    joinedAgo: '3 hours ago',
+    status: 'Inactive',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80'
+  },
+  {
+    id: 'u6',
+    name: 'Mim Akter',
+    email: 'mim@gmail.com',
+    phone: '01745-667788',
+    role: 'User',
+    joinedDate: '24 Sep 2026',
+    joinedAgo: '5 hours ago',
     status: 'Active',
-    joinedAt: '24 Sep 2026',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80'
+  },
+  {
+    id: 'u7',
+    name: 'Hasan Mahmud',
+    email: 'hasan@gmail.com',
+    phone: '01312-998877',
+    role: 'User',
+    joinedDate: '23 Sep 2026',
+    joinedAgo: '1 day ago',
+    status: 'Active',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80'
+  },
+  {
+    id: 'u8',
+    name: 'Faria Islam',
+    email: 'faria@gmail.com',
+    phone: '01999-334455',
+    role: 'User',
+    joinedDate: '22 Sep 2026',
+    joinedAgo: '1 day ago',
+    status: 'Active',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=80&q=80'
+  },
+  {
+    id: 'u9',
+    name: 'Imran Hossain',
+    email: 'imran@gmail.com',
+    phone: '01521-778899',
+    role: 'Admin',
+    joinedDate: '21 Sep 2026',
+    joinedAgo: '2 days ago',
+    status: 'Active',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80'
+  },
+  {
+    id: 'u10',
+    name: 'Samiha Rahman',
+    email: 'samiha@gmail.com',
+    phone: '01811-223366',
+    role: 'User',
+    joinedDate: '20 Sep 2026',
+    joinedAgo: '2 days ago',
+    status: 'Inactive',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80'
   }
 ];
 
 export const UsersTab: React.FC = () => {
   const [users, setUsers] = useState<UserRecord[]>(INITIAL_USERS);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('All');
+  const [userFilter, setUserFilter] = useState('All Users');
+  const [roleFilter, setRoleFilter] = useState('All Roles');
+  const [timeFilter, setTimeFilter] = useState('All Time');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
   // New user form state
@@ -101,9 +163,33 @@ export const UsersTab: React.FC = () => {
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       u.phone.includes(q);
-    const matchRole = roleFilter === 'All' || u.role === roleFilter;
-    return matchSearch && matchRole;
+
+    const matchRole =
+      roleFilter === 'All Roles' ||
+      u.role === roleFilter;
+
+    const matchUserType =
+      userFilter === 'All Users' ||
+      (userFilter === 'Active Users' ? u.status === 'Active' : u.status === 'Inactive');
+
+    return matchSearch && matchRole && matchUserType;
   });
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((u) => u.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((i) => i !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +202,8 @@ export const UsersTab: React.FC = () => {
       phone: newUserPhone || '01700-000000',
       role: newUserRole,
       status: 'Active',
-      joinedAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      joinedDate: '26 Sep 2026',
+      joinedAgo: 'Just now',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
     };
     setUsers([created, ...users]);
@@ -152,97 +239,195 @@ export const UsersTab: React.FC = () => {
                 Users Management
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                Manage registered users, administrators and platform permissions.
+                Manage all registered users, roles and permissions.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setIsAddUserOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-700/20 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-700/20 cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
-            <span>Add User</span>
+            <span>Add New User</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* 4 Metric KPI Cards matching media_1790620106013.jpg */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Users */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Total Users</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">1,245</div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1">↑ 12% (+132 this month)</div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Active Accounts</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">1,180</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">94.7% active rate</div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Administrators</div>
-          <div className="text-2xl font-black text-blue-600 mt-1">4</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Full console access</div>
-        </div>
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Verified Mobile</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">892</div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1">OTP phone authenticated</div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search user by name, email or phone..."
-              className="w-full text-xs pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
-            />
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Users className="w-6 h-6" />
+            </div>
+            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              ↑ 12%
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-xs font-semibold text-slate-500">Total Users</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">1,245</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">+132 this month</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-hidden cursor-pointer"
-          >
-            <option value="All">All Roles</option>
-            <option value="Admin">Admin</option>
-            <option value="User">User</option>
-          </select>
+        {/* Admin Users */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              ↑ 8%
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-xs font-semibold text-slate-500">Admin Users</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">28</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">+4 this month</div>
+          </div>
+        </div>
 
-          <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors">
-            <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
-          </button>
+        {/* Regular Users */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <UserCheck className="w-6 h-6" />
+            </div>
+            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              ↑ 12%
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-xs font-semibold text-slate-500">Regular Users</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">1,217</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">+128 this month</div>
+          </div>
+        </div>
+
+        {/* New This Month */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              ↑ 24%
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-xs font-semibold text-slate-500">New This Month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">156</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Compared to last month</div>
+          </div>
         </div>
       </div>
 
-      {/* Users Table */}
+      {/* Filter and Search Bar matching media_1790620106013.jpg */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name, email or phone..."
+            className="w-full text-xs pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500 transition-colors"
+          />
+        </div>
+
+        <select
+          value={userFilter}
+          onChange={(e) => setUserFilter(e.target.value)}
+          className="text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-hidden cursor-pointer"
+        >
+          <option>All Users</option>
+          <option>Active Users</option>
+          <option>Inactive Users</option>
+        </select>
+
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-hidden cursor-pointer"
+        >
+          <option>All Roles</option>
+          <option>User</option>
+          <option>Admin</option>
+        </select>
+
+        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value)}
+            className="text-xs font-semibold text-slate-600 bg-transparent outline-hidden cursor-pointer"
+          >
+            <option>All Time</option>
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>This Year</option>
+          </select>
+        </div>
+
+        <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+          <Filter className="w-3.5 h-3.5" />
+          <span>Filter</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSearch('');
+            setUserFilter('All Users');
+            setRoleFilter('All Roles');
+            setTimeFilter('All Time');
+          }}
+          className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all shadow-xs cursor-pointer"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Reset</span>
+        </button>
+      </div>
+
+      {/* Table Section */}
       <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+        <h3 className="font-bold text-slate-900 text-sm mb-4">All Users (1,245)</h3>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-100">
-                <th className="pb-3 px-3">#</th>
-                <th className="pb-3 px-3">User Profile</th>
-                <th className="pb-3 px-3">Phone</th>
+                <th className="pb-3 px-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === filtered.length && filtered.length > 0}
+                    onChange={toggleSelectAll}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </th>
+                <th className="pb-3 px-2">#</th>
+                <th className="pb-3 px-3">User</th>
+                <th className="pb-3 px-3">Contact Info</th>
                 <th className="pb-3 px-3">Role</th>
-                <th className="pb-3 px-3">Status</th>
                 <th className="pb-3 px-3">Joined At</th>
-                <th className="pb-3 px-3 text-right">Actions</th>
+                <th className="pb-3 px-3">Status</th>
+                <th className="pb-3 px-2 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.map((u, i) => (
                 <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 px-3 font-medium text-slate-400">{i + 1}</td>
+                  <td className="py-3 px-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(u.id)}
+                      onChange={() => toggleSelectOne(u.id)}
+                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                  </td>
+                  <td className="py-3 px-2 font-medium text-slate-400">{i + 1}</td>
                   <td className="py-3 px-3">
                     <div className="flex items-center gap-2.5">
                       <img
@@ -252,37 +437,73 @@ export const UsersTab: React.FC = () => {
                       />
                       <div>
                         <div className="font-bold text-slate-900">{u.name}</div>
-                        <div className="text-[11px] text-slate-500">{u.email}</div>
+                        <div className="text-[10px] text-slate-400">{u.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-3 font-medium text-slate-600">{u.phone}</td>
+                  <td className="py-3 px-3">
+                    <div className="space-y-0.5 text-[11px] text-slate-600">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span>{u.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-400 text-[10px]">
+                        <Mail className="w-3 h-3 text-slate-400" />
+                        <span>{u.email}</span>
+                      </div>
+                    </div>
+                  </td>
                   <td className="py-3 px-3">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                         u.role === 'Admin'
-                          ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                          : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'bg-emerald-50 text-emerald-600'
                       }`}
                     >
-                      {u.role === 'Admin' && <ShieldCheck className="w-3 h-3" />}
-                      <span>{u.role}</span>
+                      {u.role}
                     </span>
+                  </td>
+                  <td className="py-3 px-3 text-[11px]">
+                    <div className="font-medium text-slate-800">{u.joinedDate}</div>
+                    <div className="text-[10px] text-slate-400">{u.joinedAgo}</div>
                   </td>
                   <td className="py-3 px-3">
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      {u.status}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          u.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'
+                        }`}
+                      />
+                      <span
+                        className={`text-[11px] font-semibold ${
+                          u.status === 'Active' ? 'text-slate-700' : 'text-slate-500'
+                        }`}
+                      >
+                        {u.status}
+                      </span>
+                    </div>
                   </td>
-                  <td className="py-3 px-3 text-slate-500 font-medium">{u.joinedAt}</td>
-                  <td className="py-3 px-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
+                  <td className="py-3 px-2 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                        title="View Profile"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        className="p-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                        title="Edit User"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => handleDeleteUser(u.id, u.name)}
-                        className="p-1 rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                        className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
                         title="Delete User"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
@@ -290,6 +511,40 @@ export const UsersTab: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs">
+          <span className="text-slate-500 font-medium">
+            Showing 1 to 10 of 1,245 users
+          </span>
+          <div className="flex items-center gap-1 font-semibold">
+            <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold">
+              1
+            </button>
+            <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
+              2
+            </button>
+            <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
+              3
+            </button>
+            <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
+              4
+            </button>
+            <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
+              5
+            </button>
+            <span className="px-1 text-slate-400">...</span>
+            <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
+              125
+            </button>
+            <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
