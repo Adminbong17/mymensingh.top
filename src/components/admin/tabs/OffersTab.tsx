@@ -84,23 +84,27 @@ export const OffersTab: React.FC<OffersTabProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="text-xs font-semibold text-slate-500">Total Deals</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">{offers.length || 52}</div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1">Active promotional campaigns</div>
+          <div className="text-2xl font-black text-slate-900 mt-1">{offers.length}</div>
+          <div className="text-[11px] text-emerald-600 font-semibold mt-1">সব ডিসকাউন্ট অফার</div>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="text-xs font-semibold text-slate-500">Partner Shops</div>
-          <div className="text-2xl font-black text-blue-600 mt-1">38</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Verified outlets</div>
+          <div className="text-2xl font-black text-blue-600 mt-1">
+            {new Set(offers.map(o => o.business_name).filter(Boolean)).size}
+          </div>
+          <div className="text-[11px] text-slate-400 font-medium mt-1">যুক্ত থাকা দোকান</div>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="text-xs font-semibold text-slate-500">Max Discount</div>
-          <div className="text-2xl font-black text-rose-600 mt-1">50% OFF</div>
-          <div className="text-[11px] text-slate-400 font-medium mt-1">Seasonal mega sales</div>
+          <div className="text-2xl font-black text-rose-600 mt-1">
+            {offers.length > 0 ? offers[0].discount : '-'}
+          </div>
+          <div className="text-[11px] text-slate-400 font-medium mt-1">সর্বোচ্চ ছাড়</div>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="text-xs font-semibold text-slate-500">Coupon Claims</div>
-          <div className="text-2xl font-black text-emerald-600 mt-1">1,420</div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1">Redeemed by citizens</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">0</div>
+          <div className="text-[11px] text-slate-400 font-medium mt-1">কুপন রিডিম</div>
         </div>
       </div>
 
@@ -143,37 +147,58 @@ export const OffersTab: React.FC<OffersTabProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map((o) => (
-                <tr key={o.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 px-3 font-bold text-slate-900">{o.title}</td>
-                  <td className="py-3 px-3">
-                    <span className="text-[11px] font-black text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
-                      {o.discount}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 font-semibold text-slate-700">{o.business_name}</td>
-                  <td className="py-3 px-3">
-                    <span className="font-mono text-[11px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                      {o.promo_code}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-slate-500 font-medium">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{o.expiry_date}</span>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Percent className="w-8 h-8 text-slate-300 stroke-1" />
+                      <p className="font-semibold text-slate-600 text-sm">কোনো অফার বা ডিসকাউন্ট নেই</p>
+                      <p className="text-xs text-slate-400">নতুন অফার যোগ করতে উপরের "Add Offer" বাটনে ক্লিক করুন</p>
+                      {onAddOffer && (
+                        <button
+                          onClick={onAddOffer}
+                          className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>নতুন অফার যোগ করুন</span>
+                        </button>
+                      )}
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-right">
-                    <button
-                      onClick={() => onDeleteOffer(o.id)}
-                      className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
-                      title="Delete Offer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map((o) => (
+                  <tr key={o.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3 font-bold text-slate-900">{o.title}</td>
+                    <td className="py-3 px-3">
+                      <span className="text-[11px] font-black text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                        {o.discount}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 font-semibold text-slate-700">{o.business_name}</td>
+                    <td className="py-3 px-3">
+                      <span className="font-mono text-[11px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                        {o.promo_code}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-slate-500 font-medium">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{o.expiry_date}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <button
+                        onClick={() => onDeleteOffer(o.id)}
+                        className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
+                        title="Delete Offer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

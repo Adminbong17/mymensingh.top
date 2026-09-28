@@ -32,113 +32,14 @@ interface UserRecord {
 const INITIAL_USERS: UserRecord[] = [
   {
     id: 'u1',
-    name: 'Rakibul Hasan',
-    email: 'rakib@gmail.com',
+    name: 'Mehedi Hasan',
+    email: 'admin@bongbangla.top',
     phone: '01712-345678',
-    role: 'User',
-    joinedDate: '26 Sep 2026',
-    joinedAgo: '2 minutes ago',
+    role: 'Admin',
+    joinedDate: '28 Sep 2026',
+    joinedAgo: 'Active now',
     status: 'Active',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u2',
-    name: 'Tanjiha Afrin',
-    email: 'tanjia@gmail.com',
-    phone: '01823-456789',
-    role: 'User',
-    joinedDate: '26 Sep 2026',
-    joinedAgo: '15 minutes ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u3',
-    name: 'Sabbir Ahmed',
-    email: 'sabbir@gmail.com',
-    phone: '01911-223344',
-    role: 'Admin',
-    joinedDate: '25 Sep 2026',
-    joinedAgo: '1 hour ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u4',
-    name: 'Nusrat Jahan',
-    email: 'nusrat@gmail.com',
-    phone: '01678-556677',
-    role: 'User',
-    joinedDate: '25 Sep 2026',
-    joinedAgo: '2 hours ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u5',
-    name: 'Arif Hossain',
-    email: 'arif@gmail.com',
-    phone: '01890-112233',
-    role: 'User',
-    joinedDate: '24 Sep 2026',
-    joinedAgo: '3 hours ago',
-    status: 'Inactive',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u6',
-    name: 'Mim Akter',
-    email: 'mim@gmail.com',
-    phone: '01745-667788',
-    role: 'User',
-    joinedDate: '24 Sep 2026',
-    joinedAgo: '5 hours ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u7',
-    name: 'Hasan Mahmud',
-    email: 'hasan@gmail.com',
-    phone: '01312-998877',
-    role: 'User',
-    joinedDate: '23 Sep 2026',
-    joinedAgo: '1 day ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u8',
-    name: 'Faria Islam',
-    email: 'faria@gmail.com',
-    phone: '01999-334455',
-    role: 'User',
-    joinedDate: '22 Sep 2026',
-    joinedAgo: '1 day ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u9',
-    name: 'Imran Hossain',
-    email: 'imran@gmail.com',
-    phone: '01521-778899',
-    role: 'Admin',
-    joinedDate: '21 Sep 2026',
-    joinedAgo: '2 days ago',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u10',
-    name: 'Samiha Rahman',
-    email: 'samiha@gmail.com',
-    phone: '01811-223366',
-    role: 'User',
-    joinedDate: '20 Sep 2026',
-    joinedAgo: '2 days ago',
-    status: 'Inactive',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80'
   }
 ];
 
@@ -263,13 +164,13 @@ export const UsersTab: React.FC = () => {
               <Users className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 12%
+              Super Admin
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Users</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">1,245</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+132 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{users.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">1 active super admin</div>
           </div>
         </div>
 
@@ -279,48 +180,48 @@ export const UsersTab: React.FC = () => {
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 8%
+            <span className="inline-flex items-center text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+              Full Access
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Admin Users</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">28</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+4 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{users.filter(u => u.role === 'Admin').length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Authorized admin</div>
           </div>
         </div>
 
         {/* Regular Users */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-start justify-between">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <UserCheck className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 12%
+            <span className="inline-flex items-center text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+              Registered
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Regular Users</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">1,217</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+128 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{users.filter(u => u.role === 'User').length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">General public accounts</div>
           </div>
         </div>
 
         {/* New This Month */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-start justify-between">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <Calendar className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 24%
+              New
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">New This Month</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">156</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">Compared to last month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{users.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Platform registrations</div>
           </div>
         </div>
       </div>
@@ -516,7 +417,7 @@ export const UsersTab: React.FC = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs">
           <span className="text-slate-500 font-medium">
-            Showing 1 to 10 of 1,245 users
+            Showing {filtered.length} of {users.length} users
           </span>
           <div className="flex items-center gap-1 font-semibold">
             <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">

@@ -126,6 +126,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
             businessesCount={places.length}
             bloodDonorsCount={bloodDonors.length}
             tuitionCount={tuitionListings.length}
+            toLetCount={toLetListings.length}
+            newsCount={news.length}
+            eventsCount={events.length}
+            offersCount={offers.length}
           />
         );
 

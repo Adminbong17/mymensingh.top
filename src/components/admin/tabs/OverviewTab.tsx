@@ -6,7 +6,6 @@ import {
   GraduationCap,
   Calendar,
   UserPlus,
-  Newspaper,
   Percent,
   MoreVertical
 } from 'lucide-react';
@@ -20,6 +19,10 @@ interface OverviewTabProps {
   businessesCount: number;
   bloodDonorsCount: number;
   tuitionCount: number;
+  toLetCount?: number;
+  newsCount?: number;
+  eventsCount?: number;
+  offersCount?: number;
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
@@ -29,99 +32,41 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   onOpenUserModal,
   businessesCount,
   bloodDonorsCount,
-  tuitionCount
+  tuitionCount,
+  toLetCount = 0,
+  newsCount = 0,
+  eventsCount = 0,
+  offersCount = 0
 }) => {
   const [trendPeriod, setTrendPeriod] = useState('Last 6 Months');
 
   const recentUsers = [
     {
       id: 1,
-      name: 'Rakibul Hasan',
+      name: 'Mehedi Hasan',
       phone: '01712-345678',
-      email: 'rakib@gmail.com',
-      role: 'User',
-      joinedAt: '26 Sep 2026',
+      email: 'admin@bongbangla.top',
+      role: 'Super Admin',
+      joinedAt: 'Today',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
-    },
-    {
-      id: 2,
-      name: 'Tanjiha Afrin',
-      phone: '01823-456789',
-      email: 'tanjiha@gmail.com',
-      role: 'User',
-      joinedAt: '26 Sep 2026',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80'
-    },
-    {
-      id: 3,
-      name: 'Sabbir Ahmed',
-      phone: '01911-223344',
-      email: 'sabbir@gmail.com',
-      role: 'Admin',
-      joinedAt: '25 Sep 2026',
-      avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
-    },
-    {
-      id: 4,
-      name: 'Nusrat Jahan',
-      phone: '01678-556677',
-      email: 'nusrat@gmail.com',
-      role: 'User',
-      joinedAt: '25 Sep 2026',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80'
-    },
-    {
-      id: 5,
-      name: 'Arif Hossain',
-      phone: '01890-112233',
-      email: 'arif@gmail.com',
-      role: 'User',
-      joinedAt: '24 Sep 2026',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80'
     }
   ];
 
-  const recentActivities = [
-    {
-      icon: Users,
-      color: 'bg-emerald-100 text-emerald-600',
-      title: 'New user registered',
-      time: '2 minutes ago'
-    },
-    {
-      icon: Store,
-      color: 'bg-blue-100 text-blue-600',
-      title: 'New business added',
-      time: '15 minutes ago'
-    },
-    {
-      icon: Droplet,
-      color: 'bg-rose-100 text-rose-600',
-      title: 'Blood donor joined',
-      time: '1 hour ago'
-    },
-    {
-      icon: GraduationCap,
-      color: 'bg-purple-100 text-purple-600',
-      title: 'New tuition post',
-      time: '2 hours ago'
-    },
-    {
-      icon: Newspaper,
-      color: 'bg-amber-100 text-amber-600',
-      title: 'News published',
-      time: '3 hours ago'
-    }
-  ];
+  const recentActivities: {
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    title: string;
+    time: string;
+  }[] = [];
 
   // Total posts calculated for donut chart
   const donutData = [
-    { label: 'Businesses', count: 142, color: '#10b981' },
-    { label: 'To-Let', count: 98, color: '#3b82f6' },
-    { label: 'News', count: 86, color: '#f59e0b' },
-    { label: 'Events', count: 64, color: '#ef4444' },
-    { label: 'Offers', count: 52, color: '#06b6d4' },
-    { label: 'Tuition Media', count: 40, color: '#a855f7' }
+    { label: 'Businesses', count: businessesCount, color: '#10b981' },
+    { label: 'To-Let', count: toLetCount, color: '#3b82f6' },
+    { label: 'News', count: newsCount, color: '#f59e0b' },
+    { label: 'Events', count: eventsCount, color: '#ef4444' },
+    { label: 'Offers', count: offersCount, color: '#06b6d4' },
+    { label: 'Tuition Media', count: tuitionCount, color: '#a855f7' }
   ];
   const totalDonutCount = donutData.reduce((acc, curr) => acc + curr.count, 0);
 
@@ -168,13 +113,13 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               <Users className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 12%
+              Super Admin
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Users</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">1,245</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+132 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">1</div>
+            <div className="text-[11px] text-emerald-600 font-semibold mt-1">Active Admin Account</div>
           </div>
         </div>
 
@@ -184,14 +129,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Store className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 8%
+            <span className="inline-flex items-center text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+              Live Data
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Businesses</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{businessesCount || 328}</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+24 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{businessesCount}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Published listings</div>
           </div>
         </div>
 
@@ -201,14 +146,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <Droplet className="w-6 h-6 fill-rose-600" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 15%
+            <span className="inline-flex items-center text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+              Verified
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Blood Donors</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{bloodDonorsCount || 564}</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+73 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{bloodDonorsCount}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Ready donors</div>
           </div>
         </div>
 
@@ -218,14 +163,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <GraduationCap className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 18%
+            <span className="inline-flex items-center text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+              Tuition
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Tuition Posts</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{tuitionCount || 1032}</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+158 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{tuitionCount}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Available postings</div>
           </div>
         </div>
       </div>
@@ -441,20 +386,30 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
 
           <div className="space-y-3.5 flex-1">
-            {recentActivities.map((act, i) => {
-              const Icon = act.icon;
-              return (
-                <div key={i} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-xl ${act.color} flex items-center justify-center shrink-0`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-800 truncate">{act.title}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">{act.time}</p>
-                  </div>
+            {recentActivities.length === 0 ? (
+              <div className="py-10 text-center flex flex-col items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+                  <Store className="w-5 h-5" />
                 </div>
-              );
-            })}
+                <p className="text-xs font-bold text-slate-600">কোনো সাম্প্রতিক অ্যাক্টিভিটি নেই</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">নতুন লিস্টিং যুক্ত হলে এখানে দেখা যাবে</p>
+              </div>
+            ) : (
+              recentActivities.map((act, i) => {
+                const Icon = act.icon;
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl ${act.color} flex items-center justify-center shrink-0`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-800 truncate">{act.title}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">{act.time}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

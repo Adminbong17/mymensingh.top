@@ -41,122 +41,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
   const [sortBy, setSortBy] = useState('Sort by Newest');
   const [selectedListingIds, setSelectedListingIds] = useState<string[]>([]);
 
-  const initialListings = [
-    {
-      id: 'tl1',
-      title: '3 Bedroom Apartment',
-      location: 'Maskanda, Mymensingh',
-      type: 'Flat',
-      beds: 3,
-      baths: 2,
-      sqft: '1,200 sqft',
-      price: '৳ 18,000',
-      status: 'Active',
-      postedAt: '26 Sep 2026',
-      timeAgo: '2 hours ago',
-      image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl2',
-      title: 'Duplex House for Rent',
-      location: 'Trishal, Mymensingh',
-      type: 'House',
-      beds: 4,
-      baths: 3,
-      sqft: '2,200 sqft',
-      price: '৳ 25,000',
-      status: 'Active',
-      postedAt: '25 Sep 2026',
-      timeAgo: '5 hours ago',
-      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl3',
-      title: 'Office Space',
-      location: 'Muktagacha, Mymensingh',
-      type: 'Office',
-      beds: null,
-      baths: null,
-      sqft: '800 sqft',
-      price: '৳ 30,000',
-      status: 'Pending',
-      postedAt: '24 Sep 2026',
-      timeAgo: '1 day ago',
-      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl4',
-      title: 'Shop for Rent',
-      location: 'Sadar, Mymensingh',
-      type: 'Shop',
-      beds: null,
-      baths: null,
-      sqft: '500 sqft',
-      price: '৳ 35,000',
-      status: 'Active',
-      postedAt: '24 Sep 2026',
-      timeAgo: '1 day ago',
-      image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl5',
-      title: 'Single Room (Bachelor)',
-      location: 'Fulbaria, Mymensingh',
-      type: 'Room',
-      beds: 1,
-      baths: 1,
-      sqft: '250 sqft',
-      price: '৳ 4,500',
-      status: 'Active',
-      postedAt: '23 Sep 2026',
-      timeAgo: '2 days ago',
-      image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl6',
-      title: 'Land for Rent',
-      location: 'Muktagacha, Mymensingh',
-      type: 'Land',
-      beds: null,
-      baths: null,
-      sqft: '10 Katha',
-      price: '৳ 12,000',
-      status: 'Inactive',
-      postedAt: '22 Sep 2026',
-      timeAgo: '3 days ago',
-      image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl7',
-      title: '2 Bedroom Apartment',
-      location: 'Charpara, Mymensingh',
-      type: 'Flat',
-      beds: 2,
-      baths: 2,
-      sqft: '950 sqft',
-      price: '৳ 14,000',
-      status: 'Active',
-      postedAt: '21 Sep 2026',
-      timeAgo: '3 days ago',
-      image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'tl8',
-      title: 'Commercial Space',
-      location: 'Sadar, Mymensingh',
-      type: 'Commercial',
-      beds: null,
-      baths: null,
-      sqft: '1,500 sqft',
-      price: '৳ 50,000',
-      status: 'Active',
-      postedAt: '20 Sep 2026',
-      timeAgo: '4 days ago',
-      image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=120&q=80'
-    }
-  ];
-
-  const displayListings = toLets.length > 0 ? toLets.map((item, idx) => ({
+  const displayListings = toLets.map((item) => ({
     id: item.id,
     title: item.title,
     location: item.area,
@@ -165,17 +50,28 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
     baths: item.bathrooms,
     sqft: '1,100 sqft',
     price: item.rent,
-    status: idx === 2 ? 'Pending' : idx === 5 ? 'Inactive' : 'Active',
-    postedAt: item.available_from || '26 Sep 2026',
-    timeAgo: '1 day ago',
+    status: 'Active',
+    postedAt: item.available_from || 'আজ',
+    timeAgo: 'নতুন',
     image: item.image_url || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=120&q=80'
-  })) : initialListings;
+  }));
+
+  const filteredListings = displayListings.filter(item => {
+    const q = searchQuery.toLowerCase();
+    const matchSearch = item.title.toLowerCase().includes(q) || item.location.toLowerCase().includes(q);
+    const matchType = selectedType === 'All Types' || item.type.toLowerCase() === selectedType.toLowerCase();
+    const matchArea = selectedArea === 'All Areas' || item.location.toLowerCase().includes(selectedArea.toLowerCase());
+    const matchStatus = selectedStatus === 'All Status' || item.status.toLowerCase() === selectedStatus.toLowerCase();
+    const matchTab = activeTab === 'all' || 
+      (activeTab === 'rent' ? true : activeTab === 'sale' ? false : item.status.toLowerCase() === activeTab.toLowerCase());
+    return matchSearch && matchType && matchArea && matchStatus && matchTab;
+  });
 
   const toggleSelectAll = () => {
-    if (selectedListingIds.length === displayListings.length) {
+    if (selectedListingIds.length === filteredListings.length && filteredListings.length > 0) {
       setSelectedListingIds([]);
     } else {
-      setSelectedListingIds(displayListings.map(l => l.id));
+      setSelectedListingIds(filteredListings.map(l => l.id));
     }
   };
 
@@ -208,58 +104,36 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
     }
   };
 
-  const propertyStats = [
-    { name: 'Flat', count: 72, color: 'bg-emerald-500', width: '85%' },
-    { name: 'House', count: 38, color: 'bg-blue-500', width: '55%' },
-    { name: 'Room', count: 26, color: 'bg-purple-500', width: '40%' },
-    { name: 'Shop', count: 18, color: 'bg-rose-400', width: '30%' },
-    { name: 'Office', count: 12, color: 'bg-amber-400', width: '20%' },
-    { name: 'Land', count: 10, color: 'bg-indigo-500', width: '18%' },
-    { name: 'Commercial', count: 10, color: 'bg-orange-500', width: '18%' }
-  ];
+  const typesList = ['Flat', 'House', 'Room', 'Shop', 'Office', 'Land', 'Commercial'];
+  const colorsList = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-rose-400', 'bg-amber-400', 'bg-indigo-500', 'bg-orange-500'];
+  const propertyStats = typesList.map((type, i) => {
+    const count = toLets.filter(t => t.type?.toLowerCase().includes(type.toLowerCase())).length;
+    return {
+      name: type,
+      count,
+      color: colorsList[i % colorsList.length],
+      width: count > 0 ? `${Math.min(100, Math.round((count / (toLets.length || 1)) * 100))}%` : '0%'
+    };
+  });
 
-  const topLocations = [
-    { name: 'Sadar', count: 48, width: '80%' },
-    { name: 'Muktagacha', count: 32, width: '60%' },
-    { name: 'Trishal', count: 28, width: '50%' },
-    { name: 'Fulbaria', count: 24, width: '40%' },
-    { name: 'Charpara', count: 18, width: '30%' }
-  ];
+  const areasList = ['Sadar', 'Muktagacha', 'Trishal', 'Fulbaria', 'Charpara'];
+  const topLocations = areasList.map((area) => {
+    const count = toLets.filter(t => t.area?.toLowerCase().includes(area.toLowerCase())).length;
+    return {
+      name: area,
+      count,
+      width: count > 0 ? `${Math.min(100, Math.round((count / (toLets.length || 1)) * 100))}%` : '0%'
+    };
+  });
 
-  const recentEnquiries = [
-    {
-      name: 'Tanvir Ahmed',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80',
-      property: '3 Bedroom Apartment',
-      location: 'Maskanda',
-      status: 'active',
-      time: '5 minutes ago'
-    },
-    {
-      name: 'Faria Islam',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80',
-      property: 'Shop for Rent',
-      location: 'Sadar',
-      status: 'active',
-      time: '12 minutes ago'
-    },
-    {
-      name: 'Imran Hossain',
-      avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80',
-      property: 'Office Space',
-      location: 'Muktagacha',
-      status: 'pending',
-      time: '28 minutes ago'
-    },
-    {
-      name: 'Samiha Rahman',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=80&q=80',
-      property: 'Single Room',
-      location: 'Fulbaria',
-      status: 'active',
-      time: '1 hour ago'
-    }
-  ];
+  const recentEnquiries: {
+    name: string;
+    avatar: string;
+    property: string;
+    location: string;
+    status: string;
+    time: string;
+  }[] = [];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -315,13 +189,13 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
               <Home className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 24%
+              Live
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Listings</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">186</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+36 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{toLets.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">সব টু-লেট</div>
           </div>
         </div>
 
@@ -332,13 +206,13 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
               <MapPin className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 18%
+              Active
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">For Rent</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">162</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">Active listings</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{toLets.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">সক্রিয় বিজ্ঞাপন</div>
           </div>
         </div>
 
@@ -348,14 +222,14 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center">
               <Clock className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-              ↓ 22%
+            <span className="inline-flex items-center text-[11px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full">
+              -
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Pending Approval</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">14</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">-4 from last month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">0</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">অপেক্ষমাণ</div>
           </div>
         </div>
 
@@ -365,14 +239,14 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 36%
+            <span className="inline-flex items-center text-[11px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full">
+              -
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Enquiries</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">528</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+138 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{recentEnquiries.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">মোট অনুসন্ধান</div>
           </div>
         </div>
       </div>
@@ -471,7 +345,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                All Listings (186)
+                All Listings ({toLets.length})
               </button>
               <button
                 onClick={() => setActiveTab('rent')}
@@ -481,7 +355,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                For Rent (162)
+                For Rent ({toLets.length})
               </button>
               <button
                 onClick={() => setActiveTab('sale')}
@@ -491,7 +365,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                For Sale (18)
+                For Sale (0)
               </button>
               <button
                 onClick={() => setActiveTab('pending')}
@@ -501,7 +375,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Pending (14)
+                Pending (0)
               </button>
               <button
                 onClick={() => setActiveTab('reported')}
@@ -511,7 +385,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Reported (3)
+                Reported (0)
               </button>
             </div>
 
@@ -529,7 +403,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                   <th className="pb-3 px-2">
                     <input
                       type="checkbox"
-                      checked={selectedListingIds.length === displayListings.length}
+                      checked={selectedListingIds.length === filteredListings.length && filteredListings.length > 0}
                       onChange={toggleSelectAll}
                       className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
@@ -546,106 +420,127 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {displayListings.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedListingIds.includes(item.id)}
-                        onChange={() => toggleSelectListing(item.id)}
-                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                    </td>
-                    <td className="py-3 px-2 font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-2">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-10 h-8 rounded-lg object-cover bg-slate-100 shrink-0"
-                      />
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="font-bold text-slate-900 line-clamp-1 max-w-[150px]">
-                        {item.title}
-                      </div>
-                      <div className="text-[10px] text-slate-400 flex items-center gap-1 line-clamp-1">
-                        <MapPin className="w-2.5 h-2.5" />
-                        <span>{item.location}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getTypeBadge(item.type)}`}>
-                        {item.type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-[11px] text-slate-600">
-                      <div className="space-y-0.5">
-                        {item.beds && (
-                          <div className="flex items-center gap-1">
-                            <Bed className="w-3 h-3 text-slate-400" />
-                            <span>{item.beds} Beds</span>
-                          </div>
+                {filteredListings.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="py-12 text-center text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Home className="w-8 h-8 text-slate-300 stroke-1" />
+                        <p className="font-semibold text-slate-600 text-sm">কোনো বাসা ভাড়ার তথ্য নেই</p>
+                        <p className="text-xs text-slate-400">নতুন বাসা বা দোকান ভাড়ার বিজ্ঞাপন দিতে উপরের "Add To-Let Listing" বাটনে ক্লিক করুন</p>
+                        {onAddToLet && (
+                          <button
+                            onClick={onAddToLet}
+                            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>নতুন বিজ্ঞাপন যোগ করুন</span>
+                          </button>
                         )}
-                        {item.baths && (
-                          <div className="flex items-center gap-1">
-                            <Bath className="w-3 h-3 text-slate-400" />
-                            <span>{item.baths} Baths</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                          <Maximize className="w-2.5 h-2.5" />
-                          <span>{item.sqft}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-2">
-                      <div className="font-extrabold text-emerald-700 text-xs whitespace-nowrap">
-                        {item.price}
-                      </div>
-                      <div className="text-[10px] text-slate-400">/month</div>
-                    </td>
-                    <td className="py-3 px-2">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          item.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : item.status === 'Pending'
-                            ? 'bg-amber-50 text-amber-600'
-                            : 'bg-rose-50 text-rose-600'
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                      <div>{item.postedAt}</div>
-                      <div className="text-[10px] text-slate-400">{item.timeAgo}</div>
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                          title="View"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          className="p-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteToLet(item.id)}
-                          className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredListings.map((item, idx) => (
+                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedListingIds.includes(item.id)}
+                          onChange={() => toggleSelectListing(item.id)}
+                          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                      </td>
+                      <td className="py-3 px-2 font-medium text-slate-400">{idx + 1}</td>
+                      <td className="py-3 px-2">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-10 h-8 rounded-lg object-cover bg-slate-100 shrink-0"
+                        />
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-900 line-clamp-1 max-w-[150px]">
+                          {item.title}
+                        </div>
+                        <div className="text-[10px] text-slate-400 flex items-center gap-1 line-clamp-1">
+                          <MapPin className="w-2.5 h-2.5" />
+                          <span>{item.location}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getTypeBadge(item.type)}`}>
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-[11px] text-slate-600">
+                        <div className="space-y-0.5">
+                          {item.beds && (
+                            <div className="flex items-center gap-1">
+                              <Bed className="w-3 h-3 text-slate-400" />
+                              <span>{item.beds} Beds</span>
+                            </div>
+                          )}
+                          {item.baths && (
+                            <div className="flex items-center gap-1">
+                              <Bath className="w-3 h-3 text-slate-400" />
+                              <span>{item.baths} Baths</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                            <Maximize className="w-2.5 h-2.5" />
+                            <span>{item.sqft}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="font-extrabold text-emerald-700 text-xs whitespace-nowrap">
+                          {item.price}
+                        </div>
+                        <div className="text-[10px] text-slate-400">/month</div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            item.status === 'Active'
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : item.status === 'Pending'
+                              ? 'bg-amber-50 text-amber-600'
+                              : 'bg-rose-50 text-rose-600'
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                        <div>{item.postedAt}</div>
+                        <div className="text-[10px] text-slate-400">{item.timeAgo}</div>
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                            title="View"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            className="p-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteToLet(item.id)}
+                            className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -653,7 +548,7 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
           {/* Pagination */}
           <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs">
             <span className="text-slate-500 font-medium">
-              Showing 1 to 8 of 186 listings
+              Showing {filteredListings.length} of {toLets.length} listings
             </span>
             <div className="flex items-center gap-1 font-semibold">
               <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
@@ -661,22 +556,6 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
               </button>
               <button className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold">
                 1
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                2
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                3
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                4
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                5
-              </button>
-              <span className="px-1 text-slate-400">...</span>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                24
               </button>
               <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -749,31 +628,38 @@ export const ToLetTab: React.FC<ToLetTabProps> = ({
             </div>
 
             <div className="space-y-3">
-              {recentEnquiries.map((enq, i) => (
-                <div key={i} className="flex items-center justify-between gap-2.5 text-xs">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={enq.avatar}
-                      alt={enq.name}
-                      className="w-7 h-7 rounded-full object-cover shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="font-bold text-slate-900 text-[11px] truncate">{enq.name}</div>
-                      <div className="text-[10px] text-slate-400 truncate">
-                        {enq.property} • {enq.location}
+              {recentEnquiries.length === 0 ? (
+                <div className="py-6 text-center text-slate-400">
+                  <Users className="w-6 h-6 mx-auto mb-1.5 text-slate-300 stroke-1" />
+                  <p className="text-xs font-medium text-slate-500">কোনো অনুসন্ধান পাওয়া যায়নি</p>
+                </div>
+              ) : (
+                recentEnquiries.map((enq, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2.5 text-xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img
+                        src={enq.avatar}
+                        alt={enq.name}
+                        className="w-7 h-7 rounded-full object-cover shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 text-[11px] truncate">{enq.name}</div>
+                        <div className="text-[10px] text-slate-400 truncate">
+                          {enq.property} • {enq.location}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1.5 shrink-0 text-right">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          enq.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
+                        }`}
+                      />
+                      <span className="text-[10px] text-slate-400">{enq.time}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0 text-right">
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        enq.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}
-                    />
-                    <span className="text-[10px] text-slate-400">{enq.time}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

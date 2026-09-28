@@ -69,9 +69,22 @@ export const BlogPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Blog Posts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filteredBlogs.map((post) => (
+        {/* Blog Posts Grid or Empty State */}
+        {filteredBlogs.length === 0 ? (
+          <div className="text-center py-16 px-4 rounded-3xl bg-white border-2 border-dashed border-slate-200 max-w-xl mx-auto space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto">
+              <BookOpen className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">
+              বর্তমানে কোনো ব্লগ আর্টিকেল প্রকাশিত নেই
+            </h3>
+            <p className="text-xs text-slate-500">
+              ময়মনসিংহের ইতিহাস, ভ্রমণ গাইড ও ঐতিহ্যবাহী গল্পসমূহ শীঘ্রই এখানে প্রকাশিত হবে।
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filteredBlogs.map((post) => (
             <article
               key={post.id}
               onClick={() => setActiveBlog(post)}
@@ -152,6 +165,7 @@ export const BlogPage: React.FC = () => {
             </article>
           ))}
         </div>
+        )}
       </div>
 
       {/* Blog Detail Reader Modal */}

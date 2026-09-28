@@ -38,132 +38,28 @@ export const EventsTab: React.FC<EventsTabProps> = ({
   const [sortBy, setSortBy] = useState('Sort by Date');
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
 
-  // Demo fallback events matching the mockup screenshot
-  const initialEvents = [
-    {
-      id: 'e1',
-      title: 'ময়মনসিংহ বইমেলা ২০২৬',
-      date: '15 Oct 2026',
-      time: '9:00 AM - 8:00 PM',
-      location: 'ময়মনসিংহ টাউন হল',
-      category: 'Culture',
-      attendees: '1.2K',
-      status: 'Upcoming',
-      image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e2',
-      title: 'ফ্রি মেডিকেল ক্যাম্প',
-      date: '20 Sep 2026',
-      time: '9:00 AM - 4:00 PM',
-      location: 'ত্রিশাল উপজেলা',
-      category: 'Health',
-      attendees: '850',
-      status: 'Ongoing',
-      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e3',
-      title: 'ক্যারিয়ার গাইডলাইন সেমিনার',
-      date: '25 Sep 2026',
-      time: '10:00 AM - 1:00 PM',
-      location: 'ময়মনসিংহ মেডিকেল কলেজ',
-      category: 'Education',
-      attendees: '420',
-      status: 'Upcoming',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e4',
-      title: 'চাকরি মেলা ২০২৬',
-      date: '2 Oct 2026',
-      time: '9:00 AM - 5:00 PM',
-      location: 'জেলা পরিষদ প্রাঙ্গণ',
-      category: 'Career',
-      attendees: '1.8K',
-      status: 'Upcoming',
-      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e5',
-      title: 'ফুটবল টুর্নামেন্ট (জেলা পর্যায়)',
-      date: '18 Sep 2026',
-      time: '3:00 PM - 7:00 PM',
-      location: 'মুক্তাগাছা স্টেডিয়াম',
-      category: 'Sports',
-      attendees: '980',
-      status: 'Ongoing',
-      image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e6',
-      title: 'ঐতিহ্যবাহী নৌকা বাইচ',
-      date: '5 Oct 2026',
-      time: '8:00 AM - 5:00 PM',
-      location: 'ব্রহ্মপুত্র নদ, ময়মনসিংহ',
-      category: 'Culture',
-      attendees: '2.5K',
-      status: 'Upcoming',
-      image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e7',
-      title: 'টেকনোলজি ও আইটি ওয়ার্কশপ',
-      date: '28 Sep 2026',
-      time: '10:00 AM - 4:00 PM',
-      location: 'আনন্দ মোহন কলেজ',
-      category: 'Technology',
-      attendees: '320',
-      status: 'Draft',
-      image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e8',
-      title: 'পরিবেশ সচেতনতা র‍্যালী',
-      date: '12 Sep 2026',
-      time: '8:00 AM - 11:00 AM',
-      location: 'ময়মনসিংহ সদর',
-      category: 'Environment',
-      attendees: '640',
-      status: 'Completed',
-      image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e9',
-      title: 'ইসলামী সাংস্কৃতিক অনুষ্ঠান',
-      date: '30 Sep 2026',
-      time: '6:00 PM - 10:00 PM',
-      location: 'কেন্দ্রীয় ঈদগাহ মাঠ',
-      category: 'Religious',
-      attendees: '1.1K',
-      status: 'Upcoming',
-      image: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&w=120&q=80'
-    },
-    {
-      id: 'e10',
-      title: 'রক্তদান উৎসব',
-      date: '10 Oct 2026',
-      time: '9:00 AM - 3:00 PM',
-      location: 'ময়মনসিংহ মেডিকেল কলেজ',
-      category: 'Health',
-      attendees: '920',
-      status: 'Cancelled',
-      image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=120&q=80'
-    }
-  ];
-
-  // Merge context events with initial demo events if needed
-  const displayEvents = events.length > 0 ? events.map((e, idx) => ({
+  // Real events list mapped for display
+  const displayEvents = events.map((e) => ({
     id: e.id,
     title: e.title || e.title_bn,
     date: e.date,
     time: e.time,
     location: e.venue,
     category: e.category,
-    attendees: '450',
-    status: idx % 2 === 0 ? 'Upcoming' : 'Ongoing',
+    attendees: '0',
+    status: 'Upcoming',
     image: e.image_url || 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=120&q=80'
-  })) : initialEvents;
+  }));
+
+  const filteredEvents = displayEvents.filter(evt => {
+    const q = searchQuery.toLowerCase();
+    const matchSearch = evt.title.toLowerCase().includes(q) || evt.location.toLowerCase().includes(q);
+    const matchCat = selectedCategory === 'All Categories' || evt.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchLoc = selectedLocation === 'All Locations' || evt.location.toLowerCase().includes(selectedLocation.toLowerCase());
+    const matchStatus = selectedStatus === 'All Status' || evt.status.toLowerCase() === selectedStatus.toLowerCase();
+    const matchTab = activeTab === 'all' || evt.status.toLowerCase() === activeTab.toLowerCase();
+    return matchSearch && matchCat && matchLoc && matchStatus && matchTab;
+  });
 
   const toggleSelectAll = () => {
     if (selectedEventIds.length === displayEvents.length) {
@@ -221,17 +117,17 @@ export const EventsTab: React.FC<EventsTabProps> = ({
     }
   };
 
-  const categoryStats = [
-    { name: 'Cultural', count: 28, color: 'bg-amber-400', width: '70%' },
-    { name: 'Educational', count: 24, color: 'bg-purple-500', width: '60%' },
-    { name: 'Health', count: 18, color: 'bg-rose-400', width: '45%' },
-    { name: 'Sports', count: 16, color: 'bg-teal-500', width: '40%' },
-    { name: 'Career', count: 14, color: 'bg-blue-500', width: '35%' },
-    { name: 'Religious', count: 12, color: 'bg-indigo-500', width: '30%' },
-    { name: 'Environment', count: 10, color: 'bg-emerald-500', width: '25%' },
-    { name: 'Technology', count: 8, color: 'bg-sky-500', width: '20%' },
-    { name: 'Others', count: 6, color: 'bg-slate-400', width: '15%' }
-  ];
+  const categoriesList = ['Cultural', 'Educational', 'Health', 'Sports', 'Career', 'Religious', 'Environment', 'Technology', 'Others'];
+  const colors = ['bg-amber-400', 'bg-purple-500', 'bg-rose-400', 'bg-teal-500', 'bg-blue-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-sky-500', 'bg-slate-400'];
+  const categoryStats = categoriesList.map((cat, i) => {
+    const count = events.filter(e => e.category?.toLowerCase().includes(cat.toLowerCase())).length;
+    return {
+      name: cat,
+      count,
+      color: colors[i % colors.length],
+      width: count > 0 ? `${Math.min(100, Math.round((count / (events.length || 1)) * 100))}%` : '0%'
+    };
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -287,13 +183,13 @@ export const EventsTab: React.FC<EventsTabProps> = ({
               <CalendarIcon className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 28%
+              Live
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Events</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">156</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+34 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{events.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">সব ইভেন্ট</div>
           </div>
         </div>
 
@@ -304,13 +200,13 @@ export const EventsTab: React.FC<EventsTabProps> = ({
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 18%
+              Active
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Upcoming Events</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">62</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+12 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{events.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">আসন্ন ইভেন্ট</div>
           </div>
         </div>
 
@@ -320,14 +216,14 @@ export const EventsTab: React.FC<EventsTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 42%
+            <span className="inline-flex items-center text-[11px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full">
+              -
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Attendees</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">12,840</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+3,120 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">0</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">মোট অংশগ্রহণকারী</div>
           </div>
         </div>
 
@@ -337,14 +233,14 @@ export const EventsTab: React.FC<EventsTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
               <Ticket className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 36%
+            <span className="inline-flex items-center text-[11px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-full">
+              -
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Tickets Sold</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">4,320</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+1,140 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">0</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">টিকিট বিক্রি</div>
           </div>
         </div>
       </div>
@@ -443,7 +339,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                All Events (156)
+                All Events ({events.length})
               </button>
               <button
                 onClick={() => setActiveTab('upcoming')}
@@ -453,7 +349,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Upcoming (62)
+                Upcoming ({events.length})
               </button>
               <button
                 onClick={() => setActiveTab('ongoing')}
@@ -463,7 +359,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Ongoing (8)
+                Ongoing (0)
               </button>
               <button
                 onClick={() => setActiveTab('past')}
@@ -473,7 +369,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Past (76)
+                Past (0)
               </button>
               <button
                 onClick={() => setActiveTab('draft')}
@@ -483,7 +379,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Draft (10)
+                Draft (0)
               </button>
             </div>
 
@@ -501,7 +397,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                   <th className="pb-3 px-2">
                     <input
                       type="checkbox"
-                      checked={selectedEventIds.length === displayEvents.length}
+                      checked={selectedEventIds.length === filteredEvents.length && filteredEvents.length > 0}
                       onChange={toggleSelectAll}
                       className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
@@ -518,75 +414,96 @@ export const EventsTab: React.FC<EventsTabProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {displayEvents.map((evt, idx) => (
-                  <tr key={evt.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedEventIds.includes(evt.id)}
-                        onChange={() => toggleSelectEvent(evt.id)}
-                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                    </td>
-                    <td className="py-3 px-2 font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-2">
-                      <img
-                        src={evt.image}
-                        alt={evt.title}
-                        className="w-10 h-8 rounded-lg object-cover bg-slate-100 shrink-0"
-                      />
-                    </td>
-                    <td className="py-3 px-3 font-bold text-slate-900 line-clamp-1 max-w-[160px]">
-                      {evt.title}
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="font-semibold text-slate-800">{evt.date}</div>
-                      <div className="text-[10px] text-slate-400">{evt.time}</div>
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-600 line-clamp-1 max-w-[130px]">
-                      {evt.location}
-                    </td>
-                    <td className="py-3 px-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getCategoryBadge(evt.category)}`}>
-                        {evt.category}
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 font-semibold text-slate-700">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3 text-slate-400" />
-                        <span>{evt.attendees}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-2">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${getStatusBadge(evt.status)}`}>
-                        {evt.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                          title="View"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          className="p-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteEvent(evt.id)}
-                          className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                {filteredEvents.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="py-12 text-center text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <CalendarIcon className="w-8 h-8 text-slate-300 stroke-1" />
+                        <p className="font-semibold text-slate-600 text-sm">কোনো ইভেন্টের তথ্য নেই</p>
+                        <p className="text-xs text-slate-400">নতুন ইভেন্ট যুক্ত করতে উপরের "Add Event" বাটনে ক্লিক করুন</p>
+                        {onAddEvent && (
+                          <button
+                            onClick={onAddEvent}
+                            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>নতুন ইভেন্ট যোগ করুন</span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredEvents.map((evt, idx) => (
+                    <tr key={evt.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedEventIds.includes(evt.id)}
+                          onChange={() => toggleSelectEvent(evt.id)}
+                          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                      </td>
+                      <td className="py-3 px-2 font-medium text-slate-400">{idx + 1}</td>
+                      <td className="py-3 px-2">
+                        <img
+                          src={evt.image}
+                          alt={evt.title}
+                          className="w-10 h-8 rounded-lg object-cover bg-slate-100 shrink-0"
+                        />
+                      </td>
+                      <td className="py-3 px-3 font-bold text-slate-900 line-clamp-1 max-w-[160px]">
+                        {evt.title}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-semibold text-slate-800">{evt.date}</div>
+                        <div className="text-[10px] text-slate-400">{evt.time}</div>
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-600 line-clamp-1 max-w-[130px]">
+                        {evt.location}
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getCategoryBadge(evt.category)}`}>
+                          {evt.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 font-semibold text-slate-700">
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3 h-3 text-slate-400" />
+                          <span>{evt.attendees}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${getStatusBadge(evt.status)}`}>
+                          {evt.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                            title="View"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            className="p-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteEvent(evt.id)}
+                            className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -594,7 +511,7 @@ export const EventsTab: React.FC<EventsTabProps> = ({
           {/* Pagination */}
           <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs">
             <span className="text-slate-500 font-medium">
-              Showing 1 to 10 of 156 events
+              Showing {filteredEvents.length} of {events.length} events
             </span>
             <div className="flex items-center gap-1 font-semibold">
               <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
@@ -602,22 +519,6 @@ export const EventsTab: React.FC<EventsTabProps> = ({
               </button>
               <button className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold">
                 1
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                2
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                3
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                4
-              </button>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                5
-              </button>
-              <span className="px-1 text-slate-400">...</span>
-              <button className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-600">
-                16
               </button>
               <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -728,56 +629,31 @@ export const EventsTab: React.FC<EventsTabProps> = ({
             </div>
 
             <div className="space-y-3">
-              <div className="p-2.5 rounded-xl border border-slate-100 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=80&q=80"
-                    alt="বইমেলা"
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-900 line-clamp-1">ময়মনসিংহ বইমেলা ২০২৬</h5>
-                    <p className="text-[10px] text-slate-400">15 Oct 2026 • টাউন হল</p>
-                  </div>
+              {events.length === 0 ? (
+                <div className="py-6 text-center text-slate-400">
+                  <CalendarIcon className="w-6 h-6 mx-auto mb-1.5 text-slate-300 stroke-1" />
+                  <p className="text-xs font-medium text-slate-500">কোনো আসন্ন ইভেন্ট নেই</p>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
-                  5 days left
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl border border-slate-100 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=80&q=80"
-                    alt="ক্যারিয়ার"
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-900 line-clamp-1">ক্যারিয়ার গাইডলাইন সেমিনার</h5>
-                    <p className="text-[10px] text-slate-400">25 Sep 2026 • মেডিকেল কলেজ</p>
+              ) : (
+                events.slice(0, 3).map((evt) => (
+                  <div key={evt.id} className="p-2.5 rounded-xl border border-slate-100 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={evt.image_url || 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=80&q=80'}
+                        alt={evt.title || evt.title_bn}
+                        className="w-10 h-10 rounded-lg object-cover bg-slate-100"
+                      />
+                      <div>
+                        <h5 className="font-bold text-xs text-slate-900 line-clamp-1">{evt.title || evt.title_bn}</h5>
+                        <p className="text-[10px] text-slate-400">{evt.date} • {evt.venue}</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
+                      Upcoming
+                    </span>
                   </div>
-                </div>
-                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
-                  15 days left
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl border border-slate-100 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=80&q=80"
-                    alt="চাকরি মেলা"
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-900 line-clamp-1">চাকরি মেলা ২০২৬</h5>
-                    <p className="text-[10px] text-slate-400">2 Oct 2026 • জেলা পরিষদ</p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full shrink-0">
-                  22 days left
-                </span>
-              </div>
+                ))
+              )}
             </div>
           </div>
         </div>

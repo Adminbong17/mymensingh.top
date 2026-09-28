@@ -24,196 +24,6 @@ interface BusinessesTabProps {
   onViewPublicPage: () => void;
 }
 
-interface MockBusinessRecord {
-  id: string;
-  name: string;
-  phone: string;
-  category: string;
-  categorySlug: string;
-  location: string;
-  ownerName: string;
-  ownerPhone: string;
-  ownerAvatar: string;
-  views: string;
-  status: 'Active' | 'Pending' | 'Inactive';
-  isFeatured: boolean;
-  joinedDate: string;
-  joinedAgo: string;
-  logo: string;
-}
-
-const INITIAL_BUSINESSES: MockBusinessRecord[] = [
-  {
-    id: 'b1',
-    name: 'Sheikh Pharma',
-    phone: '01712-345678',
-    category: 'Pharmacy',
-    categorySlug: 'pharmacy',
-    location: 'Muktagacha, Mymensingh',
-    ownerName: 'Mehedi Hasan',
-    ownerPhone: '01712-345678',
-    ownerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
-    views: '1,245',
-    status: 'Active',
-    isFeatured: true,
-    joinedDate: '26 Sep 2026',
-    joinedAgo: '2 hours ago',
-    logo: 'https://images.unsplash.com/photo-1586015555751-63c2c77f0a99?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b2',
-    name: 'Vintage Fragrance',
-    phone: '01521-771548',
-    category: 'Perfume',
-    categorySlug: 'perfume',
-    location: 'Mymensingh Sadar',
-    ownerName: 'Tanvir Ahmed',
-    ownerPhone: '01823-456789',
-    ownerAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80',
-    views: '892',
-    status: 'Active',
-    isFeatured: true,
-    joinedDate: '25 Sep 2026',
-    joinedAgo: '5 hours ago',
-    logo: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b3',
-    name: 'Bismillah Restaurant',
-    phone: '01911-223344',
-    category: 'Restaurant',
-    categorySlug: 'restaurant',
-    location: 'Trishal, Mymensingh',
-    ownerName: 'Karim Uddin',
-    ownerPhone: '01911-223344',
-    ownerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-    views: '760',
-    status: 'Active',
-    isFeatured: false,
-    joinedDate: '25 Sep 2026',
-    joinedAgo: '1 day ago',
-    logo: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b4',
-    name: 'Mymensingh Diagnostics',
-    phone: '01678-556677',
-    category: 'Diagnostic',
-    categorySlug: 'diagnostic',
-    location: 'Mymensingh Sadar',
-    ownerName: 'Nusrat Jahan',
-    ownerPhone: '01678-556677',
-    ownerAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80',
-    views: '654',
-    status: 'Pending',
-    isFeatured: false,
-    joinedDate: '24 Sep 2026',
-    joinedAgo: '1 day ago',
-    logo: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b5',
-    name: 'Dreams Tuition Care',
-    phone: '01890-112233',
-    category: 'Tuition',
-    categorySlug: 'tuition',
-    location: 'Muktagacha, Mymensingh',
-    ownerName: 'Arif Hossain',
-    ownerPhone: '01890-112233',
-    ownerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80',
-    views: '612',
-    status: 'Active',
-    isFeatured: false,
-    joinedDate: '24 Sep 2026',
-    joinedAgo: '2 days ago',
-    logo: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b6',
-    name: 'Green Valley Gym',
-    phone: '01745-667788',
-    category: 'Fitness',
-    categorySlug: 'fitness',
-    location: 'Mymensingh Sadar',
-    ownerName: 'Hasan Mahmud',
-    ownerPhone: '01745-667788',
-    ownerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80',
-    views: '544',
-    status: 'Active',
-    isFeatured: true,
-    joinedDate: '23 Sep 2026',
-    joinedAgo: '2 days ago',
-    logo: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b7',
-    name: 'Style Zone Salon',
-    phone: '01312-998877',
-    category: 'Beauty & Salon',
-    categorySlug: 'beauty-salon',
-    location: 'Trishal, Mymensingh',
-    ownerName: 'Faria Islam',
-    ownerPhone: '01312-998877',
-    ownerAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80',
-    views: '498',
-    status: 'Inactive',
-    isFeatured: false,
-    joinedDate: '22 Sep 2026',
-    joinedAgo: '3 days ago',
-    logo: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b8',
-    name: 'Al Madina Electronics',
-    phone: '01999-334455',
-    category: 'Electronics',
-    categorySlug: 'electronics',
-    location: 'Muktagacha, Mymensingh',
-    ownerName: 'Imran Hossain',
-    ownerPhone: '01999-334455',
-    ownerAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=80&q=80',
-    views: '432',
-    status: 'Active',
-    isFeatured: false,
-    joinedDate: '21 Sep 2026',
-    joinedAgo: '3 days ago',
-    logo: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b9',
-    name: 'Fresh Mart',
-    phone: '01521-778899',
-    category: 'Super Shop',
-    categorySlug: 'super-shop',
-    location: 'Mymensingh Sadar',
-    ownerName: 'Samiha Rahman',
-    ownerPhone: '01521-778899',
-    ownerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=80&q=80',
-    views: '410',
-    status: 'Active',
-    isFeatured: false,
-    joinedDate: '20 Sep 2026',
-    joinedAgo: '4 days ago',
-    logo: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'b10',
-    name: 'City Car Wash',
-    phone: '01811-223366',
-    category: 'Car Service',
-    categorySlug: 'car-service',
-    location: 'Mymensingh Sadar',
-    ownerName: 'Rakibul Hasan',
-    ownerPhone: '01811-223366',
-    ownerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
-    views: '388',
-    status: 'Active',
-    isFeatured: true,
-    joinedDate: '20 Sep 2026',
-    joinedAgo: '4 days ago',
-    logo: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=80&q=80'
-  }
-];
 
 export const BusinessesTab: React.FC<BusinessesTabProps> = ({
   businesses,
@@ -227,17 +37,12 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [sortBy, setSortBy] = useState('Sort by Newest');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [featuredMap, setFeaturedMap] = useState<Record<string, boolean>>({
-    'b1': true,
-    'b2': true,
-    'b6': true,
-    'b10': true
-  });
+  const [featuredMap, setFeaturedMap] = useState<Record<string, boolean>>({});
 
-  const displayList = businesses.length > 0 ? businesses.map((b, idx) => ({
+  const displayList = businesses.map((b, idx) => ({
     id: b.id,
     name: b.name_en || b.name,
-    phone: b.phone || '01712-345678',
+    phone: b.phone || '',
     category: b.category_slug || 'General',
     categorySlug: b.category_slug || 'general',
     location: b.area || b.location || 'Mymensingh Sadar',
@@ -245,13 +50,13 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
     ownerPhone: '01712-345678',
     ownerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
     views: `${1200 - idx * 75}`,
-    status: (idx === 3 ? 'Pending' : idx === 6 ? 'Inactive' : 'Active') as 'Active' | 'Pending' | 'Inactive',
+    status: 'Active' as const,
     isFeatured: !!b.is_featured,
-    joinedDate: '26 Sep 2026',
+    joinedDate: '28 Sep 2026',
     joinedAgo: `${idx + 1} hours ago`,
     logo: b.image_url || 'https://images.unsplash.com/photo-1586015555751-63c2c77f0a99?auto=format&fit=crop&w=80&q=80',
     original: b
-  })) : INITIAL_BUSINESSES.map(b => ({ ...b, original: null as unknown as Business }));
+  }));
 
   const toggleFeatured = (id: string) => {
     setFeaturedMap(prev => ({ ...prev, [id]: !prev[id] }));
@@ -375,8 +180,8 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Businesses</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">328</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+35 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{businesses.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Active directory listings</div>
           </div>
         </div>
 
@@ -386,14 +191,14 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Eye className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 28%
+            <span className="inline-flex items-center text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+              Live
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Views</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">12,430</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+2,834 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{businesses.length > 0 ? businesses.length * 125 : 0}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Platform impressions</div>
           </div>
         </div>
 
@@ -403,14 +208,14 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <Star className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              ↑ 9%
+            <span className="inline-flex items-center text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+              Top Picks
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Featured</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">48</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">+4 this month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{businesses.filter(b => b.is_featured).length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">Promoted outlets</div>
           </div>
         </div>
 
@@ -421,13 +226,13 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
               <Clock className="w-6 h-6" />
             </div>
             <span className="inline-flex items-center text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-              ↓ 20%
+              Review
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Pending Approval</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">12</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">-3 from last month</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">0</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">All listings up-to-date</div>
           </div>
         </div>
       </div>
@@ -543,8 +348,30 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map((b, i) => (
-                <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                        <Store className="w-6 h-6" />
+                      </div>
+                      <p className="text-sm font-bold text-slate-800">কোনো ব্যবসা বা প্রতিষ্ঠান নেই</p>
+                      <p className="text-xs text-slate-400 mt-1 mb-4">
+                        নতুন কোনো ব্যবসা যুক্ত করতে বোতামে ক্লিক করুন।
+                      </p>
+                      <button
+                        onClick={onAddBusiness}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add First Business</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((b, i) => (
+                  <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="py-3 px-2">
                     <input
                       type="checkbox"
@@ -646,7 +473,8 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>
@@ -654,7 +482,7 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs">
           <span className="text-slate-500 font-medium">
-            Showing 1 to 10 of 328 businesses
+            Showing {filtered.length} businesses
           </span>
           <div className="flex items-center gap-1 font-semibold">
             <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
