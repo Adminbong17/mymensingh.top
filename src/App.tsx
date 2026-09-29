@@ -245,11 +245,24 @@ const HomePage: React.FC<{
 // ============================================================================
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Modals state
   const [isListBusinessOpen, setIsListBusinessOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Dedicated Full-Screen Layout for Admin Dashboard (No public navbar/footer or max-w-7xl restriction)
+  if (isAdminRoute) {
+    return (
+      <div className="min-h-screen w-full bg-[#f8fafc] text-slate-800 font-sans antialiased overflow-x-hidden">
+        <ScrollToTop />
+        <AdminDashboard onBackToApp={() => navigate('/')} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-slate-50 text-slate-800 font-['Plus_Jakarta_Sans',sans-serif]">

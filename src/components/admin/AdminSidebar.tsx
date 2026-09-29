@@ -45,7 +45,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onVisitWebsite,
   onLogout,
   isOpenMobile = false,
-  onCloseMobile
+  onCloseMobile,
+  usersCount
 }) => {
   const navItems = [
     {
@@ -59,7 +60,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       id: 'users' as AdminTab,
       label: 'Users',
       icon: Users,
-      badge: '1,245',
+      badge: usersCount ? String(usersCount) : null,
       iconColor: 'text-slate-300'
     },
     {

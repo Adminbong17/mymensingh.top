@@ -54,6 +54,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  const usersCount = (() => {
+    try {
+      const raw = localStorage.getItem('mymensingh_registered_users_v2');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.length;
+      }
+    } catch {}
+    return 2;
+  })();
+
   // Modals state
   const [isPlaceModalOpen, setIsPlaceModalOpen] = useState(false);
   const [placeToEdit, setPlaceToEdit] = useState<Place | null>(null);
@@ -233,7 +244,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
         onLogout={logout}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        usersCount={1245}
+        usersCount={usersCount}
       />
 
       {/* Main Content Area */}
