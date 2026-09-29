@@ -15,7 +15,8 @@ import {
   GraduationCap,
   Home,
   BookOpen,
-  Info
+  Info,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -64,9 +65,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   };
 
   const isServiceActive =
-    ['/blood-bank', '/tuition-media', '/to-let'].some((p) =>
+    ['/blood-bank', '/tuition-media', '/to-let', '/prayer'].some((p) =>
       location.pathname.startsWith(p)
-    ) || ['blood-bank', 'tuition-media', 'to-let'].includes(activeSection);
+    ) || ['blood-bank', 'tuition-media', 'to-let', 'prayer'].includes(activeSection);
 
   const isMoreActive =
     ['/blog', '/about'].some((p) => location.pathname.startsWith(p)) ||
@@ -76,6 +77,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const mobileNavLinks = [
     { id: 'home', path: '/', label: 'Home (হোম)' },
     { id: 'categories', path: '/categories', label: 'Categories (ক্যাটাগরি)' },
+    { id: 'prayer', path: '/prayer', label: 'Prayer Times (নামাজ ও রোজা)' },
     { id: 'blood-bank', path: '/blood-bank', label: 'Blood Bank (রক্তদান)' },
     { id: 'tuition-media', path: '/tuition-media', label: 'Tuition (টিউশন)' },
     { id: 'to-let', path: '/to-let', label: 'To-Let (বাসা ভাড়া)' },
@@ -212,6 +214,23 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                       <div className="text-[10px] text-slate-400 font-normal">বাসা ও মেস ভাড়া</div>
                     </div>
                   </button>
+
+                  <button
+                    onClick={() => handleLinkClick('/prayer', 'prayer')}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
+                      location.pathname.startsWith('/prayer')
+                        ? 'bg-rose-50 text-rose-700 font-bold'
+                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-rose-100/80 flex items-center justify-center text-rose-600 shrink-0">
+                      <Moon className="w-4 h-4 fill-rose-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold leading-tight">নামাজ ও রোজা</div>
+                      <div className="text-[10px] text-slate-400 font-normal">সময়সূচি ও কিবলা</div>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
@@ -250,6 +269,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               }`}
             >
               Offers
+            </button>
+
+            {/* Prayer Times (নামাজ) */}
+            <button
+              onClick={() => handleLinkClick('/prayer', 'prayer')}
+              className={`px-2.5 xl:px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
+                isLinkActive('/prayer', 'prayer')
+                  ? 'text-rose-700 bg-rose-50/90 font-bold'
+                  : 'text-slate-600 hover:text-rose-700 hover:bg-rose-50/50'
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+              <span>নামাজ</span>
             </button>
 
             {/* More Dropdown (Blog, About) */}
