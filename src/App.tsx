@@ -280,6 +280,7 @@ const AppContent: React.FC = () => {
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/profile" element={<AuthPage />} />
           <Route path="/list-business" element={<ListBusinessPage />} />
           <Route path="/blood-bank" element={<BloodBankPage />} />
           <Route path="/tuition-media" element={<TuitionMediaPage />} />

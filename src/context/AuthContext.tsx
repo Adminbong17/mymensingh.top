@@ -43,6 +43,7 @@ interface AuthContextType {
   sendPasswordResetOtp: (identifier: string) => Promise<{ success: boolean; error?: string; message?: string; phone?: string; masked_phone?: string; otp_code?: string }>;
   resetPasswordWithOtp: (phone: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string; message?: string }>;
   makeUserAdmin: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  updateUserProfile: (updates: Partial<UserProfile> & { phone?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -238,6 +239,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Helper to add user to registered users list
+  const registerLocalUser = (email: string, fullName?: string, phone?: string, role: 'Admin' | 'User' = 'User') => {
+    try {
+      const key = 'mymensingh_registered_users_v2';
+      const raw = localStorage.getItem(key);
+      const list = raw ? JSON.parse(raw) : [];
+      if (!list.some((u: any) => u.email.toLowerCase() === email.toLowerCase())) {
+        list.push({
+          id: 'u_' + Date.now(),
+          name: fullName || email.split('@')[0],
+          email: email.toLowerCase(),
+          phone: phone || '01700-000000',
+          role,
+          joinedDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          joinedAgo: 'Active now',
+          status: 'Active',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
+        });
+        localStorage.setItem(key, JSON.stringify(list));
+      }
+    } catch {}
+  };
+
   // Real Sign Up (cPanel or Supabase)
   const signUp = async (
     email: string,
@@ -261,6 +285,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('mymensingh_cpanel_user', JSON.stringify(profile));
           localStorage.removeItem('mymensingh_demo_admin');
           setIsDemoAdmin(false);
+          registerLocalUser(cleanEmail, metadata?.full_name, metadata?.phone, metadata?.role === 'admin' ? 'Admin' : 'User');
           return { success: true, requiresEmailConfirmation: false };
         }
         return { success: false, error: res.error || 'রেজিস্ট্রেশন ব্যর্থ হয়েছে।' };
@@ -300,6 +325,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
+        registerLocalUser(cleanEmail, metadata?.full_name, metadata?.phone, metadata?.role === 'admin' ? 'Admin' : 'User');
         if (data.session) {
           setUser(formatUserProfile(data.user));
           localStorage.removeItem('mymensingh_demo_admin');
@@ -377,6 +403,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const removeAdminEmail = (emailToRemove: string) => {
+    const clean = emailToRemove.toLowerCase().trim();
+    if (!clean || clean === 'admin@bongbangla.top') return;
+    setAdminEmails(prev => {
+      const updated = prev.filter(e => e !== clean);
+      localStorage.setItem(STORAGE_ADMIN_EMAILS, JSON.stringify(updated));
+      return updated;
+    });
+    setUser(prev => {
+      if (prev && prev.email.toLowerCase().trim() === clean) {
+        return { ...prev, role: 'user' };
+      }
+      return prev;
+    });
+  };
+
+  const updateUserProfile = (updates: Partial<UserProfile> & { phone?: string }) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updates };
+      if (localStorage.getItem('mymensingh_admin_session')) {
+        localStorage.setItem('mymensingh_admin_session', JSON.stringify(updated));
+      }
+      if (localStorage.getItem('mymensingh_cpanel_user')) {
+        localStorage.setItem('mymensingh_cpanel_user', JSON.stringify(updated));
+      }
+      try {
+        const key = 'mymensingh_registered_users_v2';
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const updatedList = list.map((u: any) =>
+              u.email.toLowerCase() === prev.email.toLowerCase()
+                ? { ...u, name: updates.full_name || u.name, phone: updates.phone || u.phone }
+                : u
+            );
+            localStorage.setItem(key, JSON.stringify(updatedList));
+          }
+        }
+      } catch {}
+      return updated;
+    });
+  };
+
   const makeUserAdmin = async (emailToPromote: string): Promise<{ success: boolean; message?: string; error?: string }> => {
     const clean = emailToPromote.toLowerCase().trim();
     if (!clean) return { success: false, error: 'ইমেইল আবশ্যক।' };
@@ -444,26 +515,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
-  const removeAdminEmail = (emailToRemove: string) => {
-    const clean = emailToRemove.toLowerCase().trim();
-    setAdminEmails(prev => {
-      const updated = prev.filter(e => e !== clean);
-      localStorage.setItem(STORAGE_ADMIN_EMAILS, JSON.stringify(updated));
-      return updated;
-    });
-
-    setUser(prev => {
-      if (prev && prev.email.toLowerCase().trim() === clean && !clean.includes('admin')) {
-        return { ...prev, role: 'user' };
-      }
-      return prev;
-    });
-
-    if (isCpanelConfigured()) {
-      cpanelMakeAdmin(clean, 'user').catch(() => {});
-    }
-  };
-
   const isAdmin = Boolean(user && user.role === 'admin');
 
   return (
@@ -477,6 +528,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addAdminEmail,
         removeAdminEmail,
         makeUserAdmin,
+        updateUserProfile,
         login,
         signUp,
         sendPasswordResetOtp,

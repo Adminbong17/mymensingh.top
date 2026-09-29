@@ -86,6 +86,10 @@ interface DataContextType {
   deleteTuition: (id: string) => Promise<boolean>;
   addToLet: (toLet: Omit<ToLetListing, 'id'>) => Promise<boolean>;
   deleteToLet: (id: string) => Promise<boolean>;
+  addCategory: (category: Omit<Category, 'id'>) => Promise<boolean>;
+  updateCategory: (id: string, category: Partial<Category>) => Promise<boolean>;
+  deleteCategory: (id: string) => Promise<boolean>;
+  reorderCategories: (orderedList: Category[]) => Promise<boolean>;
   refreshData: () => Promise<void>;
   resetToInitialData: () => void;
   seedDatabaseFromInitial: () => Promise<{ success: boolean; message: string }>;
@@ -818,6 +822,96 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
+  // Categories CRUD
+  const addCategory = async (catData: Omit<Category, 'id'>): Promise<boolean> => {
+    const newCategory: Category = {
+      ...catData,
+      id: `cat-${Date.now()}`,
+      count: catData.count ?? 0,
+      order_index: catData.order_index ?? categories.length + 1,
+    };
+
+    setCategories(prev => [...prev, newCategory]);
+
+    const supabase = getSupabase();
+    if (supabase && isSupabaseConfigured()) {
+      try {
+        await supabase.from('categories').insert([{
+          id: newCategory.id,
+          name_en: newCategory.name_en,
+          name_bn: newCategory.name_bn,
+          slug: newCategory.slug,
+          icon: newCategory.icon,
+          color: newCategory.color || 'emerald',
+          order_index: newCategory.order_index,
+          count: newCategory.count || 0
+        }]);
+      } catch (err) {
+        console.warn('Supabase addCategory error:', err);
+      }
+    }
+    return true;
+  };
+
+  const updateCategory = async (id: string, catData: Partial<Category>): Promise<boolean> => {
+    setCategories(prev =>
+      prev.map(cat => (cat.id === id ? { ...cat, ...catData } : cat))
+    );
+
+    const supabase = getSupabase();
+    if (supabase && isSupabaseConfigured()) {
+      try {
+        const updatePayload: Record<string, any> = {};
+        if (catData.name_en !== undefined) updatePayload.name_en = catData.name_en;
+        if (catData.name_bn !== undefined) updatePayload.name_bn = catData.name_bn;
+        if (catData.slug !== undefined) updatePayload.slug = catData.slug;
+        if (catData.icon !== undefined) updatePayload.icon = catData.icon;
+        if (catData.color !== undefined) updatePayload.color = catData.color;
+        if (catData.order_index !== undefined) updatePayload.order_index = catData.order_index;
+        if (catData.count !== undefined) updatePayload.count = catData.count;
+
+        await supabase.from('categories').update(updatePayload).eq('id', id);
+      } catch (err) {
+        console.warn('Supabase updateCategory error:', err);
+      }
+    }
+    return true;
+  };
+
+  const deleteCategory = async (id: string): Promise<boolean> => {
+    setCategories(prev => prev.filter(cat => cat.id !== id));
+
+    const supabase = getSupabase();
+    if (supabase && isSupabaseConfigured()) {
+      try {
+        await supabase.from('categories').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Supabase deleteCategory error:', err);
+      }
+    }
+    return true;
+  };
+
+  const reorderCategories = async (orderedList: Category[]): Promise<boolean> => {
+    const updated = orderedList.map((cat, idx) => ({
+      ...cat,
+      order_index: idx + 1
+    }));
+    setCategories(updated);
+
+    const supabase = getSupabase();
+    if (supabase && isSupabaseConfigured()) {
+      try {
+        for (const cat of updated) {
+          await supabase.from('categories').update({ order_index: cat.order_index }).eq('id', cat.id);
+        }
+      } catch (err) {
+        console.warn('Supabase reorderCategories error:', err);
+      }
+    }
+    return true;
+  };
+
   // Reviews CRUD
   const submitReview = async (reviewInput: {
     place_id: string;
@@ -985,6 +1079,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteTuition,
         addToLet,
         deleteToLet,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        reorderCategories,
         refreshData,
         resetToInitialData,
         seedDatabaseFromInitial,

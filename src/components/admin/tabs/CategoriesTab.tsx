@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Layers,
   Plus,
@@ -7,80 +7,232 @@ import {
   ChevronLeft,
   ChevronUp,
   ChevronDown,
-  Filter,
   RotateCcw,
   Edit2,
   Trash2,
-  Folder,
   FolderOpen,
   Network,
   FileText,
-  Eye
+  Eye,
+  X,
+  Check,
+  Utensils,
+  Hotel,
+  Hospital,
+  Pill,
+  Droplets,
+  GraduationCap,
+  Home,
+  ShoppingBag,
+  Coffee,
+  Landmark,
+  BookOpen,
+  Train,
+  Moon,
+  Calendar,
+  Tag,
+  Newspaper,
+  Building2,
+  Briefcase,
+  Wrench,
+  Grid
 } from 'lucide-react';
+import { useData } from '../../../context/DataContext';
 import type { Category } from '../../../types';
 
 interface CategoriesTabProps {
-  categories: Category[];
-  businessesCount: number;
+  categories?: Category[];
+  businessesCount?: number;
 }
 
-interface CategoryItem {
-  id: string;
-  name: string;
-  slug: string;
-  type: 'Main' | 'Sub';
-  businesses: number;
-  status: boolean;
-  order: number;
-  image: string;
-}
+const AVAILABLE_ICONS = [
+  { name: 'Utensils', label: 'রেস্টুরেন্ট / খাবার' },
+  { name: 'Hotel', label: 'হোটেল ও রিসোর্ট' },
+  { name: 'Hospital', label: 'হাসপাতাল ও ক্লিনিক' },
+  { name: 'Pill', label: 'ফার্মেসি ও ঔষধ' },
+  { name: 'Droplets', label: 'রক্তদান / ব্লাড ব্যাংক' },
+  { name: 'GraduationCap', label: 'শিক্ষা ও টিউটর' },
+  { name: 'Home', label: 'বাসা ভাড়া / টু-লেট' },
+  { name: 'ShoppingBag', label: 'শপিং ও মার্কেট' },
+  { name: 'Coffee', label: 'ক্যাফে ও কফি' },
+  { name: 'Landmark', label: 'দর্শনীয় স্থান' },
+  { name: 'BookOpen', label: 'বই ও লাইব্রেরি' },
+  { name: 'Train', label: 'পরিবহন ও যাতায়াত' },
+  { name: 'Moon', label: 'মসজিদ ও ধর্মীয়' },
+  { name: 'Calendar', label: 'ইভেন্ট ও উৎসব' },
+  { name: 'Tag', label: 'অফার ও ডিসকাউন্ট' },
+  { name: 'Newspaper', label: 'সংবাদ ও বুলেটিন' },
+  { name: 'Building2', label: 'রিয়েল এস্টেট' },
+  { name: 'Briefcase', label: 'চাকরি ও ক্যারিয়ার' },
+  { name: 'Wrench', label: 'পেশাদার সার্ভিস' },
+  { name: 'Grid', label: 'অন্যান্য সেবা' }
+];
 
-export const CategoriesTab: React.FC<CategoriesTabProps> = ({
-  categories,
-  businessesCount
-}) => {
-  const [categoriesList, setCategoriesList] = useState<CategoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('mymensingh_admin_categories_list_v1');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return categories.map((cat, idx) => ({
-      id: cat.id,
-      name: cat.name_bn ? `${cat.name_bn} (${cat.name_en})` : cat.name_en,
-      slug: cat.slug,
-      type: 'Main' as const,
-      businesses: cat.count || 0,
-      status: true,
-      order: cat.order_index || idx + 1,
-      image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=80&q=80'
-    }));
-  });
+const COLOR_OPTIONS = [
+  { name: 'emerald', bg: 'bg-emerald-500', text: 'text-emerald-700' },
+  { name: 'blue', bg: 'bg-blue-500', text: 'text-blue-700' },
+  { name: 'rose', bg: 'bg-rose-500', text: 'text-rose-700' },
+  { name: 'indigo', bg: 'bg-indigo-500', text: 'text-indigo-700' },
+  { name: 'red', bg: 'bg-red-500', text: 'text-red-700' },
+  { name: 'amber', bg: 'bg-amber-500', text: 'text-amber-700' },
+  { name: 'purple', bg: 'bg-purple-500', text: 'text-purple-700' },
+  { name: 'sky', bg: 'bg-sky-500', text: 'text-sky-700' },
+  { name: 'teal', bg: 'bg-teal-500', text: 'text-teal-700' },
+  { name: 'orange', bg: 'bg-orange-500', text: 'text-orange-700' },
+];
 
-  React.useEffect(() => {
-    try {
-      localStorage.setItem('mymensingh_admin_categories_list_v1', JSON.stringify(categoriesList));
-    } catch {}
-  }, [categoriesList]);
+export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
+  const {
+    categories,
+    businesses,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    reorderCategories
+  } = useData();
 
-  const [typeFilter, setTypeFilter] = useState('All Types');
+  // Search, filter and selection
   const [treeSearch, setTreeSearch] = useState('');
+  const [selectedTreeCategory, setSelectedTreeCategory] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const toggleStatus = (id: string) => {
-    setCategoriesList(prev =>
-      prev.map(c => (c.id === id ? { ...c, status: !c.status } : c))
-    );
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Add / Edit Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  // Form State
+  const [formNameBn, setFormNameBn] = useState('');
+  const [formNameEn, setFormNameEn] = useState('');
+  const [formSlug, setFormSlug] = useState('');
+  const [formIcon, setFormIcon] = useState('Grid');
+  const [formColor, setFormColor] = useState('emerald');
+
+  const renderIconComponent = (iconName: string, className = "w-4 h-4") => {
+    switch (iconName) {
+      case 'Utensils': return <Utensils className={className} />;
+      case 'Hotel': return <Hotel className={className} />;
+      case 'Hospital': return <Hospital className={className} />;
+      case 'Pill': return <Pill className={className} />;
+      case 'Droplets': return <Droplets className={className} />;
+      case 'GraduationCap': return <GraduationCap className={className} />;
+      case 'Home': return <Home className={className} />;
+      case 'ShoppingBag': return <ShoppingBag className={className} />;
+      case 'Coffee': return <Coffee className={className} />;
+      case 'Landmark': return <Landmark className={className} />;
+      case 'BookOpen': return <BookOpen className={className} />;
+      case 'Train': return <Train className={className} />;
+      case 'Moon': return <Moon className={className} />;
+      case 'Calendar': return <Calendar className={className} />;
+      case 'Tag': return <Tag className={className} />;
+      case 'Newspaper': return <Newspaper className={className} />;
+      case 'Building2': return <Building2 className={className} />;
+      case 'Briefcase': return <Briefcase className={className} />;
+      case 'Wrench': return <Wrench className={className} />;
+      default: return <Grid className={className} />;
+    }
   };
 
-  const moveOrder = (index: number, direction: 'up' | 'down') => {
+  // Open modal for Create
+  const handleOpenAddModal = () => {
+    setEditingCategory(null);
+    setFormNameBn('');
+    setFormNameEn('');
+    setFormSlug('');
+    setFormIcon('Grid');
+    setFormColor('emerald');
+    setIsModalOpen(true);
+  };
+
+  // Open modal for Edit
+  const handleOpenEditModal = (cat: Category) => {
+    setEditingCategory(cat);
+    setFormNameBn(cat.name_bn || '');
+    setFormNameEn(cat.name_en || '');
+    setFormSlug(cat.slug || '');
+    setFormIcon(cat.icon || 'Grid');
+    setFormColor(cat.color || 'emerald');
+    setIsModalOpen(true);
+  };
+
+  // Handle Form Submit
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formNameEn.trim() && !formNameBn.trim()) return;
+
+    const slug = (formSlug.trim() || formNameEn.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) || `cat-${Date.now()}`;
+
+    if (editingCategory) {
+      await updateCategory(editingCategory.id, {
+        name_bn: formNameBn.trim(),
+        name_en: formNameEn.trim(),
+        slug,
+        icon: formIcon,
+        color: formColor,
+      });
+    } else {
+      await addCategory({
+        name_bn: formNameBn.trim() || formNameEn.trim(),
+        name_en: formNameEn.trim() || formNameBn.trim(),
+        slug,
+        icon: formIcon,
+        color: formColor,
+        order_index: categories.length + 1,
+        count: 0
+      });
+    }
+
+    setIsModalOpen(false);
+  };
+
+  // Delete Category
+  const handleDeleteCategory = async (cat: Category) => {
+    if (window.confirm(`Are you sure you want to delete category "${cat.name_bn || cat.name_en}"?`)) {
+      await deleteCategory(cat.id);
+      setSelectedIds(prev => prev.filter(id => id !== cat.id));
+    }
+  };
+
+  // Move Order
+  const handleMoveOrder = async (index: number, direction: 'up' | 'down') => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= categoriesList.length) return;
-    const updated = [...categoriesList];
+    if (targetIndex < 0 || targetIndex >= categories.length) return;
+
+    const updated = [...categories];
     const temp = updated[index];
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
-    setCategoriesList(updated);
+
+    await reorderCategories(updated);
   };
+
+  // Filtered categories
+  const filtered = useMemo(() => {
+    return categories.filter(c => {
+      if (selectedTreeCategory && c.slug !== selectedTreeCategory) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchBn = c.name_bn && c.name_bn.toLowerCase().includes(q);
+        const matchEn = c.name_en && c.name_en.toLowerCase().includes(q);
+        const matchSlug = c.slug.toLowerCase().includes(q);
+        if (!matchBn && !matchEn && !matchSlug) return false;
+      }
+      return true;
+    });
+  }, [categories, selectedTreeCategory, searchQuery]);
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginatedCategories = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
 
   const toggleSelectAll = () => {
     if (selectedIds.length === filtered.length && filtered.length > 0) {
@@ -98,13 +250,10 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
     }
   };
 
-  const filtered = categoriesList.filter(c => {
-    if (typeFilter === 'Main') return c.type === 'Main';
-    if (typeFilter === 'Sub') return c.type === 'Sub';
-    return true;
-  });
-
-  const subCategoriesCount = 0;
+  // Businesses count per category
+  const getBizCount = (catSlug: string) => {
+    return businesses.filter(b => b.category_slug === catSlug).length;
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -126,12 +275,15 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
                 Categories Management
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                Organize all business categories and subcategories.
+                Organize, add, edit and reorder all platform categories.
               </p>
             </div>
           </div>
 
-          <button className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-700/20 cursor-pointer">
+          <button
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-700/20 cursor-pointer"
+          >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
           </button>
@@ -153,7 +305,7 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Total Categories</div>
             <div className="text-2xl font-black text-slate-900 mt-1">{categories.length}</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">ক্যাটাগরি তালিকা</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">সক্রিয় ক্যাটাগরি</div>
           </div>
         </div>
 
@@ -163,14 +315,14 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Network className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-              Active
+            <span className="inline-flex items-center text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+              Taxonomy
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Main Categories</div>
             <div className="text-2xl font-black text-slate-900 mt-1">{categories.length}</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">প্রধান বিভাগ</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">প্রধান বিভাগসমূহ</div>
           </div>
         </div>
 
@@ -180,13 +332,13 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
               <FileText className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
               Sub
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Sub Categories</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{subCategoriesCount}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">0</div>
             <div className="text-[11px] text-slate-400 font-medium mt-1">উপ-বিভাগ</div>
           </div>
         </div>
@@ -197,27 +349,28 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
               <Eye className="w-6 h-6" />
             </div>
-            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              Live
+            <span className="inline-flex items-center text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+              Listings
             </span>
           </div>
           <div className="mt-4">
             <div className="text-xs font-semibold text-slate-500">Used in Businesses</div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{businessesCount}</div>
-            <div className="text-[11px] text-slate-400 font-medium mt-1">ব্যবসা প্রতিষ্ঠান</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{businesses.length}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-1">তালিকাভুক্ত প্রতিষ্ঠান</div>
           </div>
         </div>
       </div>
 
-      {/* 2-Column Section matching media_1790620107253.jpg */}
+      {/* 2-Column Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column: Category Tree (30%) */}
         <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 className="font-bold text-slate-900 text-sm">Category Tree</h3>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400" />
-            </div>
+            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <FolderOpen className="w-4 h-4 text-emerald-600" />
+              <span>Category Tree</span>
+            </h3>
+            <span className="text-[11px] font-bold text-slate-400">{categories.length} items</span>
           </div>
 
           <div className="pt-3 pb-2">
@@ -227,48 +380,69 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
                 value={treeSearch}
                 onChange={e => setTreeSearch(e.target.value)}
                 placeholder="Search categories..."
-                className="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-hidden"
+                className="w-full text-xs px-2.5 py-2 pl-8 rounded-lg bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
               />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
             </div>
           </div>
 
           {/* Tree Structure */}
-          <div className="space-y-1.5 text-xs text-slate-700 py-2 overflow-y-auto max-h-[520px]">
+          <div className="space-y-1 text-xs text-slate-700 py-2 overflow-y-auto max-h-[500px]">
             {/* Root: All Categories */}
-            <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/60 font-bold text-emerald-950">
+            <button
+              onClick={() => { setSelectedTreeCategory(''); setCurrentPage(1); }}
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+                !selectedTreeCategory
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-emerald-50/60 text-emerald-950 hover:bg-emerald-100'
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <FolderOpen className="w-4 h-4 text-emerald-600" />
+                <FolderOpen className="w-4 h-4" />
                 <span>All Categories</span>
               </div>
-              <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+              <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                !selectedTreeCategory ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+              }`}>
                 {categories.length}
               </span>
-            </div>
+            </button>
 
             {/* Dynamic Branches */}
-            <div className="pl-3 space-y-1">
+            <div className="pl-2 space-y-1 pt-1">
               {categories
                 .filter(cat => {
                   const q = treeSearch.toLowerCase();
                   return (
                     !treeSearch ||
                     (cat.name_en && cat.name_en.toLowerCase().includes(q)) ||
-                    (cat.name_bn && cat.name_bn.toLowerCase().includes(q))
+                    (cat.name_bn && cat.name_bn.toLowerCase().includes(q)) ||
+                    cat.slug.toLowerCase().includes(q)
                   );
                 })
-                .map(cat => (
-                  <div key={cat.id}>
-                    <div className="w-full flex items-center justify-between py-1.5 px-2 hover:bg-slate-50 rounded-lg text-left">
-                      <div className="flex items-center gap-2 font-semibold">
-                        <Folder className="w-3.5 h-3.5 text-emerald-600" />
+                .map(cat => {
+                  const isSelected = selectedTreeCategory === cat.slug;
+                  const bCount = getBizCount(cat.slug);
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => { setSelectedTreeCategory(cat.slug); setCurrentPage(1); }}
+                      className={`w-full flex items-center justify-between py-2 px-2.5 rounded-lg text-left transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-300'
+                          : 'hover:bg-slate-50 text-slate-700 font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="text-emerald-600 shrink-0">{renderIconComponent(cat.icon, "w-3.5 h-3.5")}</span>
                         <span className="truncate">{cat.name_bn || cat.name_en}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {cat.count || 0}
+                      <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
+                        {bCount}
                       </span>
-                    </div>
-                  </div>
-                ))}
+                    </button>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -277,26 +451,33 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
         <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-sm">All Categories ({filtered.length})</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {selectedTreeCategory ? `Filtered: ${selectedTreeCategory}` : 'All Categories'}
+                </h3>
+                <span className="text-xs bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full">
+                  {filtered.length}টি পাওয়া গেছে
+                </span>
+              </div>
 
               <div className="flex items-center gap-2">
-                <select
-                  value={typeFilter}
-                  onChange={e => setTypeFilter(e.target.value)}
-                  className="text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 outline-hidden cursor-pointer"
-                >
-                  <option>All Types</option>
-                  <option>Main</option>
-                  <option>Sub</option>
-                </select>
-
-                <button className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer">
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Filter</span>
-                </button>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    placeholder="Search table..."
+                    className="text-xs pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
+                  />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                </div>
 
                 <button
-                  onClick={() => setTypeFilter('All Types')}
+                  onClick={() => {
+                    setSelectedTreeCategory('');
+                    setSearchQuery('');
+                    setCurrentPage(1);
+                  }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all shadow-xs cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -314,139 +495,289 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
                         type="checkbox"
                         checked={selectedIds.length === filtered.length && filtered.length > 0}
                         onChange={toggleSelectAll}
-                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                       />
                     </th>
                     <th className="pb-3 px-2">#</th>
-                    <th className="pb-3 px-2">Image</th>
+                    <th className="pb-3 px-2">Icon</th>
                     <th className="pb-3 px-3">Category Name</th>
-                    <th className="pb-3 px-2">Type</th>
+                    <th className="pb-3 px-2">Slug</th>
                     <th className="pb-3 px-2">Businesses</th>
-                    <th className="pb-3 px-2">Status</th>
                     <th className="pb-3 px-2">Order</th>
                     <th className="pb-3 px-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {filtered.length === 0 ? (
+                  {paginatedCategories.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="py-12 text-center text-slate-400">
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Layers className="w-8 h-8 text-slate-300 stroke-1" />
-                          <p className="font-semibold text-slate-600 text-sm">কোনো ক্যাটাগরি নেই</p>
+                          <p className="font-semibold text-slate-600 text-sm">কোনো ক্যাটাগরি পাওয়া যায়নি</p>
                         </div>
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((cat, idx) => (
-                      <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(cat.id)}
-                            onChange={() => toggleSelectOne(cat.id)}
-                            className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                          />
-                        </td>
-                        <td className="py-3 px-2 font-medium text-slate-400">{idx + 1}</td>
-                        <td className="py-3 px-2">
-                          <img
-                            src={cat.image}
-                            alt={cat.name}
-                            className="w-9 h-9 rounded-lg object-cover bg-slate-100 shrink-0"
-                          />
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="font-bold text-slate-900">{cat.name}</div>
-                          <div className="text-[10px] text-slate-400">{cat.slug}</div>
-                        </td>
-                        <td className="py-3 px-2">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              cat.type === 'Main'
-                                ? 'bg-blue-50 text-blue-600'
-                                : 'bg-emerald-50 text-emerald-600'
-                            }`}
-                          >
-                            {cat.type}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 font-bold text-slate-700">{cat.businesses}</td>
-                        <td className="py-3 px-2">
-                          <button
-                            onClick={() => toggleStatus(cat.id)}
-                            className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${
-                              cat.status ? 'bg-emerald-600' : 'bg-slate-300'
-                            }`}
-                          >
-                            <div
-                              className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                                cat.status ? 'translate-x-4' : 'translate-x-0'
-                              }`}
+                    paginatedCategories.map((cat, idx) => {
+                      const absoluteIndex = (currentPage - 1) * itemsPerPage + idx;
+                      const bCount = getBizCount(cat.slug);
+                      return (
+                        <tr key={cat.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(cat.id)}
+                              onChange={() => toggleSelectOne(cat.id)}
+                              className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                             />
-                          </button>
-                        </td>
-                        <td className="py-3 px-2">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => moveOrder(idx, 'up')}
-                              className="p-1 rounded hover:bg-slate-100 text-slate-500"
-                              title="Move Up"
-                            >
-                              <ChevronUp className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => moveOrder(idx, 'down')}
-                              className="p-1 rounded hover:bg-slate-100 text-slate-500"
-                              title="Move Down"
-                            >
-                              <ChevronDown className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              className="p-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                              title="Edit"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              className="p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="py-3 px-2 font-medium text-slate-400">{absoluteIndex + 1}</td>
+                          <td className="py-3 px-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                              {renderIconComponent(cat.icon, "w-4 h-4")}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="font-bold text-slate-900">{cat.name_bn || cat.name_en}</div>
+                            <div className="text-[10px] text-slate-400">{cat.name_en}</div>
+                          </td>
+                          <td className="py-3 px-2">
+                            <code className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
+                              {cat.slug}
+                            </code>
+                          </td>
+                          <td className="py-3 px-2 font-bold text-slate-700">
+                            <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-black text-[11px]">
+                              {bCount}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleMoveOrder(absoluteIndex, 'up')}
+                                disabled={absoluteIndex === 0}
+                                className="p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-30 cursor-pointer"
+                                title="Move Up"
+                              >
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleMoveOrder(absoluteIndex, 'down')}
+                                disabled={absoluteIndex === categories.length - 1}
+                                className="p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-30 cursor-pointer"
+                                title="Move Down"
+                              >
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => handleOpenEditModal(cat)}
+                                className="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategory(cat)}
+                                className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Pagination */}
+          {/* Interactive Pagination */}
           <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 text-xs">
             <span className="text-slate-500 font-medium">
-              Showing {filtered.length} of {categories.length} categories
+              Showing {paginatedCategories.length} of {filtered.length} categories (Page {currentPage} of {totalPages})
             </span>
             <div className="flex items-center gap-1 font-semibold">
-              <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-40 cursor-pointer"
+              >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-              <button className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold">
-                1
-              </button>
-              <button className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentPage === page
+                      ? 'bg-emerald-700 text-white'
+                      : 'hover:bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-40 cursor-pointer"
+              >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* =================================================================== */}
+      {/* ADD / EDIT CATEGORY MODAL */}
+      {/* =================================================================== */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">
+                    {editingCategory ? 'Edit Category' : 'Add New Category'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {editingCategory ? 'Update category information' : 'Create a new business category'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Bangla Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formNameBn}
+                    onChange={(e) => setFormNameBn(e.target.value)}
+                    placeholder="যেমন: রেস্টুরেন্ট"
+                    required
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    English Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formNameEn}
+                    onChange={(e) => {
+                      setFormNameEn(e.target.value);
+                      if (!editingCategory && !formSlug) {
+                        setFormSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+                      }
+                    }}
+                    placeholder="e.g. Restaurants"
+                    required
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  URL Slug (Unique ID)
+                </label>
+                <input
+                  type="text"
+                  value={formSlug}
+                  onChange={(e) => setFormSlug(e.target.value)}
+                  placeholder="e.g. restaurants"
+                  className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
+                />
+              </div>
+
+              {/* Icon Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Select Icon
+                </label>
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-slate-100 rounded-xl bg-slate-50">
+                  {AVAILABLE_ICONS.map((ic) => (
+                    <button
+                      type="button"
+                      key={ic.name}
+                      onClick={() => setFormIcon(ic.name)}
+                      className={`p-2 rounded-lg flex flex-col items-center gap-1 text-center transition-all cursor-pointer ${
+                        formIcon === ic.name
+                          ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                      }`}
+                    >
+                      {renderIconComponent(ic.name, "w-4 h-4")}
+                      <span className="text-[9px] truncate w-full">{ic.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Theme Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Color Accent
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {COLOR_OPTIONS.map((col) => (
+                    <button
+                      type="button"
+                      key={col.name}
+                      onClick={() => setFormColor(col.name)}
+                      className={`w-7 h-7 rounded-full ${col.bg} flex items-center justify-center transition-transform cursor-pointer ${
+                        formColor === col.name ? 'ring-2 ring-offset-2 ring-emerald-600 scale-110' : 'opacity-80 hover:opacity-100'
+                      }`}
+                    >
+                      {formColor === col.name && <Check className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  {editingCategory ? 'Update Category' : 'Create Category'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
