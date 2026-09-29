@@ -93,19 +93,74 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_FAVORITES = 'mymensingh_favorites_top_v1';
+const STORAGE_KEYS = {
+  BUSINESSES: 'mymensingh_real_businesses_v2',
+  NEWS: 'mymensingh_real_news_v2',
+  EVENTS: 'mymensingh_real_events_v2',
+  OFFERS: 'mymensingh_real_offers_v2',
+  DONORS: 'mymensingh_real_donors_v2',
+  TUITIONS: 'mymensingh_real_tuitions_v2',
+  TOLETS: 'mymensingh_real_tolets_v2',
+  REVIEWS: 'mymensingh_real_reviews_v2',
+  CATEGORIES: 'mymensingh_real_categories_v2',
+  FAVORITES: 'mymensingh_favorites_top_v1',
+};
+
+function loadStoredArray<T>(key: string, fallback: T[] = []): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function mergeWithLocal<T extends { id: string }>(cloudItems: T[] | null | undefined, localItems: T[]): T[] {
+  if (!cloudItems || cloudItems.length === 0) {
+    return localItems;
+  }
+  const map = new Map<string, T>();
+  cloudItems.forEach(item => map.set(item.id, item));
+  // Preserve locally created items that haven't synced to cloud yet
+  localItems.forEach(item => {
+    if (!map.has(item.id)) {
+      map.set(item.id, item);
+    }
+  });
+  return Array.from(map.values());
+}
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Real data arrays initialized to empty (no mock data fallback)
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [offers, setOffers] = useState<OfferItem[]>([]);
-  const [bloodDonors, setBloodDonors] = useState<BloodDonor[]>([]);
-  const [tuitionListings, setTuitionListings] = useState<TuitionListing[]>([]);
-  const [toLetListings, setToLetListings] = useState<ToLetListing[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  // Real data initialized with persistent localStorage cache
+  const [businesses, setBusinesses] = useState<Business[]>(() =>
+    loadStoredArray(STORAGE_KEYS.BUSINESSES, [])
+  );
+  const [categories, setCategories] = useState<Category[]>(() =>
+    loadStoredArray(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES)
+  );
+  const [news, setNews] = useState<NewsArticle[]>(() =>
+    loadStoredArray(STORAGE_KEYS.NEWS, [])
+  );
+  const [events, setEvents] = useState<EventItem[]>(() =>
+    loadStoredArray(STORAGE_KEYS.EVENTS, [])
+  );
+  const [offers, setOffers] = useState<OfferItem[]>(() =>
+    loadStoredArray(STORAGE_KEYS.OFFERS, [])
+  );
+  const [bloodDonors, setBloodDonors] = useState<BloodDonor[]>(() =>
+    loadStoredArray(STORAGE_KEYS.DONORS, [])
+  );
+  const [tuitionListings, setTuitionListings] = useState<TuitionListing[]>(() =>
+    loadStoredArray(STORAGE_KEYS.TUITIONS, [])
+  );
+  const [toLetListings, setToLetListings] = useState<ToLetListing[]>(() =>
+    loadStoredArray(STORAGE_KEYS.TOLETS, [])
+  );
+  const [reviews, setReviews] = useState<Review[]>(() =>
+    loadStoredArray(STORAGE_KEYS.REVIEWS, [])
+  );
 
   // Emergency contacts and train schedules (standard public municipal utility data)
   const [emergencyContacts] = useState<EmergencyContact[]>(INITIAL_EMERGENCY_CONTACTS);
@@ -113,7 +168,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // User client-side favorites
   const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_FAVORITES);
+    const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
     if (saved) {
       try { return JSON.parse(saved); } catch { return []; }
     }
@@ -123,10 +178,46 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
 
-  // Sync favorites
+  // Auto-persist all arrays to localStorage
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_FAVORITES, JSON.stringify(favorites));
+    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.BUSINESSES, JSON.stringify(businesses));
+  }, [businesses]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(news));
+  }, [news]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  }, [events]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.OFFERS, JSON.stringify(offers));
+  }, [offers]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DONORS, JSON.stringify(bloodDonors));
+  }, [bloodDonors]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.TUITIONS, JSON.stringify(tuitionListings));
+  }, [tuitionListings]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.TOLETS, JSON.stringify(toLetListings));
+  }, [toLetListings]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
+  }, [reviews]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+  }, [categories]);
 
   // Clean up legacy mock data storage
   useEffect(() => {
@@ -134,7 +225,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('mymensingh_reviews_top_v1');
   }, []);
 
-  // Real Data Fetch (Supports cPanel MySQL or Supabase)
+  // Real Data Fetch (Supports cPanel MySQL or Supabase with non-destructive local merge)
   const refreshData = useCallback(async () => {
     // 1. Check if cPanel MySQL API is configured
     if (isCpanelConfigured()) {
@@ -142,15 +233,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(true);
         const res = await cpanelFetchAll();
         if (res && res.success) {
-          if (Array.isArray(res.businesses)) setBusinesses(res.businesses);
-          if (Array.isArray(res.categories) && res.categories.length > 0) setCategories(res.categories);
-          if (Array.isArray(res.news)) setNews(res.news);
-          if (Array.isArray(res.events)) setEvents(res.events);
-          if (Array.isArray(res.offers)) setOffers(res.offers);
-          if (Array.isArray(res.blood_donors)) setBloodDonors(res.blood_donors);
-          if (Array.isArray(res.tuition_listings)) setTuitionListings(res.tuition_listings);
-          if (Array.isArray(res.to_let_listings)) setToLetListings(res.to_let_listings);
-          if (Array.isArray(res.reviews)) setReviews(res.reviews);
+          if (Array.isArray(res.businesses)) setBusinesses(prev => mergeWithLocal(res.businesses, prev));
+          if (Array.isArray(res.categories) && res.categories.length > 0) setCategories(prev => mergeWithLocal(res.categories, prev));
+          if (Array.isArray(res.news)) setNews(prev => mergeWithLocal(res.news, prev));
+          if (Array.isArray(res.events)) setEvents(prev => mergeWithLocal(res.events, prev));
+          if (Array.isArray(res.offers)) setOffers(prev => mergeWithLocal(res.offers, prev));
+          if (Array.isArray(res.blood_donors)) setBloodDonors(prev => mergeWithLocal(res.blood_donors, prev));
+          if (Array.isArray(res.tuition_listings)) setTuitionListings(prev => mergeWithLocal(res.tuition_listings, prev));
+          if (Array.isArray(res.to_let_listings)) setToLetListings(prev => mergeWithLocal(res.to_let_listings, prev));
+          if (Array.isArray(res.reviews)) setReviews(prev => mergeWithLocal(res.reviews, prev));
           setIsCloudSynced(true);
           return;
         }
@@ -179,7 +270,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order('is_featured', { ascending: false });
 
       if (!bizErr && dbBusinesses !== null) {
-        setBusinesses(dbBusinesses as Business[]);
+        setBusinesses(prev => mergeWithLocal(dbBusinesses as Business[], prev));
         setIsCloudSynced(true);
       } else {
         // Fallback check to places table if businesses table not present
@@ -187,12 +278,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('places')
           .select('*')
           .order('is_featured', { ascending: false });
-        if (!fallback.error && fallback.data !== null) {
-          setBusinesses(fallback.data as Business[]);
+        if (!fallback.error && fallback.data !== null && fallback.data.length > 0) {
+          setBusinesses(prev => mergeWithLocal(fallback.data as Business[], prev));
           setIsCloudSynced(true);
-        } else {
-          setBusinesses([]);
-          setIsCloudSynced(false);
         }
       }
 
@@ -203,7 +291,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('*')
           .order('order_index');
         if (!catErr && dbCat && dbCat.length > 0) {
-          setCategories(dbCat as Category[]);
+          setCategories(prev => mergeWithLocal(dbCat as Category[], prev));
         }
       } catch (err) {
         console.warn('Could not fetch categories from Supabase:', err);
@@ -215,14 +303,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('news')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!newsErr && dbNews !== null) {
-          setNews(dbNews as NewsArticle[]);
-        } else {
-          setNews([]);
+        if (!newsErr && dbNews !== null && dbNews.length > 0) {
+          setNews(prev => mergeWithLocal(dbNews as NewsArticle[], prev));
         }
-      } catch {
-        setNews([]);
-      }
+      } catch {}
 
       // 4. Fetch real events from Supabase
       try {
@@ -230,14 +314,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('events')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!evErr && dbEvents !== null) {
-          setEvents(dbEvents as EventItem[]);
-        } else {
-          setEvents([]);
+        if (!evErr && dbEvents !== null && dbEvents.length > 0) {
+          setEvents(prev => mergeWithLocal(dbEvents as EventItem[], prev));
         }
-      } catch {
-        setEvents([]);
-      }
+      } catch {}
 
       // 5. Fetch real offers from Supabase
       try {
@@ -245,14 +325,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('offers')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!offErr && dbOffers !== null) {
-          setOffers(dbOffers as OfferItem[]);
-        } else {
-          setOffers([]);
+        if (!offErr && dbOffers !== null && dbOffers.length > 0) {
+          setOffers(prev => mergeWithLocal(dbOffers as OfferItem[], prev));
         }
-      } catch {
-        setOffers([]);
-      }
+      } catch {}
 
       // 6. Fetch real blood donors from Supabase
       try {
@@ -260,14 +336,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('blood_donors')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!donErr && dbDonors !== null) {
-          setBloodDonors(dbDonors as BloodDonor[]);
-        } else {
-          setBloodDonors([]);
+        if (!donErr && dbDonors !== null && dbDonors.length > 0) {
+          setBloodDonors(prev => mergeWithLocal(dbDonors as BloodDonor[], prev));
         }
-      } catch {
-        setBloodDonors([]);
-      }
+      } catch {}
 
       // 7. Fetch real tuition listings from Supabase
       try {
@@ -275,14 +347,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('tuition_listings')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!tuiErr && dbTuition !== null) {
-          setTuitionListings(dbTuition as TuitionListing[]);
-        } else {
-          setTuitionListings([]);
+        if (!tuiErr && dbTuition !== null && dbTuition.length > 0) {
+          setTuitionListings(prev => mergeWithLocal(dbTuition as TuitionListing[], prev));
         }
-      } catch {
-        setTuitionListings([]);
-      }
+      } catch {}
 
       // 8. Fetch real to-let listings from Supabase
       try {
@@ -290,14 +358,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('to_let_listings')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!toLetErr && dbToLet !== null) {
-          setToLetListings(dbToLet as ToLetListing[]);
-        } else {
-          setToLetListings([]);
+        if (!toLetErr && dbToLet !== null && dbToLet.length > 0) {
+          const mapped = dbToLet.map((item: any) => ({
+            ...item,
+            location: item.location || item.area || 'ময়মনসিংহ',
+            property_type: item.property_type || item.type || 'Family'
+          }));
+          setToLetListings(prev => mergeWithLocal(mapped as ToLetListing[], prev));
         }
-      } catch {
-        setToLetListings([]);
-      }
+      } catch {}
 
       // 9. Fetch real reviews from Supabase
       try {
@@ -306,14 +375,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (!revErr && dbReviews !== null) {
-          setReviews(dbReviews as Review[]);
-        } else {
-          setReviews([]);
+        if (!revErr && dbReviews !== null && dbReviews.length > 0) {
+          setReviews(prev => mergeWithLocal(dbReviews as Review[], prev));
         }
-      } catch {
-        setReviews([]);
-      }
+      } catch {}
     } catch (e) {
       console.warn('Supabase fetch exception:', e);
       setIsCloudSynced(false);
@@ -361,10 +426,32 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        const res = await supabase.from('businesses').insert([newBusiness]);
-        if (res.error) {
-          await supabase.from('places').insert([newBusiness]);
-        }
+        const cleanPayload = {
+          id: newBusiness.id,
+          name: newBusiness.name,
+          name_bn: newBusiness.name_bn || null,
+          category: newBusiness.category,
+          category_id: newBusiness.category_id || null,
+          category_slug: newBusiness.category_slug,
+          rating: Number(newBusiness.rating) || 5.0,
+          review_count: Number(newBusiness.review_count) || 0,
+          location: newBusiness.location || 'ময়মনসিংহ',
+          area: newBusiness.area || null,
+          district: newBusiness.district || 'ময়মনসিংহ',
+          upazila: newBusiness.upazila || 'ময়মনসিংহ সদর',
+          union_ward: newBusiness.union_ward || null,
+          phone: newBusiness.phone || '',
+          website: newBusiness.website || null,
+          image_url: newBusiness.image_url || '',
+          gallery_images: newBusiness.gallery_images || [],
+          description: newBusiness.description || newBusiness.description_bn || newBusiness.description_en || null,
+          opening_hours: newBusiness.opening_hours || newBusiness.opening_hours_bn || newBusiness.opening_hours_en || null,
+          price_range: newBusiness.price_range || null,
+          is_featured: Boolean(newBusiness.is_featured),
+          latitude: Number(newBusiness.latitude) || 24.755,
+          longitude: Number(newBusiness.longitude) || 90.403,
+        };
+        await supabase.from('businesses').insert([cleanPayload]);
       } catch (err) {
         console.warn('Supabase business insert exception:', err);
       }
@@ -387,10 +474,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        const res = await supabase.from('businesses').update(updatedFields).eq('id', id);
-        if (res.error) {
-          await supabase.from('places').update(updatedFields).eq('id', id);
+        const cleanUpdate: Record<string, any> = {};
+        const allowedCols = [
+          'name', 'name_bn', 'category', 'category_id', 'category_slug',
+          'rating', 'review_count', 'location', 'area', 'district', 'upazila',
+          'union_ward', 'phone', 'website', 'image_url', 'gallery_images',
+          'description', 'opening_hours', 'price_range', 'is_featured',
+          'latitude', 'longitude'
+        ];
+        for (const [k, v] of Object.entries(updatedFields)) {
+          if (allowedCols.includes(k)) cleanUpdate[k] = v;
         }
+        await supabase.from('businesses').update(cleanUpdate).eq('id', id);
       } catch (err) {
         console.warn('Supabase update exception:', err);
       }
@@ -410,7 +505,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (supabase && isSupabaseConfigured()) {
       try {
         await supabase.from('businesses').delete().eq('id', id);
-        await supabase.from('places').delete().eq('id', id);
       } catch (err) {
         console.warn('Supabase delete exception:', err);
       }
@@ -434,7 +528,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('news').insert([newArticle]);
+        const cleanPayload = {
+          id: newArticle.id,
+          title: newArticle.title,
+          title_en: newArticle.title_en || null,
+          excerpt: newArticle.excerpt || (newArticle.content ? newArticle.content.slice(0, 100) : newArticle.title),
+          category: newArticle.category || 'General',
+          date: newArticle.date || new Date().toISOString().split('T')[0],
+          image_url: newArticle.image_url || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957',
+          read_time: newArticle.read_time || '৩ মিনিট পাঠ',
+          content: newArticle.content || newArticle.title
+        };
+        await supabase.from('news').insert([cleanPayload]);
       } catch (e) {
         console.warn('Error inserting news:', e);
       }
@@ -477,7 +582,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('events').insert([newEvent]);
+        const cleanPayload = {
+          id: newEvent.id,
+          title: newEvent.title || newEvent.title_bn,
+          title_bn: newEvent.title_bn || newEvent.title,
+          date: newEvent.date,
+          time: newEvent.time || 'সন্ধ্যা ৬:০০',
+          venue: newEvent.venue || 'ময়মনসিংহ',
+          category: newEvent.category || 'সাধারণ',
+          image_url: newEvent.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819',
+          entry_fee: newEvent.entry_fee || 'Free / উন্মুক্ত',
+          description: newEvent.description || newEvent.title
+        };
+        await supabase.from('events').insert([cleanPayload]);
       } catch (e) {
         console.warn('Error inserting event:', e);
       }
@@ -520,7 +637,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('offers').insert([newOffer]);
+        const cleanPayload = {
+          id: newOffer.id,
+          title: newOffer.title,
+          discount: newOffer.discount || '১০% ছাড়',
+          business_name: newOffer.business_name || 'ময়মনসিংহ পার্টনার',
+          category: newOffer.category || 'শপিং ও ডাইনিং',
+          expiry_date: newOffer.expiry_date || 'সীমিত সময়',
+          promo_code: newOffer.promo_code || 'MYM2026',
+          image_url: newOffer.image_url || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da',
+          description: newOffer.description || newOffer.title
+        };
+        await supabase.from('offers').insert([cleanPayload]);
       } catch (e) {
         console.warn('Error inserting offer:', e);
       }
@@ -563,7 +691,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('blood_donors').insert([newDonor]);
+        const cleanPayload = {
+          id: newDonor.id,
+          name: newDonor.name,
+          blood_group: newDonor.blood_group,
+          upazila: newDonor.upazila || 'ময়মনসিংহ সদর',
+          phone: newDonor.phone,
+          availability: newDonor.availability || 'Available',
+          last_donation: newDonor.last_donation || null
+        };
+        await supabase.from('blood_donors').insert([cleanPayload]);
       } catch (e) {
         console.warn('Error inserting blood donor:', e);
       }
@@ -600,7 +737,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('tuition_listings').insert([newTuition]);
+        const cleanPayload = {
+          id: newTuition.id,
+          title: newTuition.title,
+          class_level: newTuition.class_level,
+          subjects: Array.isArray(newTuition.subjects) ? newTuition.subjects : [newTuition.subjects],
+          location: newTuition.location,
+          salary: String(newTuition.salary),
+          days_per_week: String(newTuition.days_per_week),
+          phone: newTuition.phone,
+          posted_date: newTuition.posted_date || 'আজ'
+        };
+        await supabase.from('tuition_listings').insert([cleanPayload]);
       } catch (e) {
         console.warn('Error inserting tuition:', e);
       }
@@ -637,7 +785,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('to_let_listings').insert([newToLet]);
+        const cleanPayload = {
+          id: newToLet.id,
+          title: newToLet.title,
+          type: (newToLet as any).property_type || newToLet.type || 'Family',
+          rent: String(newToLet.rent),
+          bedrooms: Number(newToLet.bedrooms) || 1,
+          bathrooms: Number(newToLet.bathrooms) || 1,
+          area: (newToLet as any).location || newToLet.area || 'ময়মনসিংহ',
+          phone: newToLet.phone || '',
+          image_url: newToLet.image_url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
+          available_from: newToLet.available_from || 'চলতি মাস'
+        };
+        await supabase.from('to_let_listings').insert([cleanPayload]);
       } catch (e) {
         console.warn('Error inserting to-let:', e);
       }
@@ -749,6 +909,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBloodDonors([]);
     setTuitionListings([]);
     setToLetListings([]);
+    Object.values(STORAGE_KEYS).forEach(k => {
+      if (k !== STORAGE_KEYS.FAVORITES) {
+        localStorage.removeItem(k);
+      }
+    });
   };
 
   // Optional: Seed Supabase database with starter records

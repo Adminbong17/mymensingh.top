@@ -44,65 +44,18 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
-  const sampleSql = `-- Run this in your Supabase SQL Editor:
--- 1. Create Places Table
-create table if not exists public.places (
-  id text primary key,
-  category_id text not null,
-  category_slug text,
-  name_en text not null,
-  name_bn text not null,
-  tagline_en text,
-  tagline_bn text,
-  description_en text,
-  description_bn text,
-  area text,
-  address_en text,
-  address_bn text,
-  latitude numeric,
-  longitude numeric,
-  image_url text,
-  gallery_images text[],
-  phone text,
-  website text,
-  opening_hours_en text,
-  opening_hours_bn text,
-  entry_fee_en text,
-  entry_fee_bn text,
-  rating numeric default 4.8,
-  review_count integer default 0,
-  is_featured boolean default false,
-  tags text[],
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
--- 2. Create Reviews Table
-create table if not exists public.reviews (
-  id text primary key,
-  place_id text references public.places(id) on delete cascade,
-  user_name text not null,
-  rating integer not null check (rating between 1 and 5),
-  comment text not null,
-  status text default 'approved',
-  created_at timestamptz default now()
-);
-
--- 3. Row Level Security (RLS)
-alter table public.places enable row level security;
-alter table public.reviews enable row level security;
-
--- Public can read places and approved reviews
-create policy "Allow public read on places" on public.places for select using (true);
-create policy "Allow public read on reviews" on public.reviews for select using (status = 'approved');
-
--- Allow inserts
-create policy "Allow public insert on places" on public.places for insert with check (true);
-create policy "Allow public update on places" on public.places for update using (true);
-create policy "Allow public delete on places" on public.places for delete using (true);
-create policy "Allow insert on reviews" on public.reviews for insert with check (true);
-create policy "Allow update on reviews" on public.reviews for update using (true);
-create policy "Allow delete on reviews" on public.reviews for delete using (true);
+  const sampleSql = `-- Run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql):
+-- Disable Row Level Security (RLS) so the frontend API can write data seamlessly:
+alter table if exists public.businesses disable row level security;
+alter table if exists public.places disable row level security;
+alter table if exists public.news disable row level security;
+alter table if exists public.events disable row level security;
+alter table if exists public.offers disable row level security;
+alter table if exists public.blood_donors disable row level security;
+alter table if exists public.tuition_listings disable row level security;
+alter table if exists public.to_let_listings disable row level security;
+alter table if exists public.reviews disable row level security;
+alter table if exists public.categories disable row level security;
 `;
 
   const copySql = () => {

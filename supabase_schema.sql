@@ -146,42 +146,16 @@ create table if not exists public.reviews (
 
 -- ====================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
--- ====================================================================
-
-alter table public.categories enable row level security;
-alter table public.businesses enable row level security;
-alter table public.news enable row level security;
-alter table public.events enable row level security;
-alter table public.offers enable row level security;
-alter table public.blood_donors enable row level security;
-alter table public.tuition_listings enable row level security;
-alter table public.to_let_listings enable row level security;
-alter table public.reviews enable row level security;
-
--- Public read policies
-create policy "Allow public read categories" on public.categories for select using (true);
-create policy "Allow public read businesses" on public.businesses for select using (true);
-create policy "Allow public read news" on public.news for select using (true);
-create policy "Allow public read events" on public.events for select using (true);
-create policy "Allow public read offers" on public.offers for select using (true);
-create policy "Allow public read blood donors" on public.blood_donors for select using (true);
-create policy "Allow public read tuitions" on public.tuition_listings for select using (true);
-create policy "Allow public read to-let" on public.to_let_listings for select using (true);
-create policy "Allow public read reviews" on public.reviews for select using (status = 'approved');
-
--- Public insert policies (e.g. users listing businesses, submitting reviews)
-create policy "Allow public insert business" on public.businesses for insert with check (true);
-create policy "Allow public insert reviews" on public.reviews for insert with check (true);
-create policy "Allow public insert blood donor" on public.blood_donors for insert with check (true);
-create policy "Allow public insert tuition" on public.tuition_listings for insert with check (true);
-create policy "Allow public insert to-let" on public.to_let_listings for insert with check (true);
-
--- Admin modification policies
-create policy "Allow full business modify" on public.businesses for all using (true);
-create policy "Allow full review modify" on public.reviews for all using (true);
-create policy "Allow full news modify" on public.news for all using (true);
-create policy "Allow full events modify" on public.events for all using (true);
-create policy "Allow full offers modify" on public.offers for all using (true);
+-- For seamless full-stack directory operations via Supabase REST API & anon key:
+alter table if exists public.categories disable row level security;
+alter table if exists public.businesses disable row level security;
+alter table if exists public.news disable row level security;
+alter table if exists public.events disable row level security;
+alter table if exists public.offers disable row level security;
+alter table if exists public.blood_donors disable row level security;
+alter table if exists public.tuition_listings disable row level security;
+alter table if exists public.to_let_listings disable row level security;
+alter table if exists public.reviews disable row level security;
 
 -- ====================================================================
 -- SEED DATA (MYMENSINGH.TOP INITIAL RECORDS)

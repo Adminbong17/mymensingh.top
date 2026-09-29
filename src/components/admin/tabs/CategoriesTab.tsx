@@ -39,8 +39,12 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
   categories,
   businessesCount
 }) => {
-  const [categoriesList, setCategoriesList] = useState<CategoryItem[]>(() =>
-    categories.map((cat, idx) => ({
+  const [categoriesList, setCategoriesList] = useState<CategoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('mymensingh_admin_categories_list_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return categories.map((cat, idx) => ({
       id: cat.id,
       name: cat.name_bn ? `${cat.name_bn} (${cat.name_en})` : cat.name_en,
       slug: cat.slug,
@@ -49,8 +53,15 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
       status: true,
       order: cat.order_index || idx + 1,
       image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=80&q=80'
-    }))
-  );
+    }));
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('mymensingh_admin_categories_list_v1', JSON.stringify(categoriesList));
+    } catch {}
+  }, [categoriesList]);
+
   const [typeFilter, setTypeFilter] = useState('All Types');
   const [treeSearch, setTreeSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

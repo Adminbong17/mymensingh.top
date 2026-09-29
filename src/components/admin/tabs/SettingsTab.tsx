@@ -25,46 +25,57 @@ export const SettingsTab: React.FC = () => {
   const [activeSubNav, setActiveSubNav] = useState('general');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  // Load saved settings from localStorage if available
+  const savedSettings = (() => {
+    try {
+      const item = localStorage.getItem('mymensingh_platform_settings_v1');
+      return item ? JSON.parse(item) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   // Form states
-  const [siteName, setSiteName] = useState('Mymensingh');
-  const [tagline, setTagline] = useState('People | Community | Development');
+  const [siteName, setSiteName] = useState(savedSettings?.siteName || 'Mymensingh');
+  const [tagline, setTagline] = useState(savedSettings?.tagline || 'People | Community | Development');
   const [description, setDescription] = useState(
-    "Mymensingh's largest community platform for business, education, accommodation, blood donation, news, events and more."
+    savedSettings?.description ||
+      "Mymensingh's largest community platform for business, education, accommodation, blood donation, news, events and more."
   );
-  const [websiteUrl, setWebsiteUrl] = useState('https://mymensingh.top');
-  const [contactEmail, setContactEmail] = useState('info@mymensingh.top');
+  const [websiteUrl, setWebsiteUrl] = useState(savedSettings?.websiteUrl || 'https://mymensingh.top');
+  const [contactEmail, setContactEmail] = useState(savedSettings?.contactEmail || 'info@mymensingh.top');
 
   // Location settings
-  const [division, setDivision] = useState('Mymensingh');
-  const [zilla, setZilla] = useState('Mymensingh');
-  const [upazila, setUpazila] = useState('Muktagacha');
-  const [address, setAddress] = useState('Muktagacha, Mymensingh, Bangladesh');
+  const [division, setDivision] = useState(savedSettings?.division || 'Mymensingh');
+  const [zilla, setZilla] = useState(savedSettings?.zilla || 'Mymensingh');
+  const [upazila, setUpazila] = useState(savedSettings?.upazila || 'Muktagacha');
+  const [address, setAddress] = useState(savedSettings?.address || 'Muktagacha, Mymensingh, Bangladesh');
 
   // Social Links
-  const [fbUrl, setFbUrl] = useState('https://facebook.com/mymensingh');
-  const [ytUrl, setYtUrl] = useState('https://youtube.com/@mymensingh');
-  const [instaUrl, setInstaUrl] = useState('https://instagram.com/mymensingh');
-  const [xUrl, setXUrl] = useState('https://x.com/mymensingh');
-  const [liUrl, setLiUrl] = useState('https://linkedin.com/company/mymensingh');
+  const [fbUrl, setFbUrl] = useState(savedSettings?.fbUrl || 'https://facebook.com/mymensingh');
+  const [ytUrl, setYtUrl] = useState(savedSettings?.ytUrl || 'https://youtube.com/@mymensingh');
+  const [instaUrl, setInstaUrl] = useState(savedSettings?.instaUrl || 'https://instagram.com/mymensingh');
+  const [xUrl, setXUrl] = useState(savedSettings?.xUrl || 'https://x.com/mymensingh');
+  const [liUrl, setLiUrl] = useState(savedSettings?.liUrl || 'https://linkedin.com/company/mymensingh');
 
   // Appearance
-  const [primaryColor, setPrimaryColor] = useState('#16a34a');
-  const [secondaryColor, setSecondaryColor] = useState('#2563eb');
-  const [themeMode, setThemeMode] = useState('Light');
-  const [fontFamily, setFontFamily] = useState('Inter (Default)');
+  const [primaryColor, setPrimaryColor] = useState(savedSettings?.primaryColor || '#16a34a');
+  const [secondaryColor, setSecondaryColor] = useState(savedSettings?.secondaryColor || '#2563eb');
+  const [themeMode, setThemeMode] = useState(savedSettings?.themeMode || 'Light');
+  const [fontFamily, setFontFamily] = useState(savedSettings?.fontFamily || 'Inter (Default)');
 
   // Platform Status
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [allowRegistration, setAllowRegistration] = useState(true);
-  const [allowBusinessListings, setAllowBusinessListings] = useState(true);
-  const [autoApproveListings, setAutoApproveListings] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(savedSettings?.maintenanceMode ?? false);
+  const [allowRegistration, setAllowRegistration] = useState(savedSettings?.allowRegistration ?? true);
+  const [allowBusinessListings, setAllowBusinessListings] = useState(savedSettings?.allowBusinessListings ?? true);
+  const [autoApproveListings, setAutoApproveListings] = useState(savedSettings?.autoApproveListings ?? false);
 
   // Defaults
-  const [defaultLang, setDefaultLang] = useState('English');
-  const [itemsPerPage, setItemsPerPage] = useState('10');
-  const [dateFormat, setDateFormat] = useState('26 Sep 2026');
-  const [timeFormat, setTimeFormat] = useState('12 Hour (AM/PM)');
-  const [timezone, setTimezone] = useState('(GMT +6:00) Dhaka');
+  const [defaultLang, setDefaultLang] = useState(savedSettings?.defaultLang || 'English');
+  const [itemsPerPage, setItemsPerPage] = useState(savedSettings?.itemsPerPage || '10');
+  const [dateFormat, setDateFormat] = useState(savedSettings?.dateFormat || '26 Sep 2026');
+  const [timeFormat, setTimeFormat] = useState(savedSettings?.timeFormat || '12 Hour (AM/PM)');
+  const [timezone, setTimezone] = useState(savedSettings?.timezone || '(GMT +6:00) Dhaka');
 
   const subNavItems = [
     { id: 'general', label: 'General Settings', desc: 'Site information, basic configuration', icon: SettingsIcon },
