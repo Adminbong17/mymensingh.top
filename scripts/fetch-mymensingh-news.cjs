@@ -88,9 +88,9 @@ function fetchUrl(url, headers = {}) {
         }
         return fetchUrl(redirectUrl, headers).then(resolve).catch(reject);
       }
-      let body = '';
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => resolve(body));
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
     });
 
     req.on('error', reject);
@@ -113,9 +113,9 @@ function postBatchexecute(body) {
         'Content-Length': Buffer.byteLength(postData)
       }
     }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve(data));
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
     });
     req.on('error', reject);
     req.setTimeout(10000, () => {
@@ -226,6 +226,7 @@ function cleanHtml(str) {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/\uFFFD+/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
