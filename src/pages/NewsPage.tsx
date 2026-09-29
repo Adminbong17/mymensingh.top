@@ -21,7 +21,16 @@ export const NewsPage: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null);
 
-  const categories = ['All', 'Infrastructure', 'Education', 'Tourism', 'Business', 'Community'];
+  const categories = [
+    'All',
+    'উন্নয়ন ও প্রশাসন',
+    'আইন ও অপরাধ',
+    'শিক্ষা ও ক্যাম্পাস',
+    'স্বাস্থ্য ও চিকিৎসা',
+    'খেলাধুলা',
+    'বাণিজ্য ও অর্থনীতি',
+    'নাগরিক জীবন'
+  ];
 
   const filteredNews = news.filter((item) => {
     if (selectedCategory !== 'All' && item.category !== selectedCategory) {

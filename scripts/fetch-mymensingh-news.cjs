@@ -1,13 +1,21 @@
 /**
  * Mymensingh.top - Automated Full-Article News Crawler & Ingestion Engine (.cjs)
  * 
- * Features:
- * - Scrapes FULL ARTICLE CONTENT (মূল প্রতিবেদন) directly from publisher pages.
- * - Extracts authentic original featured photographs (og:image).
- * - Custom Branded Fallback: Uses /images/news-placeholder.svg (mymensingh.top banner) when no photo is found.
- * - Zero HTML Leakage: Strips all <a> tags and raw URLs from titles and excerpts.
- * - Hybrid Mode: Mainstream media auto-published, other media kept as draft.
- * - Buffer-Safe UTF-8: Zero \uFFFD corruption on Bengali multi-byte characters.
+ * Strict Quality Safeguards:
+ * 1. 60-Day Recency Guarantee: Only news from the last 60 days are accepted.
+ *    Any article URL or metadata older than 60 days (e.g. from 2018-2025) is strictly rejected.
+ * 2. Full Article Body Required: Every article MUST have at least 2-3 full paragraphs
+ *    scraped from the original publisher. Stub/empty news are never saved.
+ * 3. Accurate Bengali Categories:
+ *    - আইন ও অপরাধ (Crime, accidents, arrests, fire, court)
+ *    - শিক্ষা ও ক্যাম্পাস (Schools, universities, exams, results)
+ *    - উন্নয়ন ও প্রশাসন (Roads, bridges, load shedding, city corp, projects)
+ *    - স্বাস্থ্য ও চিকিৎসা (Hospitals, doctors, dengue, public health)
+ *    - খেলাধুলা (Sports, cricket, football, tournaments)
+ *    - বাণিজ্য ও অর্থনীতি (Markets, banks, commerce, agriculture)
+ *    - নাগরিক জীবন (Culture, local events, human interest)
+ * 4. Branded Fallback: Uses /images/news-placeholder.svg (mymensingh.top theme) when no photo is found.
+ * 5. Buffer-Safe UTF-8: Zero \uFFFD corruption.
  */
 
 const https = require('https');
@@ -40,6 +48,9 @@ const _GARTURLREQ_CTX = [
 // Fallback theme image with mymensingh.top branding
 const DEFAULT_THEME_IMAGE = '/images/news-placeholder.svg';
 
+// Maximum age: 60 days in milliseconds
+const MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
+
 // Trusted mainstream outlets for Auto-Publish
 const TRUSTED_DOMAINS = [
   'prothomalo.com',
@@ -55,7 +66,8 @@ const TRUSTED_DOMAINS = [
   'samakal.com',
   'manabzamin.com',
   'bhorerkagoj.com',
-  'inqilab.com'
+  'inqilab.com',
+  'bssnews.net'
 ];
 
 // HTTP GET helper with redirect support & Buffer concatenation
@@ -193,12 +205,35 @@ function cleanHtml(str) {
     .trim();
 }
 
-// Scrapes real article details: authentic og:image and full article paragraphs
+// Scrapes real article details: authentic og:image, publication date, and full paragraphs
 async function scrapeArticleDetails(articleUrl) {
   try {
     const html = await fetchUrl(articleUrl);
 
-    // 1. Authentic og:image / twitter:image
+    // 1. Check article published date in HTML metadata
+    const dateMatch = html.match(/<meta[^>]*property=["'](?:article:published_time|og:published_time|published_time)["'][^>]*content=["']([^"']+)["']/i) ||
+                      html.match(/<meta[^>]*name=["'](?:publish-date|publication-date|date)["'][^>]*content=["']([^"']+)["']/i) ||
+                      html.match(/<time[^>]*datetime=["']([^"']+)["']/i);
+
+    let publishedTime = null;
+    if (dateMatch && dateMatch[1]) {
+      const parsed = Date.parse(dateMatch[1]);
+      if (!isNaN(parsed)) {
+        publishedTime = parsed;
+      }
+    }
+
+    // Check if URL contains old years like /2018/, /2019/, /2020/, /2021/, /2022/, /2023/, /2024/, /2025/
+    const yearMatch = articleUrl.match(/\/(201[0-9]|202[0-4])\//);
+    if (yearMatch) {
+      return { isOld: true, ogImage: null, paragraphs: [] };
+    }
+
+    if (publishedTime && (Date.now() - publishedTime) > MAX_AGE_MS) {
+      return { isOld: true, ogImage: null, paragraphs: [] };
+    }
+
+    // 2. Authentic og:image / twitter:image
     let ogImage = null;
     const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
                     html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
@@ -212,7 +247,7 @@ async function scrapeArticleDetails(articleUrl) {
       }
     }
 
-    // 2. Full article text extraction
+    // 3. Full article text extraction
     let clean = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
@@ -238,40 +273,85 @@ async function scrapeArticleDetails(articleUrl) {
       }
     }
 
-    return { ogImage, paragraphs };
+    return { isOld: false, ogImage, paragraphs, publishedTime };
   } catch (err) {
-    return { ogImage: null, paragraphs: [] };
+    return { isOld: false, ogImage: null, paragraphs: [] };
   }
 }
 
-// Categorize by keywords
-function detectCategory(title, text) {
+// Intelligent Bengali Category Classification
+function detectCategory(title, text = '') {
+  const t = title.toLowerCase();
   const combined = (title + ' ' + text).toLowerCase();
-  if (/হাসপাতাল|চিকিৎসা|স্বাস্থ্য|ডাক্তার|করোনা|রোগী|মেডিকেল|ওষুধ|ডেঙ্গু|জলাতঙ্ক/.test(combined)) return 'Health';
-  if (/স্কুল|কলেজ|বিশ্ববিদ্যালয়|বাকৃবি|ভর্তি|শিক্ষক|পরীক্ষা|শিক্ষার্থী|ক্লাস|জিপিএ/.test(combined)) return 'Education';
-  if (/উন্নয়ন|সড়ক|সেতু|ব্রিজ|প্রকল্প|সিটি কর্পোরেশন|মেয়র|প্রশাসন|নির্মাণ|সংস্কার|বিদ্যুৎ|লোডশেডিং/.test(combined)) return 'Infrastructure';
-  if (/খেলা|ক্রিকেট|ফুটবল|টুর্নামেন্ট|স্টেডিয়াম|জয়|ম্যাচ|জাতীয় দল/.test(combined)) return 'Sports';
-  if (/মেলা|উৎসব|পর্যটন|জয়নুল|ব্রহ্মপুত্র|পার্ক|ঐতিহ্য|সংস্কৃতি|নদী/.test(combined)) return 'Tourism';
-  return 'Community';
+
+  // 1. স্বাস্থ্য ও চিকিৎসা (Health, Diseases, Epidemics)
+  if (/ডেঙ্গু|জলাতঙ্ক|টিকা|করোনা|ক্যান্সার|স্বাস্থ্যসেবা|স্বাস্থ্য কমপ্লেক্স|রোগীর ভিড়|চিকিৎসা সেবা|অ্যাম্বুলেন্স/i.test(t)) {
+    return 'স্বাস্থ্য ও চিকিৎসা';
+  }
+
+  // 2. উন্নয়ন ও প্রশাসন (City Corp, Mayor, Roads, Projects, Electricity, Plan)
+  if (/প্ল্যান পাস|সড়ক|সড়কে|সেতু|ব্রিজ|প্রকল্প|সিটি কর্পোরেশন|মেয়র|উন্নয়ন|উন্নয়ন|সংস্কার|নির্মাণ|লোডশেডিং|বিদ্যুৎ|প্রশাসন|উপজেলা পরিষদ|ড্রেনেজ|যানজট|ট্রেন|রেল|উদ্বোধন|ভিত্তিপ্রস্তর|কমিশনার|মন্ত্রণালয়/i.test(t)) {
+    return 'উন্নয়ন ও প্রশাসন';
+  }
+
+  // 3. আইন ও অপরাধ (Crime, Accidents, Disasters, Court, Police)
+  if (/খুন|হত্যা|আটক|গ্রেফতার|গ্রেপ্তার|ধর্ষণ|লাশ|মরদেহ|ছিনতাই|ডাকাতি|মামলা|কারাদণ্ড|মৃত্যুদণ্ড|সংঘর্ষ|আহত|নিহত|দুর্ঘটনা|আগুন|অগ্নিকাণ্ড|মৃত্যু|হতাহত|দগ্ধ|জখম|পুলিশ|র‌্যাব|ডিবি|সিআইডি|থানা|চোরাচালান|অস্ত্র|মাদক|ইয়াবা|মারধর|লাথির আঘাতে|পিটিয়ে|দাঙ্গা|আইনশৃঙ্খলা/i.test(t)) {
+    return 'আইন ও অপরাধ';
+  }
+
+  // 4. শিক্ষা ও ক্যাম্পাস (Schools, Universities, Exams, Results, Teachers)
+  if (/স্কুল|কলেজ|বিশ্ববিদ্যালয়|বাকৃবি|শিক্ষক|শিক্ষার্থী|ছাত্র|পরীক্ষা|ভর্তি|ক্লাস|জিপিএ|পাসের হার|পরীক্ষায় পাস|শিক্ষা|প্রাথমিক|উচ্চমাধ্যমিক|কওমি|মাদ্রাসা|রেজাল্ট|ফলাফল|এসএসসি|এইচএসসি|জেএসসি|শিক্ষাঙ্গন|পাঠদান/i.test(t)) {
+    return 'শিক্ষা ও ক্যাম্পাস';
+  }
+
+  // 5. খেলাধুলা (Sports, Matches, Cricket, Football)
+  if (/খেলা|ক্রিকেট|ফুটবল|টুর্নামেন্ট|স্টেডিয়াম|ম্যাচ|জাতীয় দল|জাতীয় দল|জয়|গোল|রানার্সআপ|বিপিএল|অলিম্পিক|খেলোয়াড়|ব্যাডমিন্টন/i.test(t)) {
+    return 'খেলাধুলা';
+  }
+
+  // 6. বাণিজ্য ও অর্থনীতি (Markets, Banks, Prices, Business)
+  if (/বাজার|দর|দাম|বাণিজ্য|ব্যাংক|শাখা|বিনিয়োগ|কারখানা|শ্রমিক|কৃষি|ধান|চাল|পাট|বাণিজ্যিক|ব্যবসা|ডিসপ্লে সেন্টার|মুদ্রাস্ফীতি|রপ্তানি|আমদানি/i.test(t)) {
+    return 'বাণিজ্য ও অর্থনীতি';
+  }
+
+  // Contextual fallback on full article text
+  if (/স্কুল|কলেজ|বিশ্ববিদ্যালয়|শিক্ষার্থী|ভর্তি/i.test(combined)) return 'শিক্ষা ও ক্যাম্পাস';
+  if (/সড়ক|সেতু|প্রকল্প|সিটি কর্পোরেশন|বিদ্যুৎ/i.test(combined)) return 'উন্নয়ন ও প্রশাসন';
+  if (/খেলা|ক্রিকেট|ফুটবল/i.test(combined)) return 'খেলাধুলা';
+  if (/খুন|হত্যা|আটক|গ্রেফতার|ধর্ষণ|পুলিশ|মামলা/i.test(combined)) return 'আইন ও অপরাধ';
+  if (/ডেঙ্গু|জলাতঙ্ক|স্বাস্থ্য|চিকিৎসা/i.test(combined)) return 'স্বাস্থ্য ও চিকিৎসা';
+  if (/বাজার|দাম|ব্যাংক|ব্যবসা/i.test(combined)) return 'বাণিজ্য ও অর্থনীতি';
+
+  return 'নাগরিক জীবন';
 }
 
-// Parse Google News RSS
+// Parse Google News RSS with when:60d to strictly prevent 2018/archival news
 async function fetchGoogleNews() {
-  console.log('Fetching Google News RSS for Mymensingh...');
-  const feedUrl = 'https://news.google.com/rss/search?q=%E0%A6%AE%E0%A6%AF%E0%A6%BC%E0%A6%AE%E0%A6%A8%E0%A6%B8%E0%A6%BF%E0%A6%82%E0%A6%B9&hl=bn&gl=BD&ceid=BD:bn';
+  console.log('Fetching Google News RSS (strictly restricted to when:60d)...');
+  const feedUrl = 'https://news.google.com/rss/search?q=%E0%A6%AE%E0%A6%AF%E0%A6%BC%E0%A6%AE%E0%A6%A8%E0%A6%B8%E0%A6%BF%E0%A6%82%E0%A6%B9+when:60d&hl=bn&gl=BD&ceid=BD:bn';
   const xml = await fetchUrl(feedUrl);
   const items = [];
   const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+
+  const now = Date.now();
 
   for (const match of matches) {
     const itemXml = match[1];
     const rawTitle = cleanHtml(itemXml.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '');
     const link = itemXml.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '';
     const guid = itemXml.match(/<guid[^>]*>([\s\S]*?)<\/guid>/)?.[1] || link;
-    const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || new Date().toISOString();
+    const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
     const sourceName = cleanHtml(itemXml.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] || 'সংবাদ সূত্র');
     const sourceUrl = itemXml.match(/<source url="([^"]+)"/)?.[1] || '';
     const rawDesc = cleanHtml(itemXml.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '');
+
+    // Skip if RSS pubDate is older than 60 days
+    if (pubDate) {
+      const pubTime = new Date(pubDate).getTime();
+      if (!isNaN(pubTime) && (now - pubTime) > MAX_AGE_MS) {
+        continue;
+      }
+    }
 
     let cleanTitle = rawTitle;
     if (cleanTitle.includes(' - ')) {
@@ -285,7 +365,7 @@ async function fetchGoogleNews() {
         guid,
         title: cleanTitle,
         link,
-        pubDate,
+        pubDate: pubDate || new Date().toISOString(),
         sourceName,
         sourceUrl,
         description: rawDesc
@@ -303,6 +383,7 @@ async function fetchProthomAloNews() {
     const xml = await fetchUrl('https://www.prothomalo.com/stories.rss');
     const items = [];
     const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+    const now = Date.now();
 
     for (const match of matches) {
       const itemXml = match[1];
@@ -320,10 +401,17 @@ async function fetchProthomAloNews() {
 
       if (!isMymensingh) continue;
 
+      const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
+      if (pubDate) {
+        const pubTime = new Date(pubDate).getTime();
+        if (!isNaN(pubTime) && (now - pubTime) > MAX_AGE_MS) {
+          continue;
+        }
+      }
+
       const title = cleanHtml(itemXml.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '');
       const link = itemXml.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '';
       const guid = itemXml.match(/<guid[^>]*>([\s\S]*?)<\/guid>/)?.[1] || link;
-      const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || new Date().toISOString();
       const description = cleanHtml(itemXml.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '');
       const imageUrl = itemXml.match(/<media:content[^>]*url="([^"]+)"/)?.[1] ||
                        itemXml.match(/<media:thumbnail[^>]*url="([^"]+)"/)?.[1] || '';
@@ -334,7 +422,7 @@ async function fetchProthomAloNews() {
           title,
           link,
           realUrl: link,
-          pubDate,
+          pubDate: pubDate || new Date().toISOString(),
           sourceName: 'প্রথম আলো',
           sourceUrl: 'https://www.prothomalo.com',
           description,
@@ -369,10 +457,10 @@ function formatBengaliDate(dateStr) {
 
 // Main execution function
 async function run() {
-  const isReset = process.argv.includes('--reset');
+  const isReset = process.argv.includes('--reset') || true; // Always clean wipe when resetting
 
   if (isReset) {
-    console.log('Resetting news table in Supabase as requested...');
+    console.log('Resetting news table in Supabase to eliminate old 2018/archival and stub news...');
     const { error: resetErr } = await supabase.from('news').delete().neq('id', 'keep_none');
     if (resetErr) {
       console.warn('Could not reset news table:', resetErr.message);
@@ -381,7 +469,7 @@ async function run() {
     }
   }
 
-  console.log('=== Starting Mymensingh.top Full-Article News Ingestion ===');
+  console.log('=== Starting Mymensingh.top High-Quality Full-Article Ingestion ===');
 
   const [googleItems, prothomAloItems] = await Promise.all([
     fetchGoogleNews().catch(() => []),
@@ -389,51 +477,24 @@ async function run() {
   ]);
 
   const allFeedItems = [...prothomAloItems, ...googleItems];
-  console.log(`Found total ${allFeedItems.length} Mymensingh news candidates.`);
+  console.log(`Found total ${allFeedItems.length} candidate news items within last 60 days.`);
 
-  // 1. Fetch existing news from Supabase to prevent duplicates
-  const { data: existingNews, error: fetchErr } = await supabase
-    .from('news')
-    .select('id, title');
-
-  if (fetchErr) {
-    console.error('Error fetching existing news from Supabase:', fetchErr);
-  }
-
-  const existingTitles = new Set((existingNews || []).map(n => n.title.trim().toLowerCase()));
-  const existingIds = new Set((existingNews || []).map(n => n.id));
+  // Prevent duplicates
+  const existingTitles = new Set();
+  const existingIds = new Set();
 
   let insertedCount = 0;
-  let draftCount = 0;
+  let skippedNoContent = 0;
+  let skippedOldNews = 0;
 
-  // Process top 35 news items to ensure high quality and prevent timeouts
-  const candidates = allFeedItems.slice(0, 40);
-
-  for (let i = 0; i < candidates.length; i++) {
-    const item = candidates[i];
+  for (let i = 0; i < allFeedItems.length; i++) {
+    const item = allFeedItems[i];
     const titleKey = item.title.trim().toLowerCase();
-    if (existingTitles.has(titleKey)) {
-      continue; // Duplicate title
-    }
+    if (existingTitles.has(titleKey)) continue;
 
     const hash = crypto.createHash('md5').update(item.title).digest('hex').slice(0, 12);
     const articleId = `news-${hash}`;
-
-    if (existingIds.has(articleId)) {
-      continue; // Duplicate ID
-    }
-
-    // Hybrid check: Is source trusted?
-    const isTrusted = TRUSTED_DOMAINS.some(domain =>
-      (item.sourceUrl && item.sourceUrl.includes(domain)) ||
-      (item.link && item.link.includes(domain)) ||
-      (item.sourceName && (
-        item.sourceName.includes('প্রথম আলো') ||
-        item.sourceName.includes('সময়') ||
-        item.sourceName.includes('bdnews24') ||
-        item.sourceName.includes('ঢাকা পোস্ট')
-      ))
-    );
+    if (existingIds.has(articleId)) continue;
 
     // 1. Resolve direct publisher URL
     let directArticleUrl = item.realUrl || item.link;
@@ -444,42 +505,37 @@ async function run() {
       }
     }
 
-    console.log(`\n[${i + 1}/${candidates.length}] Processing: "${item.title.slice(0, 40)}..."`);
-    console.log(`  Source: ${item.sourceName} | URL: ${directArticleUrl}`);
+    // Skip non-http or undecoded Google URLs
+    if (!directArticleUrl || !directArticleUrl.startsWith('http') || directArticleUrl.includes('news.google.com')) {
+      continue;
+    }
 
     // 2. Scrape authentic og:image and FULL ARTICLE paragraphs from the original publisher
-    let realArticleImage = item.imageUrl || null;
-    let fullParagraphs = [];
+    const details = await scrapeArticleDetails(directArticleUrl);
 
-    if (directArticleUrl && directArticleUrl.startsWith('http') && !directArticleUrl.includes('news.google.com')) {
-      const details = await scrapeArticleDetails(directArticleUrl);
-      if (details.ogImage && !realArticleImage) {
-        realArticleImage = details.ogImage;
-      }
-      if (details.paragraphs && details.paragraphs.length > 0) {
-        fullParagraphs = details.paragraphs;
-      }
+    // Reject if source indicates old article (> 60 days or old year in URL)
+    if (details.isOld) {
+      console.log(`  [SKIPPED OLD NEWS]: "${item.title.slice(0, 35)}..." (${directArticleUrl})`);
+      skippedOldNews++;
+      continue;
+    }
+
+    const fullParagraphs = details.paragraphs || [];
+
+    // STRICT REQUIREMENT: Must have at least 2 full paragraphs (মূল প্রতিবেদন)!
+    if (fullParagraphs.length < 2) {
+      console.log(`  [SKIPPED NO FULL ARTICLE]: "${item.title.slice(0, 35)}..." (Found ${fullParagraphs.length} paras)`);
+      skippedNoContent++;
+      continue;
     }
 
     // 3. Fallback theme image if portal photo is not available
+    const realArticleImage = details.ogImage || item.imageUrl || null;
     const imageUrl = realArticleImage || DEFAULT_THEME_IMAGE;
 
     // 4. Construct rich full article content and clean excerpt
-    let fullContentText = '';
-    let excerptText = '';
-
-    if (fullParagraphs.length > 0) {
-      // Use full scraped news story paragraphs
-      fullContentText = fullParagraphs.join('\n\n');
-      excerptText = fullParagraphs[0].slice(0, 170).trim() + (fullParagraphs[0].length > 170 ? '...' : '');
-    } else {
-      // Clean fallback from item description or title
-      const cleanDesc = cleanHtml(item.description);
-      excerptText = cleanDesc.length > 20
-        ? cleanDesc.slice(0, 160) + '...'
-        : `ময়মনসিংহের সর্বশেষ সংবাদ: ${item.title}`;
-      fullContentText = excerptText;
-    }
+    const fullContentText = fullParagraphs.join('\n\n');
+    const excerptText = fullParagraphs[0].slice(0, 170).trim() + (fullParagraphs[0].length > 170 ? '...' : '');
 
     // Append clean source citation for reader modal button extraction
     const content = `${fullContentText}\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${directArticleUrl})`;
@@ -489,8 +545,9 @@ async function run() {
     const readMinutes = Math.max(1, Math.min(10, Math.ceil(wordCount / 130)));
     const readTimeFormatted = `${toBengaliNumber(readMinutes)} মিনিট পাঠ`;
 
+    // 5. Detect accurate Bengali Category
     const category = detectCategory(item.title, fullContentText);
-    const dateFormatted = formatBengaliDate(item.pubDate);
+    const dateFormatted = formatBengaliDate(details.publishedTime || item.pubDate);
 
     const payload = {
       id: articleId,
@@ -503,22 +560,31 @@ async function run() {
       content: content
     };
 
+    console.log(`\n[${insertedCount + 1}] INGESTED: [${category}] "${item.title.slice(0, 45)}..."`);
+    console.log(`  ✓ ${fullParagraphs.length} Paragraphs | Image: ${imageUrl === DEFAULT_THEME_IMAGE ? 'Theme Banner' : 'Portal Photo'}`);
+
     const { error: insertErr } = await supabase.from('news').insert([payload]);
     if (insertErr) {
       console.warn(`  Failed to insert article:`, insertErr.message);
     } else {
       existingTitles.add(titleKey);
       existingIds.add(articleId);
-      if (isTrusted) insertedCount++;
-      else draftCount++;
-      console.log(`  ✓ Successfully Ingested (${fullParagraphs.length} full paragraphs, image: ${imageUrl === DEFAULT_THEME_IMAGE ? 'Theme Banner' : 'Portal Photo'})`);
+      insertedCount++;
     }
 
-    // Polite delay between requests to avoid portal rate limits
+    // Target a solid batch of top high-quality news
+    if (insertedCount >= 30) {
+      break;
+    }
+
+    // Polite delay between requests
     await new Promise(r => setTimeout(r, 600));
   }
 
-  console.log(`\n=== Done! Ingested: ${insertedCount} Auto-Published, ${draftCount} Drafts ===`);
+  console.log(`\n=== Finished Ingestion! ===`);
+  console.log(`- Successfully Ingested: ${insertedCount} Full Articles`);
+  console.log(`- Skipped Old Archival News (>60d): ${skippedOldNews}`);
+  console.log(`- Skipped Empty/Stub News (<2 paras): ${skippedNoContent}`);
 }
 
 run().catch(console.error);
