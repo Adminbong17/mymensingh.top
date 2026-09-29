@@ -64,6 +64,7 @@ export interface NewsArticle {
   image_url: string;
   read_time: string;
   content: string;
+  created_at?: string;
 }
 
 export interface EventItem {

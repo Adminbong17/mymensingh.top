@@ -19,6 +19,7 @@ import {
   normalizePunctuation,
   sortNewsByDate
 } from '../lib/newsUtils';
+import { formatNewsTimeDisplay } from '../lib/newsTime';
 
 const THEME_IMAGE = '/images/news-placeholder.svg';
 
@@ -218,16 +219,28 @@ export const NewsPage: React.FC = () => {
                       </div>
 
                       <div className="p-5 space-y-2">
-                        <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                            {item.date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            {item.read_time}
-                          </span>
-                        </div>
+                        {(() => {
+                          const timeDisplay = formatNewsTimeDisplay(item.created_at, item.date);
+                          return (
+                            <div className="flex items-center gap-2.5 text-[11px] font-medium">
+                              <span className="flex items-center gap-1">
+                                {timeDisplay.isWithin24h ? (
+                                  <Clock className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                                ) : (
+                                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                                )}
+                                <span className={timeDisplay.isWithin24h ? 'text-emerald-700 font-bold' : 'text-slate-500'}>
+                                  {timeDisplay.displayDate}
+                                </span>
+                              </span>
+                              <span className="text-slate-300">•</span>
+                              <span className="flex items-center gap-1 text-slate-400">
+                                <Clock className="w-3 h-3 text-slate-400" />
+                                {item.read_time}
+                              </span>
+                            </div>
+                          );
+                        })()}
 
                         <h4 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
                           {cleanItemTitle}
@@ -314,16 +327,32 @@ export const NewsPage: React.FC = () => {
 
               {/* Modal Body */}
               <div className="overflow-y-auto p-6 sm:p-8 space-y-4">
-                <div className="flex items-center gap-3 text-xs text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                    {activeArticle.date}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    {activeArticle.read_time}
-                  </span>
-                </div>
+                {(() => {
+                  const modalTime = formatNewsTimeDisplay(activeArticle.created_at, activeArticle.date);
+                  return (
+                    <div className="flex items-center gap-2.5 text-xs text-slate-500 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        {modalTime.isWithin24h ? (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                            <strong className="text-emerald-700 font-bold">{modalTime.timeAgoText}</strong>
+                            <span className="text-slate-400">({activeArticle.date})</span>
+                          </>
+                        ) : (
+                          <>
+                            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{activeArticle.date}</span>
+                          </>
+                        )}
+                      </span>
+                      <span className="text-slate-300">•</span>
+                      <span className="flex items-center gap-1 text-slate-400">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        {activeArticle.read_time}
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
                   {modalTitle}
