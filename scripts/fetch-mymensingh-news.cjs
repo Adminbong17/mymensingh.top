@@ -1,5 +1,5 @@
 /**
- * Mymensingh.top - Automated Hybrid News Fetcher & Ingestion Engine
+ * Mymensingh.top - Automated Hybrid News Fetcher & Ingestion Engine (.cjs)
  * 
  * Sources:
  * 1. Google News RSS for "ময়মনসিংহ"
