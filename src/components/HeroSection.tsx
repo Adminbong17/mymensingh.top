@@ -66,16 +66,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
         </p>
 
         {/* Big Search Box Container */}
-        <div className="pt-2 w-full max-w-4xl mx-auto">
+        <div className="pt-2 w-full max-w-5xl xl:max-w-6xl mx-auto">
           <form
             onSubmit={handleSearchSubmit}
-            className="w-full bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl border border-white/20 text-slate-800"
+            className="w-full bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl border border-white/20 text-slate-800"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 items-stretch">
               
               {/* Field 1: কী খুঁজছেন (Keyword) */}
-              <div className="text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+              <div className="lg:col-span-4 col-span-1 sm:col-span-2 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
+                <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   কী খুঁজছেন?
                 </label>
                 <div className="flex items-center gap-2">
@@ -91,8 +91,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
               </div>
 
               {/* Field 2: জেলা (District) */}
-              <div className="text-left bg-slate-50 rounded-2xl p-2.5 px-3 border border-slate-200/70">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 rounded-2xl p-2.5 px-3 border border-slate-200/70 flex flex-col justify-center">
+                <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   জেলা
                 </label>
                 <div className="flex items-center gap-2">
@@ -107,8 +107,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
               </div>
 
               {/* Field 3: উপজেলা (Upazila) */}
-              <div className="text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
+                <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   উপজেলা
                 </label>
                 <div className="flex items-center gap-2">
@@ -129,8 +129,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
               </div>
 
               {/* Field 4: ইউনিয়ন / সিটি (Union/City) */}
-              <div className="text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
+                <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   ইউনিয়ন / সিটি
                 </label>
                 <div className="flex items-center gap-2">
@@ -139,9 +139,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
                     value={selectedUnion}
                     onChange={(e) => setSelectedUnion(e.target.value)}
                     disabled={!selectedUpazila}
-                    className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-800 outline-hidden cursor-pointer disabled:text-slate-400"
+                    className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-800 outline-hidden cursor-pointer disabled:text-slate-400 truncate"
                   >
-                    <option value="">{selectedUpazila ? 'সকল ইউনিয়ন / ওয়ার্ড' : 'আগে উপজেলা নির্বাচন করুন'}</option>
+                    <option value="" className="truncate">
+                      {selectedUpazila ? 'সকল ইউনিয়ন / ওয়ার্ড' : 'উপজেলা নির্বাচন'}
+                    </option>
                     {unions.map((u) => (
                       <option key={u} value={u}>
                         {u}
@@ -151,17 +153,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
                 </div>
               </div>
 
-            </div>
+              {/* Field 5: Action Submit Button */}
+              <div className="lg:col-span-2 col-span-1 sm:col-span-2 lg:col-auto flex items-stretch">
+                <button
+                  type="submit"
+                  className="w-full h-full min-h-[50px] sm:min-h-[54px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md sm:shadow-lg shadow-emerald-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <Search className="w-4 h-4 shrink-0" />
+                  <span>সন্ধান করুন</span>
+                </button>
+              </div>
 
-            {/* Big Action Submit Button */}
-            <div className="pt-3 flex justify-end">
-              <button
-                type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-emerald-600/30 transition-all transform hover:-translate-y-0.5"
-              >
-                <Search className="w-5 h-5" />
-                <span>সন্ধান করুন (Search)</span>
-              </button>
             </div>
           </form>
         </div>
