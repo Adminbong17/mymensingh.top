@@ -5,12 +5,15 @@
  * 1. Google News RSS for "ময়মনসিংহ"
  * 2. Prothom Alo Stories RSS (filtered for Mymensingh)
  * 
- * Hybrid Mode:
- * - Tier 1 (Trusted Mainstream Media): Auto-published directly to live website.
- * - Tier 2 (Other Sources): Stored as Draft for Admin 1-click approval.
+ * Features:
+ * - Real Portal Photos: Extracts exact og:image from the publisher's article.
+ * - Hybrid Mode: Mainstream media auto-published, other media kept as draft.
+ * - Google News Link Decoder: Resolves Google News RSS redirect to real article URLs.
+ * - Backfill Updater: Replaces placeholder images with real portal photographs.
  */
 
 const https = require('https');
+const http = require('http');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -19,6 +22,22 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL |
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94ZHl3aGdjZHFrZHhtbnpsb2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODI5MjgsImV4cCI6MjEwNjE1ODkyOH0.ZF2YPPq1Y4dyyinHBUXJjuw5bzsQT4yBZBOqYwlBP14';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const BATCHEXECUTE_URL = 'https://news.google.com/_/DotsSplashUi/data/batchexecute';
+const _GARTURLREQ_CTX = [
+  ['X', 'X', ['X', 'X'], null, null, 1, 1, 'US:en', null, 1, null, null, null, null, null, 0, 1],
+  'X',
+  'X',
+  1,
+  [1, 1, 1],
+  1,
+  1,
+  null,
+  0,
+  0,
+  null,
+  0
+];
 
 // Trusted mainstream outlets for Auto-Publish
 const TRUSTED_DOMAINS = [
@@ -37,7 +56,7 @@ const TRUSTED_DOMAINS = [
   'bhorerkagoj.com'
 ];
 
-// Fallback category images
+// Fallback category images (only used if publisher has no image at all)
 const CATEGORY_IMAGES = {
   Infrastructure: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80',
   Education: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80',
@@ -47,10 +66,20 @@ const CATEGORY_IMAGES = {
   Community: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80'
 };
 
-// HTTP GET helper
+// HTTP GET helper with redirect support
 function fetchUrl(url, headers = {}) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', ...headers } }, (res) => {
+    const isHttps = url.startsWith('https:');
+    const client = isHttps ? https : http;
+
+    const req = client.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'bn,en-US;q=0.7,en;q=0.3',
+        ...headers
+      }
+    }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         let redirectUrl = res.headers.location;
         if (!redirectUrl.startsWith('http')) {
@@ -63,22 +92,125 @@ function fetchUrl(url, headers = {}) {
       res.on('data', chunk => body += chunk);
       res.on('end', () => resolve(body));
     });
+
     req.on('error', reject);
-    req.setTimeout(15000, () => {
+    req.setTimeout(12000, () => {
       req.destroy();
       reject(new Error('Request timeout'));
     });
   });
 }
 
+// POST helper for Google batchexecute
+function postBatchexecute(body) {
+  return new Promise((resolve, reject) => {
+    const postData = 'f.req=' + encodeURIComponent(body);
+    const req = https.request(BATCHEXECUTE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error('Batchexecute timeout'));
+    });
+    req.write(postData);
+    req.end();
+  });
+}
+
+// Decodes a Google News RSS article URL to the real publisher article URL
+async function decodeGoogleNewsUrl(googleUrl) {
+  try {
+    const match = googleUrl.match(/(?:articles|read)\/([a-zA-Z0-9_-]+)/);
+    if (!match) return null;
+    const artId = match[1];
+
+    const paramsUrl = `https://news.google.com/rss/articles/${artId}?hl=bn&gl=BD&ceid=BD:bn`;
+    const html = await fetchUrl(paramsUrl);
+
+    const sgMatch = html.match(/data-n-a-sg="([^"]+)"/);
+    const tsMatch = html.match(/data-n-a-ts="([^"]+)"/);
+
+    if (!sgMatch || !tsMatch) return null;
+
+    const sg = sgMatch[1];
+    const ts = tsMatch[1];
+
+    const inner = [
+      'garturlreq',
+      _GARTURLREQ_CTX,
+      artId,
+      /^\d+$/.test(ts) ? parseInt(ts, 10) : ts,
+      sg
+    ];
+
+    const envelopes = [
+      ['Fbv4je', JSON.stringify(inner), null, '0']
+    ];
+
+    const rawRes = await postBatchexecute(JSON.stringify([envelopes]));
+    let cleanRes = rawRes;
+    if (cleanRes.startsWith(")]}'")) {
+      cleanRes = cleanRes.replace(")]}'", "").trim();
+    }
+
+    const parsed = JSON.parse(cleanRes);
+    for (const row of parsed) {
+      if (Array.isArray(row) && row[2]) {
+        let payload = row[2];
+        if (typeof payload === 'string') {
+          payload = JSON.parse(payload);
+        }
+        if (Array.isArray(payload) && payload[0] === 'garturlres' && payload[1]) {
+          return payload[1];
+        }
+      }
+    }
+  } catch (err) {
+    // Graceful fallback
+  }
+  return null;
+}
+
+// Extracts the authentic OpenGraph or Twitter featured image from a news article URL
+async function getArticleOgImage(articleUrl) {
+  try {
+    const html = await fetchUrl(articleUrl);
+    const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+                    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
+                    html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
+                    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
+
+    if (ogMatch && ogMatch[1].startsWith('http')) {
+      const cleanImg = ogMatch[1].replace(/&amp;/g, '&').trim();
+      // Filter out tiny generic icons or logos
+      if (!cleanImg.includes('favicon') && !cleanImg.includes('logo_small')) {
+        return cleanImg;
+      }
+    }
+  } catch (err) {
+    // Fail quietly and fall back
+  }
+  return null;
+}
+
 // Categorize by keywords
 function detectCategory(title, text) {
   const combined = (title + ' ' + text).toLowerCase();
-  if (/হাসপাতাল|চিকিৎসা|স্বাস্থ্য|ডাক্তার|করোনা|রোগী|মেডিকেল|ওষুধ/.test(combined)) return 'Health';
-  if (/স্কুল|কলেজ|বিশ্ববিদ্যালয়|বাকৃবি|ভর্তি|শিক্ষক|পরীক্ষা|শিক্ষার্থী|ক্লাস/.test(combined)) return 'Education';
-  if (/উন্নয়ন|সড়ক|সেতু|ব্রিজ|প্রকল্প|সিটি কর্পোরেশন|মেয়র|প্রশাসন|নির্মাণ|সংস্কার/.test(combined)) return 'Infrastructure';
-  if (/খেলা|ক্রিকেট|ফুটবল|টুর্নামেন্ট|স্টেডিয়াম|জয়|ম্যাচ/.test(combined)) return 'Sports';
-  if (/মেলা|উৎসব|পর্যটন|জয়নুল|ব্রহ্মপুত্র|পার্ক|ঐতিহ্য|সংস্কৃতি/.test(combined)) return 'Tourism';
+  if (/হাসপাতাল|চিকিৎসা|স্বাস্থ্য|ডাক্তার|করোনা|রোগী|মেডিকেল|ওষুধ|ডেঙ্গু|জলাতঙ্ক/.test(combined)) return 'Health';
+  if (/স্কুল|কলেজ|বিশ্ববিদ্যালয়|বাকৃবি|ভর্তি|শিক্ষক|পরীক্ষা|শিক্ষার্থী|ক্লাস|জিপিএ/.test(combined)) return 'Education';
+  if (/উন্নয়ন|সড়ক|সেতু|ব্রিজ|প্রকল্প|সিটি কর্পোরেশন|মেয়র|প্রশাসন|নির্মাণ|সংস্কার|বিদ্যুৎ|লোডশেডিং/.test(combined)) return 'Infrastructure';
+  if (/খেলা|ক্রিকেট|ফুটবল|টুর্নামেন্ট|স্টেডিয়াম|জয়|ম্যাচ|জাতীয় দল/.test(combined)) return 'Sports';
+  if (/মেলা|উৎসব|পর্যটন|জয়নুল|ব্রহ্মপুত্র|পার্ক|ঐতিহ্য|সংস্কৃতি|নদী/.test(combined)) return 'Tourism';
   return 'Community';
 }
 
@@ -115,7 +247,6 @@ async function fetchGoogleNews() {
     const sourceName = cleanHtml(itemXml.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] || 'সংবাদ সূত্র');
     const sourceUrl = itemXml.match(/<source url="([^"]+)"/)?.[1] || '';
 
-    // Remove source name suffix from title e.g. "Title - Source"
     let cleanTitle = rawTitle;
     if (cleanTitle.includes(' - ')) {
       const parts = cleanTitle.split(' - ');
@@ -151,7 +282,6 @@ async function fetchProthomAloNews() {
       const keywords = itemXml.match(/<media:keywords>([\s\S]*?)<\/media:keywords>/)?.[1] || '';
       const fullText = itemXml.toLowerCase();
 
-      // Filter only Mymensingh related articles
       const isMymensingh =
         keywords.includes('ময়মনসিংহ') ||
         keywords.includes('ময়মনসিংহ') ||
@@ -176,11 +306,12 @@ async function fetchProthomAloNews() {
           guid,
           title,
           link,
+          realUrl: link,
           pubDate,
           sourceName: 'প্রথম আলো',
           sourceUrl: 'https://www.prothomalo.com',
           description,
-          imageUrl
+          imageUrl: imageUrl.replace(/&amp;/g, '&')
         });
       }
     }
@@ -203,9 +334,59 @@ function formatBengaliDate(dateStr) {
   return `${day} ${month}, ${year}`;
 }
 
+// Backfill real portal images for existing articles in Supabase
+async function backfillRealImages(limit = 15) {
+  console.log(`Checking existing articles to replace placeholder images with real portal photos (Limit: ${limit})...`);
+  try {
+    const { data: rows, error } = await supabase
+      .from('news')
+      .select('id, title, content, image_url')
+      .order('created_at', { ascending: false })
+      .limit(60);
+
+    if (error || !rows) return;
+
+    const needsImage = rows.filter(r => r.image_url && r.image_url.includes('images.unsplash.com')).slice(0, limit);
+    console.log(`Found ${needsImage.length} articles with stock images.`);
+
+    for (const item of needsImage) {
+      const linkMatch = item.content && item.content.match(/মূল প্রতিবেদন পড়ুন:\s*(https?:\/\/[^\s)]+)/i);
+      let targetUrl = linkMatch ? linkMatch[1] : null;
+
+      if (!targetUrl) continue;
+
+      // If Google News link, decode it
+      let realUrl = targetUrl;
+      if (targetUrl.includes('news.google.com')) {
+        const decoded = await decodeGoogleNewsUrl(targetUrl);
+        if (decoded) {
+          realUrl = decoded;
+        }
+      }
+
+      console.log(`Fetching real photo for: "${item.title.slice(0, 30)}..." -> ${realUrl}`);
+      const realPhoto = await getArticleOgImage(realUrl);
+
+      if (realPhoto) {
+        console.log(`  ✓ Found real photo: ${realPhoto.slice(0, 60)}...`);
+        const updatedContent = item.content.replace(targetUrl, realUrl);
+        await supabase
+          .from('news')
+          .update({
+            image_url: realPhoto,
+            content: updatedContent
+          })
+          .eq('id', item.id);
+      }
+    }
+  } catch (e) {
+    console.warn('Backfill notice:', e.message);
+  }
+}
+
 // Main execution function
 async function run() {
-  console.log('=== Starting Mymensingh.top Automated News Ingestion ===');
+  console.log('=== Starting Mymensingh.top Automated News Ingestion with Real Photos ===');
 
   const [googleItems, prothomAloItems] = await Promise.all([
     fetchGoogleNews().catch(() => []),
@@ -236,7 +417,6 @@ async function run() {
       continue; // Duplicate title
     }
 
-    // Generate unique ID based on title hash
     const hash = crypto.createHash('md5').update(item.title).digest('hex').slice(0, 12);
     const articleId = `news-${hash}`;
 
@@ -256,15 +436,29 @@ async function run() {
       ))
     );
 
+    // Extract REAL article photo
+    let realArticleImage = item.imageUrl || null;
+    let directArticleUrl = item.realUrl || item.link;
+
+    if (!realArticleImage && item.link && item.link.includes('news.google.com')) {
+      // Decode Google News URL to real portal article URL
+      const decodedUrl = await decodeGoogleNewsUrl(item.link);
+      if (decodedUrl) {
+        directArticleUrl = decodedUrl;
+        realArticleImage = await getArticleOgImage(decodedUrl);
+      }
+    }
+
     const category = detectCategory(item.title, item.description || '');
     const dateFormatted = formatBengaliDate(item.pubDate);
     const excerpt = item.description
       ? item.description.slice(0, 160) + '...'
       : `ময়মনসিংহের সর্বশেষ সংবাদ: ${item.title}`;
 
-    const content = `${excerpt}\n\nময়মনসিংহ সিটি ও সংলগ্ন এলাকার স্থানীয় খবরের বিস্তারিত তথ্যের জন্য মূল সংবাদ লিংকে প্রবেশ করুন।\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${item.link})`;
+    const content = `${excerpt}\n\nময়মনসিংহ সিটি ও সংলগ্ন এলাকার স্থানীয় খবরের বিস্তারিত তথ্যের জন্য মূল সংবাদ লিংকে প্রবেশ করুন।\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${directArticleUrl})`;
 
-    const imageUrl = item.imageUrl || CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Community;
+    // Use REAL photo from portal, or fallback only if unavailable
+    const imageUrl = realArticleImage || CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Community;
 
     const payload = {
       id: articleId,
@@ -278,6 +472,9 @@ async function run() {
     };
 
     console.log(`[${isTrusted ? 'AUTO-PUBLISH' : 'DRAFT'}] Ingesting: ${item.title} (${item.sourceName})`);
+    if (realArticleImage) {
+      console.log(`  📸 Real Portal Photo: ${realArticleImage.slice(0, 70)}...`);
+    }
 
     const { error: insertErr } = await supabase.from('news').insert([payload]);
     if (insertErr) {
@@ -294,6 +491,9 @@ async function run() {
   }
 
   console.log(`=== Done! Auto-Published: ${insertedCount}, Drafts: ${draftCount} ===`);
+
+  // Run backfill to update existing stock images with real news photos
+  await backfillRealImages(25);
 }
 
 run().catch(console.error);
