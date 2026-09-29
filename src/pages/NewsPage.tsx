@@ -281,11 +281,8 @@ export const NewsPage: React.FC = () => {
                 {activeArticle.excerpt}
               </p>
 
-              <div className="text-sm text-slate-700 leading-relaxed space-y-3 pt-2">
+              <div className="text-sm text-slate-700 leading-relaxed space-y-3 pt-2 whitespace-pre-line">
                 <p>{activeArticle.content}</p>
-                <p>
-                  ময়মনসিংহ সিটি কর্পোরেশন ও জেলা প্রশাসনের সার্বিক তদারকিতে শহরের যোগাযোগ ব্যবস্থা এবং নাগরিক সুযোগ-সুবিধা আধুনিকায়ন করা হচ্ছে। স্থানীয় নাগরিকরা এই উদ্যোগকে স্বাগত জানিয়েছেন এবং দ্রুত বাস্তবায়নের প্রত্যাশা ব্যক্ত করেছেন।
-                </p>
               </div>
 
               <div className="pt-6 border-t border-slate-200 flex items-center justify-between">

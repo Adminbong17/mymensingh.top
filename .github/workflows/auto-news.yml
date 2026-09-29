@@ -1,0 +1,31 @@
+name: Automated Mymensingh News Aggregator
+
+on:
+  schedule:
+    # Runs every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    # Allows manual one-click trigger from GitHub Actions tab
+
+jobs:
+  fetch-and-sync-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run News Ingestion Engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL || 'https://oxdywhgcdqkdxmnzlofg.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_KEY || secrets.VITE_SUPABASE_ANON_KEY }}
+        run: node scripts/fetch-mymensingh-news.js
