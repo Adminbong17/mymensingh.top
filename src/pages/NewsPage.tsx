@@ -30,13 +30,10 @@ export const NewsPage: React.FC = () => {
 
   const categories = [
     'All',
-    'উন্নয়ন ও প্রশাসন',
-    'আইন ও অপরাধ',
-    'শিক্ষা ও ক্যাম্পাস',
-    'স্বাস্থ্য ও চিকিৎসা',
-    'খেলাধুলা',
-    'বাণিজ্য ও অর্থনীতি',
-    'নাগরিক জীবন'
+    'ময়মনসিংহ',
+    'বাংলাদেশ',
+    'আন্তর্জাতিক',
+    'খেলাধুলা'
   ];
 
   // Sort all news by recency
@@ -66,13 +63,13 @@ export const NewsPage: React.FC = () => {
           <div className="relative z-10 max-w-2xl space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md">
               <Newspaper className="w-3.5 h-3.5" />
-              <span>Mymensingh News & Updates</span>
+              <span>Global, National & Local News</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-              ময়মনসিংহের সর্বশেষ সংবাদ ও বুলেটিন
+              দেশ ও বিদেশের সর্বশেষ সংবাদ
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              শহরের অবকাঠামোগত উন্নয়ন, শিক্ষা, সংস্কৃতি, পর্যটন এবং নাগরিক জীবনের গুরুত্বপূর্ণ সকল খবর সবার আগে জানুন।
+              ময়মনসিংহ, জাতীয়, আন্তর্জাতিক ও খেলাধুলার গুরুত্বপূর্ণ সকল খবর সবার আগে জানুন।
             </p>
           </div>
           <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />

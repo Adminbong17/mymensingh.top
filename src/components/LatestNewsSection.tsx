@@ -34,13 +34,13 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-full mb-1">
               <Newspaper className="w-3.5 h-3.5" />
-              <span>City Updates & Headlines</span>
+              <span>National, Global & Local News</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-              Latest News from Mymensingh
+              দেশ ও বিদেশের সর্বশেষ সংবাদ
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              ময়মনসিংহের উন্নয়ন, শিক্ষা, পর্যটন ও নাগরিক জীবনের সাম্প্রতিক খবর
+              ময়মনসিংহ, বাংলাদেশ, আন্তর্জাতিক ঘটনাবলি ও খেলাধুলার সাম্প্রতিক খবর ও আপডেট
             </p>
           </div>
 
