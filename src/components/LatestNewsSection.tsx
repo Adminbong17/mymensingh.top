@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Newspaper, Calendar, Clock, ArrowRight, X, ExternalLink } from 'lucide-react';
 import type { NewsArticle } from '../types';
-import { parseArticleSource } from '../lib/newsUtils';
+import { parseArticleSource, cleanNewsText } from '../lib/newsUtils';
 
 interface LatestNewsSectionProps {
   news: NewsArticle[];
@@ -87,7 +87,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                       </h3>
 
                       <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                        {item.excerpt}
+                        {cleanNewsText(item.excerpt)}
                       </p>
                     </div>
                   </div>
@@ -140,9 +140,9 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                     {selectedArticle.title}
                   </h2>
 
-                  {selectedArticle.excerpt && (
+                  {selectedArticle.excerpt && cleanNewsText(selectedArticle.excerpt) && (
                     <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100">
-                      {selectedArticle.excerpt}
+                      {cleanNewsText(selectedArticle.excerpt)}
                     </p>
                   )}
 

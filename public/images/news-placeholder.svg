@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#022c22" />
+      <stop offset="50%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#041f1a" />
+    </linearGradient>
+    
+    <radialGradient id="glowTopRight" cx="80%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="glowCenter" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#059669" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#059669" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Glass Card Gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.03" />
+    </linearGradient>
+
+    <!-- Emerald Accent Gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Deep Emerald Background -->
+  <rect width="1200" height="675" fill="url(#bgGrad)" />
+
+  <!-- Ambient Lighting Glows -->
+  <rect width="1200" height="675" fill="url(#glowTopRight)" />
+  <rect width="1200" height="675" fill="url(#glowCenter)" />
+
+  <!-- Decorative Tech & News Grid Pattern -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="675" />
+    <line x1="250" y1="0" x2="250" y2="675" />
+    <line x1="400" y1="0" x2="400" y2="675" />
+    <line x1="550" y1="0" x2="550" y2="675" />
+    <line x1="700" y1="0" x2="700" y2="675" />
+    <line x1="850" y1="0" x2="850" y2="675" />
+    <line x1="1000" y1="0" x2="1000" y2="675" />
+    
+    <line x1="0" y1="100" x2="1200" y2="100" />
+    <line x1="0" y1="225" x2="1200" y2="225" />
+    <line x1="0" y1="350" x2="1200" y2="350" />
+    <line x1="0" y1="475" x2="1200" y2="475" />
+    <line x1="0" y1="600" x2="1200" y2="600" />
+  </g>
+
+  <!-- Elegant Decorative Curved Waves (Broadcast / River Brahmaputra Motif) -->
+  <path d="M-50,550 C250,420 500,620 850,500 C1050,430 1150,520 1250,480" fill="none" stroke="#10b981" stroke-width="2" opacity="0.2" />
+  <path d="M-50,580 C200,460 480,650 820,530 C1020,460 1180,550 1250,520" fill="none" stroke="#34d399" stroke-width="1.5" opacity="0.15" />
+  <path d="M-50,610 C150,500 450,680 780,560 C980,490 1150,580 1250,550" fill="none" stroke="#6ee7b7" stroke-width="1" opacity="0.1" />
+
+  <!-- Center Card Container (Glassmorphic Frame) -->
+  <rect x="150" y="90" width="900" height="495" rx="32" fill="url(#cardGrad)" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.18" filter="url(#shadow)" />
+
+  <!-- Top Badge: Official Portal / Live Updates -->
+  <g transform="translate(600, 155)">
+    <rect x="-155" y="-18" width="310" height="36" rx="18" fill="#10b981" fill-opacity="0.2" stroke="#34d399" stroke-width="1.2" />
+    <circle cx="-120" cy="0" r="5" fill="#34d399" filter="url(#softGlow)">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
+    </circle>
+    <text x="-105" y="5" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#a7f3d0" letter-spacing="1.5">MYMENSINGH.TOP NEWS</text>
+  </g>
+
+  <!-- Central News Icon & Brand Logo -->
+  <g transform="translate(600, 240)">
+    <!-- Icon Container -->
+    <rect x="-42" y="-42" width="84" height="84" rx="24" fill="url(#accentGrad)" filter="url(#shadow)" />
+    <!-- Modern Newspaper / Signal Icon -->
+    <path d="M-18,-16 L18,-16 C21,-16 23,-14 23,-11 L23,15 C23,18 21,20 18,20 L-18,20 C-21,20 -23,18 -23,15 L-23,-11 C-23,-14 -21,-16 -18,-16 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="-14" y1="-8" x2="6" y2="-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="-14" y1="-1" x2="14" y2="-1" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="-14" y1="6" x2="14" y2="6" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="-14" y1="13" x2="4" y2="13" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+
+  <!-- Main Headline Typography: mymensingh.top -->
+  <text x="600" y="365" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" fill="#ffffff" letter-spacing="-0.5">
+    mymensingh<tspan fill="#34d399">.top</tspan>
+  </text>
+
+  <!-- Bengali Subtitle -->
+  <text x="600" y="420" text-anchor="middle" font-family="'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', sans-serif" font-size="25" font-weight="700" fill="#e2e8f0" letter-spacing="0.5">
+    ময়মনসিংহ প্রতিদিন • খবর ও সার্বিক আপডেট
+  </text>
+
+  <!-- Accent Divider Line -->
+  <rect x="510" y="445" width="180" height="3" rx="1.5" fill="url(#accentGrad)" />
+
+  <!-- Bottom Categories / Local Focus -->
+  <text x="600" y="495" text-anchor="middle" font-family="'Hind Siliguri', 'Noto Sans Bengali', sans-serif" font-size="15" font-weight="500" fill="#94a3b8" letter-spacing="0.5">
+    উন্নয়ন  •  শিক্ষা  •  স্বাস্থ্য  •  বাণিজ্য  •  পর্যটন  •  নাগরিক সেবা
+  </text>
+
+  <!-- Bottom Strip Accent -->
+  <rect x="0" y="667" width="1200" height="8" fill="url(#accentGrad)" />
+</svg>

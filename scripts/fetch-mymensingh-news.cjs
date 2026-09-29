@@ -1,15 +1,13 @@
 /**
- * Mymensingh.top - Automated Hybrid News Fetcher & Ingestion Engine (.cjs)
- * 
- * Sources:
- * 1. Google News RSS for "ময়মনসিংহ"
- * 2. Prothom Alo Stories RSS (filtered for Mymensingh)
+ * Mymensingh.top - Automated Full-Article News Crawler & Ingestion Engine (.cjs)
  * 
  * Features:
- * - Real Portal Photos: Extracts exact og:image from the publisher's article.
+ * - Scrapes FULL ARTICLE CONTENT (মূল প্রতিবেদন) directly from publisher pages.
+ * - Extracts authentic original featured photographs (og:image).
+ * - Custom Branded Fallback: Uses /images/news-placeholder.svg (mymensingh.top banner) when no photo is found.
+ * - Zero HTML Leakage: Strips all <a> tags and raw URLs from titles and excerpts.
  * - Hybrid Mode: Mainstream media auto-published, other media kept as draft.
- * - Google News Link Decoder: Resolves Google News RSS redirect to real article URLs.
- * - Backfill Updater: Replaces placeholder images with real portal photographs.
+ * - Buffer-Safe UTF-8: Zero \uFFFD corruption on Bengali multi-byte characters.
  */
 
 const https = require('https');
@@ -19,7 +17,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://oxdywhgcdqkdxmnzlofg.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94ZHl3aGdjZHFrZHhtbnpsb2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODI5MjgsImV4cCI6MjEwNjE1ODkyOH0.ZF2YPPq1Y4dyyinHBUXJjuw5bzsQT4yBZBOqYwlBP14';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94ZHl3aGdjZHFrZHhtbnpsb2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODI5MjgsImV4cCI6MjEwNjE1ODkyOH0.ZF2YPPq1Y4dyyinHBUXJjuw5bzsQT4yBZBOqYwlBP14';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -39,6 +37,9 @@ const _GARTURLREQ_CTX = [
   0
 ];
 
+// Fallback theme image with mymensingh.top branding
+const DEFAULT_THEME_IMAGE = '/images/news-placeholder.svg';
+
 // Trusted mainstream outlets for Auto-Publish
 const TRUSTED_DOMAINS = [
   'prothomalo.com',
@@ -53,20 +54,11 @@ const TRUSTED_DOMAINS = [
   'banglatribune.com',
   'samakal.com',
   'manabzamin.com',
-  'bhorerkagoj.com'
+  'bhorerkagoj.com',
+  'inqilab.com'
 ];
 
-// Fallback category images (only used if publisher has no image at all)
-const CATEGORY_IMAGES = {
-  Infrastructure: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80',
-  Education: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80',
-  Health: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80',
-  Tourism: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-  Sports: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80',
-  Community: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80'
-};
-
-// HTTP GET helper with redirect support
+// HTTP GET helper with redirect support & Buffer concatenation
 function fetchUrl(url, headers = {}) {
   return new Promise((resolve, reject) => {
     const isHttps = url.startsWith('https:');
@@ -181,10 +173,33 @@ async function decodeGoogleNewsUrl(googleUrl) {
   return null;
 }
 
-// Extracts the authentic OpenGraph or Twitter featured image from a news article URL
-async function getArticleOgImage(articleUrl) {
+// Clean HTML tags, entities, and stray links
+function cleanHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/<a[\s\S]*?<\/a>/gi, ' ')
+    .replace(/<a[\s\S]*$/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/https?:\/\/[^\s]+/g, '')
+    .replace(/\uFFFD+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Scrapes real article details: authentic og:image and full article paragraphs
+async function scrapeArticleDetails(articleUrl) {
   try {
     const html = await fetchUrl(articleUrl);
+
+    // 1. Authentic og:image / twitter:image
+    let ogImage = null;
     const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
                     html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
                     html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
@@ -192,15 +207,41 @@ async function getArticleOgImage(articleUrl) {
 
     if (ogMatch && ogMatch[1].startsWith('http')) {
       const cleanImg = ogMatch[1].replace(/&amp;/g, '&').trim();
-      // Filter out tiny generic icons or logos
-      if (!cleanImg.includes('favicon') && !cleanImg.includes('logo_small')) {
-        return cleanImg;
+      if (!cleanImg.includes('favicon') && !cleanImg.includes('logo_small') && !cleanImg.includes('placeholder')) {
+        ogImage = cleanImg;
       }
     }
+
+    // 2. Full article text extraction
+    let clean = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, '')
+      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, '')
+      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, '')
+      .replace(/<aside\b[^<]*(?:(?!<\/aside>)<[^<]*)*<\/aside>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+
+    const pMatches = [...clean.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+    const paragraphs = [];
+
+    for (const m of pMatches) {
+      const text = cleanHtml(m[1]);
+      if (text.length < 35) continue;
+      if (/কপিরাইট|সর্বস্বত্ব|বিজ্ঞাপন|গুগল নিউজে|ফলো করুন|সাবস্ক্রাইব|অনলাইন ডেস্ক|আমাদের পেজে|ছবি সংগৃহীত|নিজস্ব প্রতিবেদক|প্রতিনিধি|আপডেট:/i.test(text) && text.length < 90) {
+        continue;
+      }
+      if (/https?:\/\//i.test(text)) continue;
+
+      if (!paragraphs.some(p => p.slice(0, 30) === text.slice(0, 30))) {
+        paragraphs.push(text);
+      }
+    }
+
+    return { ogImage, paragraphs };
   } catch (err) {
-    // Fail quietly and fall back
+    return { ogImage: null, paragraphs: [] };
   }
-  return null;
 }
 
 // Categorize by keywords
@@ -212,23 +253,6 @@ function detectCategory(title, text) {
   if (/খেলা|ক্রিকেট|ফুটবল|টুর্নামেন্ট|স্টেডিয়াম|জয়|ম্যাচ|জাতীয় দল/.test(combined)) return 'Sports';
   if (/মেলা|উৎসব|পর্যটন|জয়নুল|ব্রহ্মপুত্র|পার্ক|ঐতিহ্য|সংস্কৃতি|নদী/.test(combined)) return 'Tourism';
   return 'Community';
-}
-
-// Clean HTML tags and entities
-function cleanHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\uFFFD+/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 // Parse Google News RSS
@@ -247,6 +271,7 @@ async function fetchGoogleNews() {
     const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || new Date().toISOString();
     const sourceName = cleanHtml(itemXml.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] || 'সংবাদ সূত্র');
     const sourceUrl = itemXml.match(/<source url="([^"]+)"/)?.[1] || '';
+    const rawDesc = cleanHtml(itemXml.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '');
 
     let cleanTitle = rawTitle;
     if (cleanTitle.includes(' - ')) {
@@ -262,7 +287,8 @@ async function fetchGoogleNews() {
         link,
         pubDate,
         sourceName,
-        sourceUrl
+        sourceUrl,
+        description: rawDesc
       });
     }
   }
@@ -324,70 +350,38 @@ async function fetchProthomAloNews() {
   }
 }
 
+// Convert numbers to Bengali digits
+function toBengaliNumber(num) {
+  const digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return String(num).replace(/[0-9]/g, d => digits[d]);
+}
+
 // Format date to readable Bengali format (e.g. "২৯ সেপ্টেম্বর, ২০২৬")
 function formatBengaliDate(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return 'আজ';
   const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-  const day = d.getDate();
+  const day = toBengaliNumber(d.getDate());
   const month = months[d.getMonth()];
-  const year = d.getFullYear();
+  const year = toBengaliNumber(d.getFullYear());
   return `${day} ${month}, ${year}`;
-}
-
-// Backfill real portal images for existing articles in Supabase
-async function backfillRealImages(limit = 15) {
-  console.log(`Checking existing articles to replace placeholder images with real portal photos (Limit: ${limit})...`);
-  try {
-    const { data: rows, error } = await supabase
-      .from('news')
-      .select('id, title, content, image_url')
-      .order('created_at', { ascending: false })
-      .limit(60);
-
-    if (error || !rows) return;
-
-    const needsImage = rows.filter(r => r.image_url && r.image_url.includes('images.unsplash.com')).slice(0, limit);
-    console.log(`Found ${needsImage.length} articles with stock images.`);
-
-    for (const item of needsImage) {
-      const linkMatch = item.content && item.content.match(/মূল প্রতিবেদন পড়ুন:\s*(https?:\/\/[^\s)]+)/i);
-      let targetUrl = linkMatch ? linkMatch[1] : null;
-
-      if (!targetUrl) continue;
-
-      // If Google News link, decode it
-      let realUrl = targetUrl;
-      if (targetUrl.includes('news.google.com')) {
-        const decoded = await decodeGoogleNewsUrl(targetUrl);
-        if (decoded) {
-          realUrl = decoded;
-        }
-      }
-
-      console.log(`Fetching real photo for: "${item.title.slice(0, 30)}..." -> ${realUrl}`);
-      const realPhoto = await getArticleOgImage(realUrl);
-
-      if (realPhoto) {
-        console.log(`  ✓ Found real photo: ${realPhoto.slice(0, 60)}...`);
-        const updatedContent = item.content.replace(targetUrl, realUrl);
-        await supabase
-          .from('news')
-          .update({
-            image_url: realPhoto,
-            content: updatedContent
-          })
-          .eq('id', item.id);
-      }
-    }
-  } catch (e) {
-    console.warn('Backfill notice:', e.message);
-  }
 }
 
 // Main execution function
 async function run() {
-  console.log('=== Starting Mymensingh.top Automated News Ingestion with Real Photos ===');
+  const isReset = process.argv.includes('--reset');
+
+  if (isReset) {
+    console.log('Resetting news table in Supabase as requested...');
+    const { error: resetErr } = await supabase.from('news').delete().neq('id', 'keep_none');
+    if (resetErr) {
+      console.warn('Could not reset news table:', resetErr.message);
+    } else {
+      console.log('News table cleared successfully.');
+    }
+  }
+
+  console.log('=== Starting Mymensingh.top Full-Article News Ingestion ===');
 
   const [googleItems, prothomAloItems] = await Promise.all([
     fetchGoogleNews().catch(() => []),
@@ -412,7 +406,11 @@ async function run() {
   let insertedCount = 0;
   let draftCount = 0;
 
-  for (const item of allFeedItems) {
+  // Process top 35 news items to ensure high quality and prevent timeouts
+  const candidates = allFeedItems.slice(0, 40);
+
+  for (let i = 0; i < candidates.length; i++) {
+    const item = candidates[i];
     const titleKey = item.title.trim().toLowerCase();
     if (existingTitles.has(titleKey)) {
       continue; // Duplicate title
@@ -437,64 +435,90 @@ async function run() {
       ))
     );
 
-    // Extract REAL article photo
-    let realArticleImage = item.imageUrl || null;
+    // 1. Resolve direct publisher URL
     let directArticleUrl = item.realUrl || item.link;
-
-    if (!realArticleImage && item.link && item.link.includes('news.google.com')) {
-      // Decode Google News URL to real portal article URL
-      const decodedUrl = await decodeGoogleNewsUrl(item.link);
-      if (decodedUrl) {
-        directArticleUrl = decodedUrl;
-        realArticleImage = await getArticleOgImage(decodedUrl);
+    if (item.link && item.link.includes('news.google.com')) {
+      const decoded = await decodeGoogleNewsUrl(item.link);
+      if (decoded) {
+        directArticleUrl = decoded;
       }
     }
 
-    const category = detectCategory(item.title, item.description || '');
+    console.log(`\n[${i + 1}/${candidates.length}] Processing: "${item.title.slice(0, 40)}..."`);
+    console.log(`  Source: ${item.sourceName} | URL: ${directArticleUrl}`);
+
+    // 2. Scrape authentic og:image and FULL ARTICLE paragraphs from the original publisher
+    let realArticleImage = item.imageUrl || null;
+    let fullParagraphs = [];
+
+    if (directArticleUrl && directArticleUrl.startsWith('http') && !directArticleUrl.includes('news.google.com')) {
+      const details = await scrapeArticleDetails(directArticleUrl);
+      if (details.ogImage && !realArticleImage) {
+        realArticleImage = details.ogImage;
+      }
+      if (details.paragraphs && details.paragraphs.length > 0) {
+        fullParagraphs = details.paragraphs;
+      }
+    }
+
+    // 3. Fallback theme image if portal photo is not available
+    const imageUrl = realArticleImage || DEFAULT_THEME_IMAGE;
+
+    // 4. Construct rich full article content and clean excerpt
+    let fullContentText = '';
+    let excerptText = '';
+
+    if (fullParagraphs.length > 0) {
+      // Use full scraped news story paragraphs
+      fullContentText = fullParagraphs.join('\n\n');
+      excerptText = fullParagraphs[0].slice(0, 170).trim() + (fullParagraphs[0].length > 170 ? '...' : '');
+    } else {
+      // Clean fallback from item description or title
+      const cleanDesc = cleanHtml(item.description);
+      excerptText = cleanDesc.length > 20
+        ? cleanDesc.slice(0, 160) + '...'
+        : `ময়মনসিংহের সর্বশেষ সংবাদ: ${item.title}`;
+      fullContentText = excerptText;
+    }
+
+    // Append clean source citation for reader modal button extraction
+    const content = `${fullContentText}\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${directArticleUrl})`;
+
+    // Calculate reading time based on Bengali word count
+    const wordCount = fullContentText.split(/\s+/).length;
+    const readMinutes = Math.max(1, Math.min(10, Math.ceil(wordCount / 130)));
+    const readTimeFormatted = `${toBengaliNumber(readMinutes)} মিনিট পাঠ`;
+
+    const category = detectCategory(item.title, fullContentText);
     const dateFormatted = formatBengaliDate(item.pubDate);
-    const excerpt = item.description
-      ? item.description.slice(0, 160) + '...'
-      : `ময়মনসিংহের সর্বশেষ সংবাদ: ${item.title}`;
-
-    const content = `${excerpt}\n\nময়মনসিংহ সিটি ও সংলগ্ন এলাকার স্থানীয় খবরের বিস্তারিত তথ্যের জন্য মূল সংবাদ লিংকে প্রবেশ করুন।\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${directArticleUrl})`;
-
-    // Use REAL photo from portal, or fallback only if unavailable
-    const imageUrl = realArticleImage || CATEGORY_IMAGES[category] || CATEGORY_IMAGES.Community;
 
     const payload = {
       id: articleId,
       title: item.title,
-      excerpt: excerpt,
+      excerpt: excerptText,
       category: category,
       date: dateFormatted,
       image_url: imageUrl,
-      read_time: '২ মিনিট পাঠ',
+      read_time: readTimeFormatted,
       content: content
     };
 
-    console.log(`[${isTrusted ? 'AUTO-PUBLISH' : 'DRAFT'}] Ingesting: ${item.title} (${item.sourceName})`);
-    if (realArticleImage) {
-      console.log(`  📸 Real Portal Photo: ${realArticleImage.slice(0, 70)}...`);
-    }
-
     const { error: insertErr } = await supabase.from('news').insert([payload]);
     if (insertErr) {
-      console.warn(`Failed to insert article "${item.title}":`, insertErr.message);
+      console.warn(`  Failed to insert article:`, insertErr.message);
     } else {
       existingTitles.add(titleKey);
       existingIds.add(articleId);
-      if (isTrusted) {
-        insertedCount++;
-      } else {
-        draftCount++;
-      }
+      if (isTrusted) insertedCount++;
+      else draftCount++;
+      console.log(`  ✓ Successfully Ingested (${fullParagraphs.length} full paragraphs, image: ${imageUrl === DEFAULT_THEME_IMAGE ? 'Theme Banner' : 'Portal Photo'})`);
     }
+
+    // Polite delay between requests to avoid portal rate limits
+    await new Promise(r => setTimeout(r, 600));
   }
 
-  console.log(`=== Done! Auto-Published: ${insertedCount}, Drafts: ${draftCount} ===`);
-
-  // Run backfill to update existing stock images with real news photos
-  await backfillRealImages(25);
+  console.log(`\n=== Done! Ingested: ${insertedCount} Auto-Published, ${draftCount} Drafts ===`);
 }
 
 run().catch(console.error);

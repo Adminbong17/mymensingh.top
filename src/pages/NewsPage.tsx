@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import type { NewsArticle } from '../types';
-import { parseArticleSource } from '../lib/newsUtils';
+import { parseArticleSource, cleanNewsText } from '../lib/newsUtils';
 
 export const NewsPage: React.FC = () => {
   const { news } = useData();
@@ -198,7 +198,7 @@ export const NewsPage: React.FC = () => {
                       </h4>
 
                       <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                        {item.excerpt}
+                        {cleanNewsText(item.excerpt)}
                       </p>
                     </div>
                   </div>
@@ -281,9 +281,9 @@ export const NewsPage: React.FC = () => {
                   {activeArticle.title}
                 </h2>
 
-                {activeArticle.excerpt && (
+                {activeArticle.excerpt && cleanNewsText(activeArticle.excerpt) && (
                   <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100">
-                    {activeArticle.excerpt}
+                    {cleanNewsText(activeArticle.excerpt)}
                   </p>
                 )}
 
