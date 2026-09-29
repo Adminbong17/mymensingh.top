@@ -12,6 +12,7 @@ import {
   Upload
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { VaultMediaUploader } from '../VaultMediaUploader';
 
 export type EntityModalType = 'news' | 'event' | 'offer' | 'donor' | 'tuition' | 'tolet' | null;
 
@@ -309,13 +310,13 @@ export const AdminEntityModal: React.FC<AdminEntityModalProps> = ({ type, isOpen
                     <option value="খেলাধুলা">খেলাধুলা</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">ছবির URL</label>
-                  <input
-                    type="url"
+                <div className="sm:col-span-2">
+                  <VaultMediaUploader
                     value={newsImage}
-                    onChange={(e) => setNewsImage(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-sky-500 outline-hidden"
+                    onChange={setNewsImage}
+                    label="সংবাদের ছবি (FileVault Media)"
+                    placeholder="https://..."
+                    helperText="ছবি আপলোড করলে সরাসরি vault.bongbangla.top-এ সংরক্ষিত হবে।"
                   />
                 </div>
               </div>
@@ -420,13 +421,13 @@ export const AdminEntityModal: React.FC<AdminEntityModalProps> = ({ type, isOpen
                     className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-hidden"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">ছবির URL</label>
-                  <input
-                    type="url"
+                <div className="sm:col-span-2">
+                  <VaultMediaUploader
                     value={eventImage}
-                    onChange={(e) => setEventImage(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 outline-hidden"
+                    onChange={setEventImage}
+                    label="ইভেন্টের ছবি বা ব্যানার (FileVault Media)"
+                    placeholder="https://..."
+                    helperText="ছবি আপলোড করলে সরাসরি vault.bongbangla.top-এ সংরক্ষিত হবে।"
                   />
                 </div>
               </div>
@@ -506,12 +507,12 @@ export const AdminEntityModal: React.FC<AdminEntityModalProps> = ({ type, isOpen
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">ছবির URL</label>
-                <input
-                  type="url"
+                <VaultMediaUploader
                   value={offerImage}
-                  onChange={(e) => setOfferImage(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-500 outline-hidden"
+                  onChange={setOfferImage}
+                  label="অফারের ছবি বা ব্যানার (FileVault Media)"
+                  placeholder="https://..."
+                  helperText="ছবি আপলোড করলে সরাসরি vault.bongbangla.top-এ সংরক্ষিত হবে।"
                 />
               </div>
 
@@ -809,13 +810,13 @@ export const AdminEntityModal: React.FC<AdminEntityModalProps> = ({ type, isOpen
                     className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-purple-500 outline-hidden"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">ফ্ল্যাটের ছবির URL</label>
-                  <input
-                    type="url"
+                <div className="sm:col-span-2">
+                  <VaultMediaUploader
                     value={toLetImage}
-                    onChange={(e) => setToLetImage(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-purple-500 outline-hidden"
+                    onChange={setToLetImage}
+                    label="ফ্ল্যাট / বাসার ছবি (FileVault Media)"
+                    placeholder="https://..."
+                    helperText="ছবি আপলোড করলে সরাসরি vault.bongbangla.top-এ সংরক্ষিত হবে।"
                   />
                 </div>
               </div>

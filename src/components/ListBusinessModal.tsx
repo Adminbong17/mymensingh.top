@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, PlusCircle, CheckCircle, Building2, MapPin, Phone, Image } from 'lucide-react';
+import { X, PlusCircle, CheckCircle, Building2, MapPin, Phone } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+import { VaultMediaUploader } from './VaultMediaUploader';
 
 interface ListBusinessModalProps {
   isOpen: boolean;
@@ -233,21 +234,13 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                ছবি বা লোগোর লিংক (Image URL)
-              </label>
-              <div className="relative">
-                <Image className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
-                />
-              </div>
-            </div>
+            <VaultMediaUploader
+              value={imageUrl}
+              onChange={setImageUrl}
+              label="ছবি বা লোগো (FileVault Media)"
+              placeholder="https://..."
+              helperText="ছবি আপলোড করলে স্বয়ংক্রিয়ভাবে vault.bongbangla.top-এ সেভ হবে এবং লাইভ প্রিভিউ দেখতে পাবেন।"
+            />
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
