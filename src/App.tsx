@@ -210,7 +210,18 @@ const HomePage: React.FC<{
       <ExploreCategories
         categories={categories}
         selectedCategory={selectedCategorySlug}
-        onSelectCategory={(slug) => navigate(`/categories?category=${slug}`)}
+        onSelectCategory={(slug) => {
+          if (slug === 'blood-bank' || slug === 'tuition-media' || slug === 'to-let') {
+            navigate(`/${slug}`);
+          } else if (slug === 'news') {
+            navigate('/news');
+          } else if (slug === 'all') {
+            navigate('/categories');
+          } else {
+            navigate(`/categories?category=${slug}`);
+          }
+        }}
+        onSeeAll={() => navigate('/categories')}
       />
 
       {/* 5. Latest News Section (5 news cards) */}

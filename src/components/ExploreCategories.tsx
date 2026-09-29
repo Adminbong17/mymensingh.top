@@ -1,25 +1,26 @@
 import React from 'react';
 import {
   Utensils,
-  Hotel,
-  Hospital,
+  Bed,
+  PlusSquare,
   Pill,
   Droplets,
   GraduationCap,
   Home,
   ShoppingBag,
   Coffee,
-  Landmark,
+  Trees,
   BookOpen,
-  Train,
+  Bus,
   Moon,
   Calendar,
   Tag,
   Newspaper,
   Building2,
   Briefcase,
-  Wrench,
-  Grid
+  Settings,
+  MoreHorizontal,
+  ArrowRight
 } from 'lucide-react';
 import type { Category } from '../types';
 
@@ -27,112 +28,150 @@ interface ExploreCategoriesProps {
   categories: Category[];
   selectedCategory: string;
   onSelectCategory: (slug: string) => void;
+  onSeeAll?: () => void;
 }
+
+const SHORT_BN_NAMES: Record<string, string> = {
+  'restaurants': 'রেস্টুরেন্ট',
+  'hotels': 'হোটেল',
+  'hospitals': 'হাসপাতাল',
+  'pharmacy': 'ফার্মেসি',
+  'blood-bank': 'রক্ত ব্যাংক',
+  'tuition-media': 'টিউশন মিডিয়া',
+  'to-let': 'বাসা ভাড়া',
+  'shopping': 'শপিং',
+  'cafes': 'ক্যাফে',
+  'tourist-places': 'পর্যটন স্থান',
+  'education': 'শিক্ষা প্রতিষ্ঠান',
+  'transport': 'পরিবহন',
+  'mosques': 'মসজিদ',
+  'events': 'ইভেন্ট',
+  'offers': 'অফার',
+  'news': 'সংবাদ',
+  'real-estate': 'রিয়েল এস্টেট',
+  'jobs': 'চাকরি',
+  'services': 'সেবা',
+  'more': 'আরও',
+};
+
+const getCategoryIcon = (slug: string) => {
+  const iconClass = "w-6 h-6 sm:w-7 sm:h-7 transition-transform group-hover:scale-110 duration-200";
+  switch (slug) {
+    case 'restaurants':
+      return <Utensils className={`${iconClass} text-[#F97316]`} />;
+    case 'hotels':
+      return <Bed className={`${iconClass} text-[#2563EB]`} />;
+    case 'hospitals':
+      return <PlusSquare className={`${iconClass} text-[#E11D48]`} />;
+    case 'pharmacy':
+      return <Pill className={`${iconClass} text-[#10B981]`} />;
+    case 'blood-bank':
+      return <Droplets className={`${iconClass} text-[#EF4444]`} />;
+    case 'tuition-media':
+      return <GraduationCap className={`${iconClass} text-[#7C3AED]`} />;
+    case 'to-let':
+      return <Home className={`${iconClass} text-[#F97316]`} />;
+    case 'shopping':
+      return <ShoppingBag className={`${iconClass} text-[#DB2777]`} />;
+    case 'cafes':
+      return <Coffee className={`${iconClass} text-[#92400E]`} />;
+    case 'tourist-places':
+      return <Trees className={`${iconClass} text-[#047857]`} />;
+    case 'education':
+      return <BookOpen className={`${iconClass} text-[#2563EB]`} />;
+    case 'transport':
+      return <Bus className={`${iconClass} text-[#0284C7]`} />;
+    case 'mosques':
+      return <Moon className={`${iconClass} text-[#0D9488]`} />;
+    case 'events':
+      return <Calendar className={`${iconClass} text-[#EA580C]`} />;
+    case 'offers':
+      return <Tag className={`${iconClass} text-[#EC4899]`} />;
+    case 'news':
+      return <Newspaper className={`${iconClass} text-[#059669]`} />;
+    case 'real-estate':
+      return <Building2 className={`${iconClass} text-[#4F46E5]`} />;
+    case 'jobs':
+      return <Briefcase className={`${iconClass} text-[#334155]`} />;
+    case 'services':
+      return <Settings className={`${iconClass} text-[#3B82F6]`} />;
+    case 'more':
+    default:
+      return <MoreHorizontal className={`${iconClass} text-[#3B82F6]`} />;
+  }
+};
 
 export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
   categories,
   selectedCategory,
   onSelectCategory,
+  onSeeAll,
 }) => {
-  const getCategoryIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Utensils': return <Utensils className="w-5 h-5" />;
-      case 'Hotel': return <Hotel className="w-5 h-5" />;
-      case 'Hospital': return <Hospital className="w-5 h-5" />;
-      case 'Pill': return <Pill className="w-5 h-5" />;
-      case 'Droplets': return <Droplets className="w-5 h-5" />;
-      case 'GraduationCap': return <GraduationCap className="w-5 h-5" />;
-      case 'Home': return <Home className="w-5 h-5" />;
-      case 'ShoppingBag': return <ShoppingBag className="w-5 h-5" />;
-      case 'Coffee': return <Coffee className="w-5 h-5" />;
-      case 'Landmark': return <Landmark className="w-5 h-5" />;
-      case 'BookOpen': return <BookOpen className="w-5 h-5" />;
-      case 'Train': return <Train className="w-5 h-5" />;
-      case 'Moon': return <Moon className="w-5 h-5" />;
-      case 'Calendar': return <Calendar className="w-5 h-5" />;
-      case 'Tag': return <Tag className="w-5 h-5" />;
-      case 'Newspaper': return <Newspaper className="w-5 h-5" />;
-      case 'Building2': return <Building2 className="w-5 h-5" />;
-      case 'Briefcase': return <Briefcase className="w-5 h-5" />;
-      case 'Wrench': return <Wrench className="w-5 h-5" />;
-      default: return <Grid className="w-5 h-5" />;
-    }
-  };
-
   return (
-    <section id="categories" className="py-14 bg-white border-y border-slate-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <section id="categories" className="pt-4 pb-12 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6">
         
-        {/* Heading */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Browse Directory
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-              Explore Categories
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              ময়মনসিংহের প্রয়োজনীয় সকল সেবা ও ব্যবসা ২০টি নির্দিষ্ট ক্যাটাগরিতে বিভক্ত
-            </p>
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-8 sm:h-9 bg-emerald-600 rounded-full shrink-0" />
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                Explore Categories
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                ময়মনসিংহের সব কিছু, এক জায়গায়
+              </p>
+            </div>
           </div>
 
-          <div className="text-xs font-semibold text-slate-500">
-            বর্তমানে মোট <strong className="text-slate-900">২০টি ক্যাটাগরি</strong> সক্রিয়
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (onSeeAll) {
+                onSeeAll();
+              } else {
+                onSelectCategory('all');
+              }
+            }}
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-emerald-600 transition-colors group cursor-pointer shrink-0"
+          >
+            <span>See All Categories</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
         </div>
 
         {/* 20 Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-2.5 sm:gap-3">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.slug;
+            const displayNameBn = SHORT_BN_NAMES[cat.slug] || cat.name_bn;
+
             return (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => onSelectCategory(cat.slug)}
-                className={`group p-4 rounded-2xl border text-left transition-all duration-200 flex flex-col justify-between h-32 hover:-translate-y-1 ${
+                className={`group flex flex-col items-center justify-center text-center p-3 sm:p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer h-[102px] sm:h-[110px] w-full ${
                   isSelected
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/25 ring-2 ring-emerald-300'
-                    : 'bg-slate-50/70 hover:bg-white border-slate-200/90 hover:border-emerald-300 shadow-2xs hover:shadow-md'
+                    ? 'bg-emerald-50/60 text-emerald-800 border-emerald-500 ring-2 ring-emerald-400/50 shadow-sm'
+                    : 'bg-white hover:bg-slate-50/50 border-slate-200/80 hover:border-slate-300 shadow-2xs hover:shadow-md hover:-translate-y-1'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`p-2.5 rounded-xl transition-colors ${
-                      isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-white text-emerald-600 shadow-xs group-hover:bg-emerald-50'
-                    }`}
-                  >
-                    {getCategoryIcon(cat.icon)}
-                  </div>
-                  <span
-                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                      isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-200/60 text-slate-600'
-                    }`}
-                  >
-                    {cat.count || 20}+
-                  </span>
+                {/* Icon */}
+                <div className="mb-2 shrink-0 flex items-center justify-center">
+                  {getCategoryIcon(cat.slug)}
                 </div>
 
-                <div>
-                  <h3
-                    className={`text-xs sm:text-sm font-bold truncate ${
-                      isSelected ? 'text-white' : 'text-slate-900 group-hover:text-emerald-700'
-                    }`}
-                  >
-                    {cat.name_en}
-                  </h3>
-                  <p
-                    className={`text-[11px] truncate ${
-                      isSelected ? 'text-emerald-100' : 'text-slate-500'
-                    }`}
-                  >
-                    {cat.name_bn}
-                  </p>
-                </div>
+                {/* English Title */}
+                <h3 className="text-xs sm:text-[13px] font-bold text-slate-800 group-hover:text-emerald-700 transition-colors leading-tight truncate w-full px-1">
+                  {cat.name_en}
+                </h3>
+
+                {/* Bengali Subtitle */}
+                <p className="text-[11px] sm:text-xs text-slate-500 group-hover:text-slate-700 transition-colors leading-tight truncate w-full px-1 mt-0.5">
+                  {displayNameBn}
+                </p>
               </button>
             );
           })}
