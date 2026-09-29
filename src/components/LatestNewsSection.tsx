@@ -1,20 +1,35 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Newspaper, Calendar, Clock, ArrowRight, X, ExternalLink } from 'lucide-react';
 import type { NewsArticle } from '../types';
-import { parseArticleSource, cleanNewsText } from '../lib/newsUtils';
+import {
+  parseArticleSource,
+  cleanNewsText,
+  normalizePunctuation,
+  sortNewsByDate
+} from '../lib/newsUtils';
+
+const THEME_IMAGE = '/images/news-placeholder.svg';
 
 interface LatestNewsSectionProps {
   news: NewsArticle[];
 }
 
 export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) => {
+  const navigate = useNavigate();
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+
+  // 1. Sort news strictly by recency/time from source
+  const sortedNews = sortNewsByDate(news);
+
+  // 2. Limit display to maximum 6 articles on Homepage
+  const displayNews = sortedNews.slice(0, 6);
 
   return (
     <section id="news" className="py-14 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Header */}
+        {/* Header with Title and View All Button */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-full mb-1">
@@ -28,10 +43,20 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
               ময়মনসিংহের উন্নয়ন, শিক্ষা, পর্যটন ও নাগরিক জীবনের সাম্প্রতিক খবর
             </p>
           </div>
+
+          {news.length > 0 && (
+            <button
+              onClick={() => navigate('/news')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-sm hover:shadow transition-all self-start sm:self-auto cursor-pointer"
+            >
+              <span>সব খবর দেখুন</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* News Cards Grid or Empty State */}
-        {news.length === 0 ? (
+        {displayNews.length === 0 ? (
           <div className="text-center py-16 px-4 rounded-3xl bg-white border-2 border-dashed border-slate-200 max-w-xl mx-auto space-y-3">
             <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
               <Newspaper className="w-7 h-7" />
@@ -45,8 +70,11 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((item, index) => {
+            {displayNews.map((item, index) => {
               const isFeaturedNews = index === 0; // First item is highlighted
+              const cleanTitle = normalizePunctuation(item.title);
+              const cleanExcerpt = cleanNewsText(item.excerpt);
+
               return (
                 <div
                   key={item.id}
@@ -56,10 +84,18 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                   }`}
                 >
                   <div>
-                    <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+                    <div className="relative aspect-16/10 overflow-hidden bg-slate-900">
                       <img
-                        src={item.image_url}
-                        alt={item.title}
+                        src={item.image_url || THEME_IMAGE}
+                        alt={cleanTitle}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.src.includes('news-placeholder.svg')) {
+                            target.onerror = null;
+                            target.src = THEME_IMAGE;
+                          }
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3 flex items-center gap-1.5">
@@ -82,12 +118,12 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                         </span>
                       </div>
 
-                      <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2">
-                        {item.title}
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
+                        {cleanTitle}
                       </h3>
 
                       <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                        {cleanNewsText(item.excerpt)}
+                        {cleanExcerpt}
                       </p>
                     </div>
                   </div>
@@ -104,18 +140,42 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
           </div>
         )}
 
+        {/* View All Redirection CTA Button at bottom */}
+        {news.length > 6 && (
+          <div className="text-center pt-4">
+            <button
+              onClick={() => navigate('/news')}
+              className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-white hover:bg-emerald-50 text-emerald-800 border-2 border-emerald-600/30 hover:border-emerald-600 font-bold text-sm shadow-xs hover:shadow-md transition-all cursor-pointer group"
+            >
+              <span>সকল {news.length}টি খবর ও বুলেটিন দেখুন</span>
+              <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        )}
+
         {/* Read Full News Modal */}
         {selectedArticle && (() => {
           const { cleanBody, sourceName, sourceUrl } = parseArticleSource(selectedArticle.content);
+          const modalTitle = normalizePunctuation(selectedArticle.title);
+          const modalExcerpt = cleanNewsText(selectedArticle.excerpt);
+
           return (
             <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
               <div className="fixed inset-0 -z-10" onClick={() => setSelectedArticle(null)} />
               
               <div className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 my-8">
-                <div className="relative aspect-16/9 overflow-hidden bg-slate-100">
+                <div className="relative aspect-16/9 overflow-hidden bg-slate-900">
                   <img
-                    src={selectedArticle.image_url}
-                    alt={selectedArticle.title}
+                    src={selectedArticle.image_url || THEME_IMAGE}
+                    alt={modalTitle}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes('news-placeholder.svg')) {
+                        target.onerror = null;
+                        target.src = THEME_IMAGE;
+                      }
+                    }}
                     className="w-full h-full object-cover"
                   />
                   <button
@@ -137,16 +197,16 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                   </div>
 
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
-                    {selectedArticle.title}
+                    {modalTitle}
                   </h2>
 
-                  {selectedArticle.excerpt && cleanNewsText(selectedArticle.excerpt) && (
-                    <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100">
-                      {cleanNewsText(selectedArticle.excerpt)}
+                  {modalExcerpt && (
+                    <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100 leading-relaxed">
+                      {modalExcerpt}
                     </p>
                   )}
 
-                  {cleanBody && cleanBody !== selectedArticle.excerpt && (
+                  {cleanBody && cleanBody !== modalExcerpt && (
                     <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                       {cleanBody}
                     </p>
@@ -182,7 +242,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                   <div className="pt-4 border-t border-slate-100 flex justify-end">
                     <button
                       onClick={() => setSelectedArticle(null)}
-                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors"
+                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       বন্ধ করুন
                     </button>

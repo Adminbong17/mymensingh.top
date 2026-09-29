@@ -13,7 +13,14 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import type { NewsArticle } from '../types';
-import { parseArticleSource, cleanNewsText } from '../lib/newsUtils';
+import {
+  parseArticleSource,
+  cleanNewsText,
+  normalizePunctuation,
+  sortNewsByDate
+} from '../lib/newsUtils';
+
+const THEME_IMAGE = '/images/news-placeholder.svg';
 
 export const NewsPage: React.FC = () => {
   const { news } = useData();
@@ -32,7 +39,10 @@ export const NewsPage: React.FC = () => {
     'নাগরিক জীবন'
   ];
 
-  const filteredNews = news.filter((item) => {
+  // Sort all news by recency
+  const sortedNews = sortNewsByDate(news);
+
+  const filteredNews = sortedNews.filter((item) => {
     if (selectedCategory !== 'All' && item.category !== selectedCategory) {
       return false;
     }
@@ -45,7 +55,7 @@ export const NewsPage: React.FC = () => {
     return true;
   });
 
-  const featuredStory = news[0];
+  const featuredStory = filteredNews.length > 0 ? filteredNews[0] : null;
 
   return (
     <div className="py-8 sm:py-12 bg-slate-50 min-h-screen">
@@ -74,10 +84,18 @@ export const NewsPage: React.FC = () => {
             onClick={() => setActiveArticle(featuredStory)}
             className="group relative bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer grid grid-cols-1 lg:grid-cols-12 gap-0"
           >
-            <div className="lg:col-span-7 relative aspect-16/10 lg:aspect-auto h-64 sm:h-80 lg:h-full overflow-hidden bg-slate-100">
+            <div className="lg:col-span-7 relative aspect-16/10 lg:aspect-auto h-64 sm:h-80 lg:h-full overflow-hidden bg-slate-900">
               <img
-                src={featuredStory.image_url}
-                alt={featuredStory.title}
+                src={featuredStory.image_url || THEME_IMAGE}
+                alt={normalizePunctuation(featuredStory.title)}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes('news-placeholder.svg')) {
+                    target.onerror = null;
+                    target.src = THEME_IMAGE;
+                  }
+                }}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute top-4 left-4">
@@ -95,21 +113,21 @@ export const NewsPage: React.FC = () => {
                     {featuredStory.category}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                     {featuredStory.date}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
                     {featuredStory.read_time}
                   </span>
                 </div>
 
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors leading-snug">
-                  {featuredStory.title}
+                  {normalizePunctuation(featuredStory.title)}
                 </h2>
 
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-4">
-                  {featuredStory.excerpt}
+                  {cleanNewsText(featuredStory.excerpt)}
                 </p>
               </div>
 
@@ -130,7 +148,7 @@ export const NewsPage: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
@@ -170,55 +188,68 @@ export const NewsPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredNews.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setActiveArticle(item)}
-                  className="group bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-xl hover:border-emerald-300 transition-all duration-300 cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
-                      <img
-                        src={item.image_url}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3">
-                        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-slate-800 shadow-xs">
-                          {item.category}
-                        </span>
+              {filteredNews.map((item) => {
+                const cleanItemTitle = normalizePunctuation(item.title);
+                const cleanItemExcerpt = cleanNewsText(item.excerpt);
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => setActiveArticle(item)}
+                    className="group bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-xl hover:border-emerald-300 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="relative aspect-16/10 overflow-hidden bg-slate-900">
+                        <img
+                          src={item.image_url || THEME_IMAGE}
+                          alt={cleanItemTitle}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.includes('news-placeholder.svg')) {
+                              target.onerror = null;
+                              target.src = THEME_IMAGE;
+                            }
+                          }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-slate-800 shadow-xs">
+                            {item.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-5 space-y-2">
+                        <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                            {item.date}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            {item.read_time}
+                          </span>
+                        </div>
+
+                        <h4 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
+                          {cleanItemTitle}
+                        </h4>
+
+                        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                          {cleanItemExcerpt}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="p-5 space-y-2">
-                      <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {item.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {item.read_time}
-                        </span>
-                      </div>
-
-                      <h4 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2">
-                        {item.title}
-                      </h4>
-
-                      <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                        {cleanNewsText(item.excerpt)}
-                      </p>
+                    <div className="p-4 px-5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        বিস্তারিত পড়ুন <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
                     </div>
                   </div>
-
-                  <div className="p-4 px-5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                      বিস্তারিত পড়ুন <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -250,19 +281,30 @@ export const NewsPage: React.FC = () => {
       {/* Full Article Reader Modal */}
       {activeArticle && (() => {
         const { cleanBody, sourceName, sourceUrl } = parseArticleSource(activeArticle.content);
+        const modalTitle = normalizePunctuation(activeArticle.title);
+        const modalExcerpt = cleanNewsText(activeArticle.excerpt);
+
         return (
           <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
             <div className="relative w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 my-8 flex flex-col max-h-[92vh]">
               {/* Modal Header */}
-              <div className="relative aspect-16/9 bg-slate-100 shrink-0">
+              <div className="relative aspect-16/9 bg-slate-900 shrink-0">
                 <img
-                  src={activeArticle.image_url}
-                  alt={activeArticle.title}
+                  src={activeArticle.image_url || THEME_IMAGE}
+                  alt={modalTitle}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes('news-placeholder.svg')) {
+                      target.onerror = null;
+                      target.src = THEME_IMAGE;
+                    }
+                  }}
                   className="w-full h-full object-cover"
                 />
                 <button
                   onClick={() => setActiveArticle(null)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -277,26 +319,26 @@ export const NewsPage: React.FC = () => {
               <div className="overflow-y-auto p-6 sm:p-8 space-y-4">
                 <div className="flex items-center gap-3 text-xs text-slate-500">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                     {activeArticle.date}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
                     {activeArticle.read_time}
                   </span>
                 </div>
 
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
-                  {activeArticle.title}
+                  {modalTitle}
                 </h2>
 
-                {activeArticle.excerpt && cleanNewsText(activeArticle.excerpt) && (
-                  <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100">
-                    {cleanNewsText(activeArticle.excerpt)}
+                {modalExcerpt && (
+                  <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100 leading-relaxed">
+                    {modalExcerpt}
                   </p>
                 )}
 
-                {cleanBody && cleanBody !== activeArticle.excerpt && (
+                {cleanBody && cleanBody !== modalExcerpt && (
                   <div className="text-sm text-slate-700 leading-relaxed space-y-3 pt-2 whitespace-pre-line">
                     <p>{cleanBody}</p>
                   </div>
@@ -335,14 +377,14 @@ export const NewsPage: React.FC = () => {
                       navigator.clipboard.writeText(window.location.href);
                       alert('খবরের লিংক কপি করা হয়েছে!');
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <Share2 className="w-4 h-4 text-emerald-600" />
                     <span>লিংক শেয়ার করুন</span>
                   </button>
                   <button
                     onClick={() => setActiveArticle(null)}
-                    className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors"
+                    className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     বন্ধ করুন
                   </button>

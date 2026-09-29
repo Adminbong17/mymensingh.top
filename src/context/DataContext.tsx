@@ -99,7 +99,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
   BUSINESSES: 'mymensingh_real_businesses_v2',
-  NEWS: 'mymensingh_real_news_v2',
+  NEWS: 'mymensingh_real_news_v3',
   EVENTS: 'mymensingh_real_events_v2',
   OFFERS: 'mymensingh_real_offers_v2',
   DONORS: 'mymensingh_real_donors_v2',
@@ -223,10 +223,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
   }, [categories]);
 
-  // Clean up legacy mock data storage
+  // Clean up legacy mock data storage and outdated news cache
   useEffect(() => {
     localStorage.removeItem('mymensingh_businesses_top_v1');
     localStorage.removeItem('mymensingh_reviews_top_v1');
+    localStorage.removeItem('mymensingh_real_news_v2');
+    localStorage.removeItem('mymensingh_real_news_v1');
   }, []);
 
   // Real Data Fetch (Supports cPanel MySQL or Supabase with non-destructive local merge)
@@ -239,7 +241,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (res && res.success) {
           if (Array.isArray(res.businesses)) setBusinesses(prev => mergeWithLocal(res.businesses, prev));
           if (Array.isArray(res.categories) && res.categories.length > 0) setCategories(prev => mergeWithLocal(res.categories, prev));
-          if (Array.isArray(res.news)) setNews(prev => mergeWithLocal(res.news, prev));
+          if (Array.isArray(res.news)) setNews(res.news);
           if (Array.isArray(res.events)) setEvents(prev => mergeWithLocal(res.events, prev));
           if (Array.isArray(res.offers)) setOffers(prev => mergeWithLocal(res.offers, prev));
           if (Array.isArray(res.blood_donors)) setBloodDonors(prev => mergeWithLocal(res.blood_donors, prev));
@@ -301,14 +303,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Could not fetch categories from Supabase:', err);
       }
 
-      // 3. Fetch real news from Supabase
+      // 3. Fetch real news from Supabase (authoritative source)
       try {
         const { data: dbNews, error: newsErr } = await supabase
           .from('news')
           .select('*')
           .order('created_at', { ascending: false });
         if (!newsErr && dbNews !== null && dbNews.length > 0) {
-          setNews(prev => mergeWithLocal(dbNews as NewsArticle[], prev));
+          setNews(dbNews as NewsArticle[]);
         }
       } catch {}
 
