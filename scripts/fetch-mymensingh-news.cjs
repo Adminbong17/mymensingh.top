@@ -1,11 +1,23 @@
 /**
- * Mymensingh.top - Automated Global, National, Local & Sports News Aggregator (.cjs)
+ * Mymensingh.top - Unified 10 Media Outlets News Aggregator (.cjs)
+ * 
+ * Aggregates fresh, authentic news ONLY from Bangladesh's TOP 10 Media Outlets:
+ * 1. প্রথম আলো (Prothom Alo - prothomalo.com)
+ * 2. দ্য ডেইলি স্টার (The Daily Star - bangla.thedailystar.net & thedailystar.net)
+ * 3. বিডিনিউজ টোয়েন্টিফোর (bdnews24.com - bangla.bdnews24.com)
+ * 4. বাংলা ট্রিবিউন (Bangla Tribune - banglatribune.com)
+ * 5. ঢাকা পোস্ট (Dhaka Post - dhakapost.com)
+ * 6. জাগোনিউজ২৪ (Jagonews24.com - jagonews24.com)
+ * 7. রাইজিংবিডি (Risingbd.com - risingbd.com)
+ * 8. বাংলাদেশ প্রতিদিন (Bangladesh Pratidin - bd-pratidin.com)
+ * 9. কালের কণ্ঠ (Kaler Kantho - kalerkantho.com)
+ * 10. বাংলানিউজ২৪ (Banglanews24.com - banglanews24.com)
  * 
  * Categories (User Specified):
- * 1. ময়মনসিংহ (Mymensingh local news & updates)
- * 2. বাংলাদেশ (National news, politics, affairs)
- * 3. আন্তর্জাতিক (World news, global events, Middle East, USA, Europe)
- * 4. খেলাধুলা (Sports, cricket, football, tournaments)
+ * 1. ময়মনসিংহ (Mymensingh local news & divisional updates)
+ * 2. বাংলাদেশ (National news, governance, political affairs)
+ * 3. আন্তর্জাতিক (World news, Middle East, USA, Europe, global events)
+ * 4. খেলাধুলা (Cricket, football, sports tournaments)
  */
 
 const https = require('https');
@@ -20,22 +32,22 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_S
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const DEFAULT_THEME_IMAGE = '/images/news-placeholder.svg';
-const MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000;
+const MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000; // 60 days maximum
 
-// HTTP GET helper with redirect support & Buffer concatenation
-function fetchUrl(url, headers = {}) {
+// Generic HTTP GET with redirect handling and timeout safety
+function fetchUrl(url, headers = {}, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     const isHttps = url.startsWith('https:');
     const client = isHttps ? https : http;
 
     const req = client.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'bn-BD,bn;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Language': 'bn-BD,bn;q=0.9,en-US;q=0.8',
         ...headers
       },
-      timeout: 12000
+      timeout: timeoutMs
     }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         let redirectUrl = res.headers.location;
@@ -43,7 +55,7 @@ function fetchUrl(url, headers = {}) {
           const origin = new URL(url).origin;
           redirectUrl = new URL(redirectUrl, origin).href;
         }
-        return fetchUrl(redirectUrl, headers).then(resolve).catch(reject);
+        return fetchUrl(redirectUrl, headers, timeoutMs).then(resolve).catch(reject);
       }
 
       if (res.statusCode !== 200) {
@@ -53,8 +65,7 @@ function fetchUrl(url, headers = {}) {
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
-        const fullBuffer = Buffer.concat(chunks);
-        resolve(fullBuffer.toString('utf8'));
+        resolve(Buffer.concat(chunks).toString('utf8'));
       });
     });
 
@@ -66,7 +77,7 @@ function fetchUrl(url, headers = {}) {
   });
 }
 
-// Clean HTML tags and entities
+// Clean HTML tags and decode entities
 function cleanHtml(str) {
   if (!str) return '';
   return str
@@ -77,8 +88,9 @@ function cleanHtml(str) {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&ldquo;|&rdquo;/g, '"')
+    .replace(/&lsquo;|&rsquo;/g, "'")
     .replace(/<a[\s\S]*?<\/a>/gi, ' ')
-    .replace(/<a[\s\S]*$/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/https?:\/\/[^\s]+/g, '')
     .replace(/\uFFFD+/g, '')
@@ -100,80 +112,6 @@ function normalizePunctuation(str) {
     .trim();
 }
 
-// Scrapes real article details: og:image, date, and full paragraphs
-async function scrapeArticleDetails(articleUrl) {
-  try {
-    const html = await fetchUrl(articleUrl);
-
-    // 1. Check article published date
-    const dateMatch = html.match(/<meta[^>]*property=["'](?:article:published_time|og:published_time|published_time)["'][^>]*content=["']([^"']+)["']/i) ||
-                      html.match(/<meta[^>]*name=["'](?:publish-date|publication-date|date)["'][^>]*content=["']([^"']+)["']/i) ||
-                      html.match(/<time[^>]*datetime=["']([^"']+)["']/i);
-
-    let publishedTime = null;
-    if (dateMatch && dateMatch[1]) {
-      const parsed = Date.parse(dateMatch[1]);
-      if (!isNaN(parsed)) {
-        publishedTime = parsed;
-      }
-    }
-
-    // Check if URL indicates old years
-    const yearMatch = articleUrl.match(/\/(201[0-9]|202[0-4])\//);
-    if (yearMatch) {
-      return { isOld: true, ogImage: null, paragraphs: [] };
-    }
-
-    if (publishedTime && (Date.now() - publishedTime) > MAX_AGE_MS) {
-      return { isOld: true, ogImage: null, paragraphs: [] };
-    }
-
-    // 2. Authentic og:image
-    let ogImage = null;
-    const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
-                    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
-                    html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
-                    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
-
-    if (ogMatch && ogMatch[1].startsWith('http')) {
-      const cleanImg = ogMatch[1].replace(/&amp;/g, '&').trim();
-      if (!cleanImg.includes('favicon') && !cleanImg.includes('logo_small') && !cleanImg.includes('placeholder')) {
-        ogImage = cleanImg;
-      }
-    }
-
-    // 3. Full article text extraction
-    let clean = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, '')
-      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, '')
-      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, '')
-      .replace(/<aside\b[^<]*(?:(?!<\/aside>)<[^<]*)*<\/aside>/gi, '')
-      .replace(/<!--[\s\S]*?-->/g, '');
-
-    const pMatches = [...clean.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
-    const paragraphs = [];
-
-    for (const m of pMatches) {
-      const text = cleanHtml(m[1]);
-      if (text.length < 35) continue;
-      if (/কপিরাইট|সর্বস্বত্ব|বিজ্ঞাপন|গুগল নিউজে|ফলো করুন|সাবস্ক্রাইব|অনলাইন ডেস্ক|আমাদের পেজে|ছবি সংগৃহীত|নিজস্ব প্রতিবেদক|প্রতিনিধি|আপডেট:/i.test(text) && text.length < 90) {
-        continue;
-      }
-      if (/https?:\/\//i.test(text)) continue;
-
-      if (!paragraphs.some(p => p.slice(0, 30) === text.slice(0, 30))) {
-        paragraphs.push(text);
-      }
-    }
-
-    return { isOld: false, ogImage, paragraphs, publishedTime };
-  } catch (err) {
-    return { isOld: false, ogImage: null, paragraphs: [] };
-  }
-}
-
 // Convert numbers to Bengali digits
 function toBengaliNumber(num) {
   const digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -191,95 +129,472 @@ function formatBengaliDate(dateStr) {
   return `${day} ${month}, ${year}`;
 }
 
-// Fetch candidate news via Prothom Alo search API with published-at sorting
-async function fetchCandidatesForCategory(query, category) {
-  try {
-    const url = `https://www.prothomalo.com/api/v1/advanced-search?q=${encodeURIComponent(query)}&sort=published-at&limit=15`;
-    const jsonStr = await fetchUrl(url);
-    const data = JSON.parse(jsonStr);
-    const items = [];
+// Parse Bing News RSS items
+function parseBingRss(xml, defaultSource = '') {
+  const items = [];
+  const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+  for (const m of matches) {
+    const itemXml = m[1];
+    const rawTitle = itemXml.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '';
+    const cleanTitle = cleanHtml(rawTitle).replace(/\s*-\s*[^|\n]+$/, '').trim();
+    if (!cleanTitle || cleanTitle.length < 12) continue;
 
-    if (data && Array.isArray(data.items)) {
-      for (const it of data.items) {
-        if (!it.headline || !it.url) continue;
+    const linkMatch = itemXml.match(/url=([^&"'>\s]+)/)?.[1] || itemXml.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '';
+    const directUrl = linkMatch ? decodeURIComponent(linkMatch) : '';
+    if (!directUrl || !directUrl.startsWith('http')) continue;
 
-        // Skip non-story or video links
-        if (it.url.includes('/video/') || it.url.includes('kishoralo') || it.url.includes('bondhushava')) {
-          continue;
-        }
+    const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
+    if (pubDate && (Date.now() - new Date(pubDate).getTime()) > MAX_AGE_MS) continue;
 
-        // Check age
-        if (it['published-at']) {
-          const pubTime = new Date(it['published-at']).getTime();
-          if (!isNaN(pubTime) && (Date.now() - pubTime) > MAX_AGE_MS) {
-            continue;
+    const img = itemXml.match(/<News:Image>([\s\S]*?)<\/News:Image>/)?.[1] || null;
+    const desc = cleanHtml(itemXml.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '');
+
+    items.push({
+      title: cleanTitle,
+      url: directUrl,
+      pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+      sourceName: defaultSource,
+      imageUrl: img,
+      excerpt: desc || cleanTitle,
+      body: desc || cleanTitle
+    });
+  }
+  return items;
+}
+
+// Classify news into the 4 target categories with precision
+function classifyCategory(title = '', excerpt = '', url = '', rawCategory = '') {
+  const normText = `${title} ${excerpt} ${url} ${rawCategory}`.toLowerCase().replace(/\u09AF\u09BC/g, '\u09DF');
+
+  // 1. Mymensingh Local News (division, districts, upazilas, landmarks)
+  const mymensinghKeywords = [
+    'ময়মনসিংহ', 'ময়মনসিংহ', 'গফরগাঁও', 'ত্রিশাল', 'ভালুকা', 'মুক্তাগাছা',
+    'ফুলবাড়িয়া', 'ফুলবাড়িয়া', 'হালুয়াঘাট', 'হালুয়াঘাট', 'ধোবাউড়া', 'তারাকান্দা',
+    'ঈশ্বরগঞ্জ', 'নান্দাইল', 'গৌরীপুর', 'নেত্রকোনা', 'শেরপুর', 'জামালপুর',
+    'ব্রহ্মপুত্র', 'আনন্দ মোহন', 'বাকৃবি', 'কৃষি বিশ্ববিদ্যালয়', 'কৃষি বিশ্ববিদ্যালয়', 'mymensingh'
+  ];
+  if (mymensinghKeywords.some(kw => normText.includes(kw))) {
+    return 'ময়মনসিংহ';
+  }
+
+  // 2. Sports News (explicit sports terms, exclude 'আইসিসিবি' and innocent verbs like 'খেলতে গিয়ে')
+  const isSportsUrl = /\/(sports|sport|cricket|football)\//i.test(url);
+  const sportsKeywords = [
+    'খেলাধুলা', 'ক্রিকেট', 'ফুটবল', 'বিশ্বকাপ', 'মেসি', 'রোনালদো',
+    'সাকিব আল হাসান', 'তামিম ইকবাল', 'বিপিএল', 'আইপিএল', 'উইকেট', 'চ্যাম্পিয়ন',
+    'লা লিগা', 'প্রিমিয়ার লিগ', 'ব্যাটসম্যান', 'বোলার', 'অলরাউন্ডার',
+    'আনচেলত্তি', 'ভিনিসিউস', 'এমবাপ্পে', 'নেইমার', 'ইয়ামাল', 'ইয়ামাল',
+    'ম্যানসিটি', 'ম্যান সিটি', 'বার্সেলোনা', 'রিয়াল মাদ্রিদ', 'রিয়াল',
+    'আর্সেনাল', 'লিভারপুল', 'চেলসি', 'বায়ার্ন', 'জুভেন্টাস', 'পিএসজি',
+    'উয়েফা', 'ব্যালন ডি', 'বিসিবি', 'বাফুফে', 'স্টেডিয়াম', 'টেস্ট ম্যাচ',
+    'ওয়ানডে', 'টি-টোয়েন্টি', 'খেলার মাঠ', 'খেলার খবর', 'ক্রিকেট খেলা',
+    'ফুটবল খেলা', 'আজকের খেলা'
+  ];
+  const hasIcc = normText.includes('আইসিসি') && !normText.includes('আইসিসিবি');
+  const hasSportsWord = sportsKeywords.some(kw => normText.includes(kw)) ||
+                        hasIcc ||
+                        normText.includes('ফিফা') ||
+                        /(^|\s)(ক্রিকেট|ফুটবল|মেসি|রোনালদো|গোলপোস্ট|সেমিফাইনাল|ফাইনাল ম্যাচ|টেস্ট সিরিজ)(\s|$)/.test(normText) ||
+                        /(^|\s)গোল(ে|ের|টি|এ|\s|$)/.test(normText);
+
+  if (isSportsUrl || hasSportsWord || rawCategory === 'খেলা' || rawCategory === 'খেলাধুলা' || rawCategory === 'sport' || rawCategory === 'sports') {
+    return 'খেলাধুলা';
+  }
+
+  // 3. International News (exclude 'বিশ্ববিদ্যালয়' from 'বিশ্ব')
+  const isIntlUrl = /\/(world|international|probash)\//i.test(url);
+  const intlKeywords = [
+    'আন্তর্জাতিক', 'বহির্বিশ্ব', 'আমেরিকা', 'যুক্তরাষ্ট্র', 'রাশিয়া', 'রাশিয়া',
+    'ইউক্রেন', 'ইসরায়েল', 'ইসরায়েল', 'ফিলিস্তিন', 'গাজা', 'চীন', 'ভারত',
+    'মধ্যপ্রাচ্য', 'ইরান', 'লেবানন', 'ট্রাম্প', 'বাইডেন', 'পুতিন', 'নেতানিয়াহু',
+    'জাতিসংঘ', 'ইউরোপ', 'পাকিস্তান', 'সৌদি', 'আমিরাত', 'দুবাই', 'কাতার',
+    'যুক্তরাজ্য', 'ব্রিটেন', 'লন্ডন', 'হোয়াইট হাউস', 'যুদ্ধবিরতি', 'মরক্কো',
+    'মিশর', 'তুরস্ক', 'জাপান', 'জার্মানি', 'ফ্রান্স', 'কানাডা', 'অস্ট্রেলিয়া',
+    'অস্ট্রেলিয়া', 'ইতালি', 'স্পেন', 'মালয়েশিয়া', 'মালয়েশিয়া', 'সিঙ্গাপুর',
+    'ইন্দোনেশিয়া', 'আফগানিস্তান', 'প্রবাসী', 'প্রবাস'
+  ];
+  const hasIntlWord = intlKeywords.some(kw => normText.includes(kw)) ||
+                      (/(^|\s)(বিশ্ব|বিশ্বের|বিশ্বজুড়ে|সারা বিশ্ব)(\s|$)/.test(normText) && !normText.includes('বিশ্ববিদ্যাল'));
+
+  if (isIntlUrl || hasIntlWord || rawCategory === 'আন্তর্জাতিক' || rawCategory === 'বিশ্ব') {
+    return 'আন্তর্জাতিক';
+  }
+
+  // 4. Default: বাংলাদেশ
+  return 'বাংলাদেশ';
+}
+
+// ----------------------------------------------------------------------------
+// 1. প্রথম আলো (Prothom Alo - Direct API with Full Article Elements)
+// ----------------------------------------------------------------------------
+async function fetchProthomAloNews() {
+  const items = [];
+  const queries = [
+    { q: 'ময়মনসিংহ', cat: 'ময়মনসিংহ' },
+    { q: 'বাংলাদেশ', cat: 'বাংলাদেশ' },
+    { q: 'আন্তর্জাতিক', cat: 'আন্তর্জাতিক' },
+    { q: 'খেলাধুলা', cat: 'খেলাধুলা' }
+  ];
+
+  for (const { q, cat } of queries) {
+    try {
+      const url = `https://www.prothomalo.com/api/v1/advanced-search?q=${encodeURIComponent(q)}&sort=published-at&limit=4`;
+      const json = await fetchUrl(url);
+      const data = JSON.parse(json);
+
+      for (const it of data.items || []) {
+        if (!it.headline || !it.url || it.url.includes('/video/')) continue;
+        const pubTime = it['published-at'] ? new Date(it['published-at']).getTime() : Date.now();
+        if (Date.now() - pubTime > MAX_AGE_MS) continue;
+
+        let paragraphs = [];
+        if (it.cards && Array.isArray(it.cards)) {
+          for (const c of it.cards) {
+            for (const el of c['story-elements'] || []) {
+              if (el.type === 'text' && el.text) {
+                const pMatches = [...el.text.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+                for (const pm of pMatches) {
+                  const cleaned = cleanHtml(pm[1]);
+                  if (cleaned.length > 25) paragraphs.push(cleaned);
+                }
+              }
+            }
           }
         }
+
+        const img = it['hero-image-s3-key'] ? `https://images.prothomalo.com/${it['hero-image-s3-key']}` : null;
+        const summary = cleanHtml(it.summary);
+        const excerpt = summary || paragraphs[0] || cleanHtml(it.headline);
+        const body = paragraphs.length > 0 ? paragraphs.join('\n\n') : excerpt;
 
         items.push({
           title: cleanHtml(it.headline),
           url: it.url,
           pubDate: it['published-at'] || new Date().toISOString(),
-          category: category,
-          sourceName: 'প্রথম আলো'
+          sourceName: 'প্রথম আলো',
+          category: cat,
+          imageUrl: img || DEFAULT_THEME_IMAGE,
+          excerpt,
+          body
         });
       }
+    } catch (e) {
+      console.warn('Prothom Alo error:', e.message);
     }
-    return items;
-  } catch (err) {
-    console.warn(`Search failed for ${category} ("${query}"):`, err.message);
-    return [];
   }
+  return items;
 }
 
-// Fetch Prothom Alo Master Stories RSS for supplementary items
-async function fetchMasterRssItems() {
+// ----------------------------------------------------------------------------
+// 2. দ্য ডেইলি স্টার (The Daily Star - Bangla RSS & Bing Feed)
+// ----------------------------------------------------------------------------
+async function fetchDailyStarNews() {
+  const items = [];
   try {
-    const xml = await fetchUrl('https://www.prothomalo.com/stories.rss');
-    const items = [];
-    const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-    const now = Date.now();
-
-    for (const match of matches) {
-      const itemXml = match[1];
+    const xml = await fetchUrl('https://bangla.thedailystar.net/rss.xml');
+    for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+      const itemXml = m[1];
       const link = itemXml.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '';
-      if (!link || link.includes('/video/') || link.includes('kishoralo')) continue;
+      if (!link) continue;
+
+      const desc = itemXml.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '';
+      const titleMatch = desc.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || itemXml.match(/<title>([\s\S]*?)<\/title>/);
+      const title = cleanHtml(titleMatch ? titleMatch[1] : '');
+      if (!title) continue;
 
       const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
-      if (pubDate) {
-        const pubTime = new Date(pubDate).getTime();
-        if (!isNaN(pubTime) && (now - pubTime) > MAX_AGE_MS) continue;
-      }
+      const pMatches = [...desc.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map(p => cleanHtml(p[1])).filter(t => t.length > 20);
 
-      const title = cleanHtml(itemXml.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '');
-      let category = 'বাংলাদেশ';
-      if (link.includes('/sports/')) category = 'খেলাধুলা';
-      else if (link.includes('/world/')) category = 'আন্তর্জাতিক';
-      else if (link.includes('mymensingh') || title.includes('ময়মনসিংহ') || title.includes('ময়মনসিংহ')) category = 'ময়মনসিংহ';
-
-      if (title && link) {
-        items.push({
-          title,
-          url: link,
-          pubDate: pubDate || new Date().toISOString(),
-          category,
-          sourceName: 'প্রথম আলো'
-        });
-      }
+      items.push({
+        title,
+        url: link,
+        pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        sourceName: 'দ্য ডেইলি স্টার',
+        category: classifyCategory(title, pMatches.join(' '), link),
+        imageUrl: DEFAULT_THEME_IMAGE,
+        excerpt: pMatches[0] || title,
+        body: pMatches.join('\n\n') || title
+      });
     }
-    return items;
-  } catch (err) {
-    console.warn('Master RSS failed:', err.message);
-    return [];
-  }
+  } catch (e) {}
+
+  try {
+    const bingXml = await fetchUrl('https://www.bing.com/news/search?q=site:bangla.thedailystar.net&format=rss');
+    const bingItems = parseBingRss(bingXml, 'দ্য ডেইলি স্টার');
+    for (const it of bingItems) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'দ্য ডেইলি স্টার');
+      items.push(it);
+    }
+  } catch (e) {}
+
+  return items;
 }
 
-// Main Aggregator Execution
-async function run() {
-  console.log('=== Starting Mymensingh.top Global, National & Sports News Aggregator ===');
+// ----------------------------------------------------------------------------
+// 3. বিডিনিউজ টোয়েন্টিফোর (bdnews24.com - Direct Official API)
+// ----------------------------------------------------------------------------
+async function fetchBdnews24News() {
+  const items = [];
+  try {
+    const json = await fetchUrl('https://bangla.bdnews24.com/api/v1/stories?limit=15');
+    const data = JSON.parse(json);
 
-  // Step 1: Wipe outdated news table in Supabase so categories are 100% cleanly populated
-  console.log('Resetting news table in Supabase...');
+    for (const story of data.stories || []) {
+      if (!story.headline || !story.url) continue;
+
+      const pubTime = story['published-at'] ? new Date(story['published-at']).getTime() : Date.now();
+      if (Date.now() - pubTime > MAX_AGE_MS) continue;
+
+      const img = story['hero-image-s3-key'] ? `https://images.assettype.com/${story['hero-image-s3-key']}` : DEFAULT_THEME_IMAGE;
+      const sectionName = story.sections?.[0]?.name || '';
+      const title = cleanHtml(story.headline);
+      const excerpt = cleanHtml(story.subheadline) || title;
+      const category = classifyCategory(title, excerpt, story.url, sectionName);
+
+      items.push({
+        title,
+        url: story.url,
+        pubDate: story['published-at'] || new Date().toISOString(),
+        sourceName: 'বিডিনিউজ টোয়েন্টিফোর',
+        category,
+        imageUrl: img,
+        excerpt,
+        body: excerpt
+      });
+    }
+  } catch (e) {
+    console.warn('bdnews24 error:', e.message);
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 4. বাংলা ট্রিবিউন (Bangla Tribune - Direct RSS)
+// ----------------------------------------------------------------------------
+async function fetchBanglaTribuneNews() {
+  const items = [];
+  try {
+    const xml = await fetchUrl('https://www.banglatribune.com/feed/');
+    for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+      if (items.length >= 12) break;
+      const itemXml = m[1];
+      const title = cleanHtml(itemXml.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '');
+      const link = itemXml.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '';
+      const pubDate = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
+      if (!title || !link) continue;
+
+      const imgMatch = itemXml.match(/<img[^>]*src=["']([^"']+)["']/i);
+      const descMatch = itemXml.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '';
+      const desc = cleanHtml(descMatch);
+      const catMatch = itemXml.match(/<category>([\s\S]*?)<\/category>/)?.[1] || '';
+
+      items.push({
+        title,
+        url: link,
+        pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        sourceName: 'বাংলা ট্রিবিউন',
+        category: classifyCategory(title, desc, link, cleanHtml(catMatch)),
+        imageUrl: imgMatch ? imgMatch[1] : DEFAULT_THEME_IMAGE,
+        excerpt: desc || title,
+        body: desc || title
+      });
+    }
+  } catch (e) {
+    console.warn('Bangla Tribune error:', e.message);
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 5. ঢাকা পোস্ট (Dhaka Post)
+// ----------------------------------------------------------------------------
+async function fetchDhakaPostNews() {
+  const items = [];
+  const queries = ['site:dhakapost.com', 'site:dhakapost.com ময়মনসিংহ'];
+  for (const q of queries) {
+    const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+    const parsed = parseBingRss(xml, 'ঢাকা পোস্ট');
+    for (const it of parsed) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'ঢাকা পোস্ট');
+      items.push(it);
+    }
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 6. জাগোনিউজ২৪ (Jagonews24.com)
+// ----------------------------------------------------------------------------
+async function fetchJagonewsNews() {
+  const items = [];
+  const queries = ['site:jagonews24.com', 'site:jagonews24.com ময়মনসিংহ'];
+  for (const q of queries) {
+    const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+    const parsed = parseBingRss(xml, 'জাগোনিউজ২৪');
+    for (const it of parsed) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'জাগোনিউজ২৪');
+      items.push(it);
+    }
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 7. রাইজিংবিডি (Risingbd.com)
+// ----------------------------------------------------------------------------
+async function fetchRisingbdNews() {
+  const items = [];
+  const queries = ['site:risingbd.com', 'site:risingbd.com ময়মনসিংহ'];
+  for (const q of queries) {
+    const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+    const parsed = parseBingRss(xml, 'রাইজিংবিডি');
+    for (const it of parsed) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'রাইজিংবিডি');
+      items.push(it);
+    }
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 8. বাংলাদেশ প্রতিদিন (Bangladesh Pratidin)
+// ----------------------------------------------------------------------------
+async function fetchBdPratidinNews() {
+  const items = [];
+  const queries = ['site:bd-pratidin.com', 'site:bd-pratidin.com ময়মনসিংহ'];
+  for (const q of queries) {
+    const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+    const parsed = parseBingRss(xml, 'বাংলাদেশ প্রতিদিন');
+    for (const it of parsed) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'বাংলাদেশ প্রতিদিন');
+      items.push(it);
+    }
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 9. কালের কণ্ঠ (Kaler Kantho)
+// ----------------------------------------------------------------------------
+async function fetchKalerKanthoNews() {
+  const items = [];
+  const queries = ['"কালের কণ্ঠ"', 'site:kalerkantho.com ময়মনসিংহ'];
+  for (const q of queries) {
+    const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+    const parsed = parseBingRss(xml, 'কালের কণ্ঠ');
+    for (const it of parsed) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'কালের কণ্ঠ');
+      items.push(it);
+    }
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// 10. বাংলানিউজ২৪ (Banglanews24.com)
+// ----------------------------------------------------------------------------
+async function fetchBanglanewsNews() {
+  const items = [];
+  const queries = ['"বাংলানিউজ"', 'site:banglanews24.com ময়মনসিংহ'];
+  for (const q of queries) {
+    const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+    const parsed = parseBingRss(xml, 'বাংলানিউজ২৪');
+    for (const it of parsed) {
+      it.category = classifyCategory(it.title, it.excerpt, it.url, 'বাংলানিউজ২৪');
+      items.push(it);
+    }
+  }
+  return items;
+}
+
+// ----------------------------------------------------------------------------
+// MAIN EXECUTION
+// ----------------------------------------------------------------------------
+async function run() {
+  console.log('=== Starting Mymensingh.top TOP 10 News Media Ingestion ===\n');
+
+  console.log('Targeting the 10 media outlets:');
+  console.log('1. প্রথম আলো (Prothom Alo)');
+  console.log('2. দ্য ডেইলি স্টার (The Daily Star)');
+  console.log('3. বিডিনিউজ টোয়েন্টিফোর (bdnews24.com)');
+  console.log('4. বাংলা ট্রিবিউন (Bangla Tribune)');
+  console.log('5. ঢাকা পোস্ট (Dhaka Post)');
+  console.log('6. জাগোনিউজ২৪ (Jagonews24.com)');
+  console.log('7. রাইজিংবিডি (Risingbd.com)');
+  console.log('8. বাংলাদেশ প্রতিদিন (Bangladesh Pratidin)');
+  console.log('9. কালের কণ্ঠ (Kaler Kantho)');
+  console.log('10. বাংলানিউজ২৪ (Banglanews24.com)\n');
+
+  // Fetch concurrently
+  const [
+    prothomAloItems,
+    dailyStarItems,
+    bdnews24Items,
+    banglaTribuneItems,
+    dhakaPostItems,
+    jagonewsItems,
+    risingbdItems,
+    bdPratidinItems,
+    kalerKanthoItems,
+    banglanewsItems
+  ] = await Promise.all([
+    fetchProthomAloNews(),
+    fetchDailyStarNews(),
+    fetchBdnews24News(),
+    fetchBanglaTribuneNews(),
+    fetchDhakaPostNews(),
+    fetchJagonewsNews(),
+    fetchRisingbdNews(),
+    fetchBdPratidinNews(),
+    fetchKalerKanthoNews(),
+    fetchBanglanewsNews()
+  ]);
+
+  const allArticles = [
+    ...prothomAloItems,
+    ...dailyStarItems,
+    ...bdnews24Items,
+    ...banglaTribuneItems,
+    ...dhakaPostItems,
+    ...jagonewsItems,
+    ...risingbdItems,
+    ...bdPratidinItems,
+    ...kalerKanthoItems,
+    ...banglanewsItems
+  ];
+
+  console.log(`\nTotal candidate articles gathered: ${allArticles.length}`);
+  const sourceStats = {};
+  for (const it of allArticles) {
+    sourceStats[it.sourceName] = (sourceStats[it.sourceName] || 0) + 1;
+  }
+  console.log('Candidate Breakdown by Source:');
+  console.log(JSON.stringify(sourceStats, null, 2));
+
+  // Partition candidates by category
+  const categoryPools = {
+    'ময়মনসিংহ': [],
+    'বাংলাদেশ': [],
+    'আন্তর্জাতিক': [],
+    'খেলাধুলা': []
+  };
+
+  for (const item of allArticles) {
+    if (categoryPools[item.category]) {
+      categoryPools[item.category].push(item);
+    } else {
+      categoryPools['বাংলাদেশ'].push(item);
+    }
+  }
+
+  console.log('\nPool sizes per category:');
+  console.log(`- ময়মনসিংহ: ${categoryPools['ময়মনসিংহ'].length}`);
+  console.log(`- বাংলাদেশ: ${categoryPools['বাংলাদেশ'].length}`);
+  console.log(`- আন্তর্জাতিক: ${categoryPools['আন্তর্জাতিক'].length}`);
+  console.log(`- খেলাধুলা: ${categoryPools['খেলাধুলা'].length}`);
+
+  // Step 2: Clear outdated news in Supabase
+  console.log('\nResetting Supabase news table...');
   try {
     const { error: resetErr } = await supabase.from('news').delete().neq('id', 'keep_none');
     if (resetErr) {
@@ -291,43 +606,8 @@ async function run() {
     console.warn('Wipe notice:', err.message);
   }
 
-  // Step 2: Fetch candidates for each category
-  console.log('Fetching fresh candidates across all 4 categories...');
-  const [
-    mymensinghItems,
-    bangladeshItems,
-    intlItems,
-    sportsItems,
-    masterItems
-  ] = await Promise.all([
-    fetchCandidatesForCategory('ময়মনসিংহ', 'ময়মনসিংহ'),
-    fetchCandidatesForCategory('বাংলাদেশ OR রাজনীতি OR সরকার', 'বাংলাদেশ'),
-    fetchCandidatesForCategory('যুদ্ধ OR আন্তর্জাতিক OR গাজা OR ট্রাম্প', 'আন্তর্জাতিক'),
-    fetchCandidatesForCategory('খেলাধুলা OR ক্রিকেট OR ফুটবল', 'খেলাধুলা'),
-    fetchMasterRssItems()
-  ]);
-
-  const categoryPools = {
-    'ময়মনসিংহ': [...mymensinghItems],
-    'বাংলাদেশ': [...bangladeshItems],
-    'আন্তর্জাতিক': [...intlItems],
-    'খেলাধুলা': [...sportsItems]
-  };
-
-  // Merge master RSS items into respective categories
-  for (const m of masterItems) {
-    if (categoryPools[m.category]) {
-      categoryPools[m.category].push(m);
-    }
-  }
-
-  console.log(`Candidate pools:`);
-  console.log(`- ময়মনসিংহ: ${categoryPools['ময়মনসিংহ'].length}`);
-  console.log(`- বাংলাদেশ: ${categoryPools['বাংলাদেশ'].length}`);
-  console.log(`- আন্তর্জাতিক: ${categoryPools['আন্তর্জাতিক'].length}`);
-  console.log(`- খেলাধুলা: ${categoryPools['খেলাধুলা'].length}`);
-
-  const TARGET_PER_CATEGORY = 8;
+  // Step 3: Insert balanced articles across categories using Round-Robin source selection
+  const TARGET_PER_CATEGORY = 10;
   const insertedCounts = {
     'ময়মনসিংহ': 0,
     'বাংলাদেশ': 0,
@@ -337,74 +617,97 @@ async function run() {
 
   const existingTitles = new Set();
   const existingIds = new Set();
+  const sourceInsertedCounts = {};
   const categories = ['ময়মনসিংহ', 'বাংলাদেশ', 'আন্তর্জাতিক', 'খেলাধুলা'];
 
   for (const cat of categories) {
-    console.log(`\n--- Ingesting Category: [${cat}] (Target: ${TARGET_PER_CATEGORY}) ---`);
+    console.log(`\n--- Ingesting [${cat}] (Target: ${TARGET_PER_CATEGORY}) ---`);
     const pool = categoryPools[cat] || [];
 
-    for (let i = 0; i < pool.length; i++) {
-      if (insertedCounts[cat] >= TARGET_PER_CATEGORY) break;
-
-      const item = pool[i];
-      const titleKey = item.title.trim().toLowerCase();
-      if (existingTitles.has(titleKey)) continue;
-
-      const hash = crypto.createHash('md5').update(item.title).digest('hex').slice(0, 12);
-      const articleId = `news-${hash}`;
-      if (existingIds.has(articleId)) continue;
-
-      // Scrape details & full paragraphs directly from publisher
-      const details = await scrapeArticleDetails(item.url);
-      if (details.isOld) continue;
-
-      const fullParagraphs = details.paragraphs || [];
-      if (fullParagraphs.length < 2) {
-        continue; // Must be full article
+    // Group items in this category by sourceName
+    const sourceBuckets = {};
+    for (const item of pool) {
+      if (!sourceBuckets[item.sourceName]) {
+        sourceBuckets[item.sourceName] = [];
       }
+      sourceBuckets[item.sourceName].push(item);
+    }
 
-      // Fallback theme image if portal photo is not available
-      const realArticleImage = details.ogImage || null;
-      const imageUrl = realArticleImage || DEFAULT_THEME_IMAGE;
+    // Sort each source's bucket by publication time descending
+    for (const src of Object.keys(sourceBuckets)) {
+      sourceBuckets[src].sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+    }
 
-      // Construct content
-      const fullContentText = fullParagraphs.join('\n\n');
-      const cleanExcerpt = fullParagraphs[0].slice(0, 170).trim() + (fullParagraphs[0].length > 170 ? '...' : '');
-      const content = `${fullContentText}\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${item.url})`;
+    // Prioritize sources that have fewer overall insertions across the whole database
+    const sortedSources = Object.keys(sourceBuckets).sort((a, b) => {
+      const countA = sourceInsertedCounts[a] || 0;
+      const countB = sourceInsertedCounts[b] || 0;
+      return countA - countB;
+    });
 
-      const wordCount = fullContentText.split(/\s+/).length;
-      const readMinutes = Math.max(1, Math.min(10, Math.ceil(wordCount / 130)));
-      const readTimeFormatted = `${toBengaliNumber(readMinutes)} মিনিট পাঠ`;
-      const dateFormatted = formatBengaliDate(details.publishedTime || item.pubDate);
+    // Round-robin selection across sources
+    let addedInRound = true;
+    while (insertedCounts[cat] < TARGET_PER_CATEGORY && addedInRound) {
+      addedInRound = false;
 
-      const payload = {
-        id: articleId,
-        title: normalizePunctuation(item.title),
-        excerpt: cleanExcerpt,
-        category: cat,
-        date: dateFormatted,
-        image_url: imageUrl,
-        read_time: readTimeFormatted,
-        content: content
-      };
+      for (const src of sortedSources) {
+        if (insertedCounts[cat] >= TARGET_PER_CATEGORY) break;
 
-      const { error: insertErr } = await supabase.from('news').insert([payload]);
-      if (insertErr) {
-        console.warn(`  Failed inserting article:`, insertErr.message);
-      } else {
-        existingTitles.add(titleKey);
-        existingIds.add(articleId);
-        insertedCounts[cat] = (insertedCounts[cat] || 0) + 1;
-        console.log(`  [+${insertedCounts[cat]}] [${cat}]: "${item.title.slice(0, 42)}..."`);
+        const bucket = sourceBuckets[src];
+        if (!bucket || bucket.length === 0) continue;
+
+        const item = bucket.shift();
+        const titleKey = item.title.trim().toLowerCase();
+        if (existingTitles.has(titleKey)) continue;
+
+        const hash = crypto.createHash('md5').update(item.title).digest('hex').slice(0, 12);
+        const articleId = `news-${hash}`;
+        if (existingIds.has(articleId)) continue;
+
+        // Construct excerpt & body with formatted source attribution button
+        const cleanExcerpt = cleanHtml(item.excerpt).slice(0, 170).trim() + (item.excerpt.length > 170 ? '...' : '');
+        const content = `${item.body}\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${item.url})`;
+
+        const wordCount = (item.body || '').split(/\s+/).length;
+        const readMinutes = Math.max(1, Math.min(10, Math.ceil(wordCount / 130)));
+        const readTimeFormatted = `${toBengaliNumber(readMinutes)} মিনিট পাঠ`;
+        const dateFormatted = formatBengaliDate(item.pubDate);
+
+        const payload = {
+          id: articleId,
+          title: normalizePunctuation(item.title),
+          excerpt: cleanExcerpt,
+          category: cat,
+          date: dateFormatted,
+          image_url: item.imageUrl || DEFAULT_THEME_IMAGE,
+          read_time: readTimeFormatted,
+          content: content,
+          created_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()
+        };
+
+        const { error: insertErr } = await supabase.from('news').insert([payload]);
+        if (insertErr) {
+          console.warn(`  Failed inserting article:`, insertErr.message);
+        } else {
+          existingTitles.add(titleKey);
+          existingIds.add(articleId);
+          insertedCounts[cat] = (insertedCounts[cat] || 0) + 1;
+          sourceInsertedCounts[item.sourceName] = (sourceInsertedCounts[item.sourceName] || 0) + 1;
+          addedInRound = true;
+          console.log(`  [+${insertedCounts[cat]}] [${cat} | ${item.sourceName}]: "${item.title.slice(0, 42)}..."`);
+        }
       }
-
-      // Polite delay between article fetches
-      await new Promise(r => setTimeout(r, 400));
     }
   }
 
-  console.log(`\n=== Aggregation Completed Successfully ===`);
+  console.log(`\n=== All 10 Outlets Ingestion Completed Successfully ===`);
   console.log(JSON.stringify(insertedCounts, null, 2));
+
+  // Verify total count in Supabase
+  const { data: dbNews, error: countErr } = await supabase.from('news').select('id, category, title, created_at');
+  if (!countErr && dbNews) {
+    console.log(`\nSupabase live records count: ${dbNews.length}`);
+  }
 }
 
 run().catch(console.error);
