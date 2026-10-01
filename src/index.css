@@ -71,7 +71,7 @@ body {
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: news-ticker-scroll 65s linear infinite;
+  animation: news-ticker-scroll 130s linear infinite;
 }
 
 .news-marquee-track:hover,
