@@ -79,6 +79,44 @@ function fetchUrl(url, headers = {}, timeoutMs = 8000) {
   });
 }
 
+// Scrapes the real multi-paragraph article body from portal web page
+async function fetchFullArticleBody(url) {
+  if (!url || !url.startsWith('http')) return null;
+  try {
+    const html = await fetchUrl(url, {}, 6000);
+    // Strip scripts, styles, headers, footers, navs
+    const cleanDoc = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, ' ')
+      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, ' ')
+      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, ' ');
+
+    const pMatches = [...cleanDoc.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+    const validParas = [];
+    for (const m of pMatches) {
+      const p = cleanHtml(m[1]);
+      if (
+        p.length > 35 &&
+        !p.includes('কপিরাইট') &&
+        !p.includes('সর্বস্বত্ব') &&
+        !p.includes('Google News') &&
+        !p.includes('বিজ্ঞাপন') &&
+        !p.includes('app_installed') &&
+        !p.startsWith('{') &&
+        !p.includes('@context') &&
+        !p.includes('ফেসবুক পেজে')
+      ) {
+        validParas.push(p);
+      }
+    }
+    if (validParas.length >= 2) {
+      return validParas.slice(0, 15).join('\n\n');
+    }
+  } catch {}
+  return null;
+}
+
 // Clean HTML tags and decode entities
 function cleanHtml(str) {
   if (!str) return '';
@@ -353,6 +391,21 @@ async function fetchBdnews24News() {
       const excerpt = cleanHtml(story.subheadline) || title;
       const category = classifyCategory(title, excerpt, story.url, sectionName);
 
+      // Extract full multi-paragraph article body if slug available
+      let body = excerpt;
+      if (story.slug) {
+        try {
+          const detailRaw = await fetchUrl(`https://bangla.bdnews24.com/api/v1/stories-by-slug?slug=${encodeURIComponent(story.slug)}`, {}, 4000);
+          const detailJson = JSON.parse(detailRaw);
+          const paras = (detailJson.story?.cards || [])
+            .flatMap(c => (c['story-elements'] || []).filter(e => e.type === 'text').map(e => cleanHtml(e.text)))
+            .filter(t => t.length > 20);
+          if (paras.length > 0) {
+            body = paras.join('\n\n');
+          }
+        } catch {}
+      }
+
       items.push({
         title,
         url: story.url,
@@ -361,7 +414,7 @@ async function fetchBdnews24News() {
         category,
         imageUrl: img,
         excerpt,
-        body: excerpt
+        body
       });
     }
   } catch (e) {
@@ -619,6 +672,53 @@ async function run() {
   const existingIds = new Set((dbExistingNews || []).map(item => item.id));
   console.log(`Preserving ${existingIds.size} existing articles in database.`);
 
+  // Step 2.5: Enrich existing articles in Supabase that have short/missing full body
+  try {
+    const { data: allDbRows } = await supabase.from('news').select('id, title, content, excerpt');
+    if (allDbRows && allDbRows.length > 0) {
+      const needEnrichment = allDbRows.filter(r => !r.content || r.content.length < 280);
+      if (needEnrichment.length > 0) {
+        console.log(`\nFound ${needEnrichment.length} existing articles needing full body enrichment. Enriching...`);
+        for (const row of needEnrichment) {
+          const urlMatch = row.content?.match(/(https?:\/\/[^\s)\n]+)/);
+          if (urlMatch) {
+            const articleUrl = urlMatch[1];
+            let fullBody = null;
+            if (articleUrl.includes('bdnews24.com')) {
+              const slugMatch = articleUrl.match(/bdnews24\.com\/(.+?)(?:\?|$)/);
+              if (slugMatch) {
+                try {
+                  const detailRaw = await fetchUrl(`https://bangla.bdnews24.com/api/v1/stories-by-slug?slug=${encodeURIComponent(slugMatch[1])}`, {}, 4000);
+                  const detailJson = JSON.parse(detailRaw);
+                  const paras = (detailJson.story?.cards || [])
+                    .flatMap(c => (c['story-elements'] || []).filter(e => e.type === 'text').map(e => cleanHtml(e.text)))
+                    .filter(t => t.length > 20);
+                  if (paras.length > 0) fullBody = paras.join('\n\n');
+                } catch {}
+              }
+            }
+            if (!fullBody) {
+              fullBody = await fetchFullArticleBody(articleUrl);
+            }
+            if (fullBody && fullBody.length > 100) {
+              const srcMatch = row.content.match(/\(?(?:সংবাদ\s*উৎস|উৎস):[\s\S]*$/i);
+              const enrichedContent = `${fullBody}\n\n${srcMatch ? srcMatch[0] : ''}`.trim();
+              const wordCount = fullBody.split(/\s+/).length;
+              const readMinutes = Math.max(1, Math.min(10, Math.ceil(wordCount / 130)));
+              await supabase.from('news').update({
+                content: enrichedContent,
+                read_time: `${toBengaliNumber(readMinutes)} মিনিট পাঠ`
+              }).eq('id', row.id);
+              console.log(`  ✓ Enriched [${wordCount} words]: "${row.title.slice(0, 35)}..."`);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Enrichment notice:', err.message);
+  }
+
   // Step 3: Insert balanced fresh articles across categories using Round-Robin source selection
   const TARGET_PER_CATEGORY = 10;
   const insertedCounts = {
@@ -675,11 +775,20 @@ async function run() {
         const articleId = `news-${hash}`;
         if (existingIds.has(articleId)) continue;
 
-        // Construct excerpt & body with formatted source attribution button
-        const cleanExcerpt = cleanHtml(item.excerpt).slice(0, 170).trim() + (item.excerpt.length > 170 ? '...' : '');
-        const content = `${item.body}\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${item.url})`;
+        // Ensure rich multi-paragraph body
+        let articleBody = item.body;
+        if (!articleBody || articleBody.length < 250) {
+          const scrapedBody = await fetchFullArticleBody(item.url);
+          if (scrapedBody && scrapedBody.length > 100) {
+            articleBody = scrapedBody;
+          }
+        }
 
-        const wordCount = (item.body || '').split(/\s+/).length;
+        // Construct excerpt & body with formatted source attribution button
+        const cleanExcerpt = cleanHtml(item.excerpt).slice(0, 180).trim() + (item.excerpt.length > 180 ? '...' : '');
+        const content = `${articleBody}\n\n(সংবাদ উৎস: ${item.sourceName} — মূল প্রতিবেদন পড়ুন: ${item.url})`;
+
+        const wordCount = (articleBody || '').split(/\s+/).length;
         const readMinutes = Math.max(1, Math.min(10, Math.ceil(wordCount / 130)));
         const readTimeFormatted = `${toBengaliNumber(readMinutes)} মিনিট পাঠ`;
         const dateFormatted = formatBengaliDate(item.pubDate);
