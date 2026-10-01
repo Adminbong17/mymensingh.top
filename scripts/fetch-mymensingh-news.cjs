@@ -25,9 +25,11 @@ const http = require('http');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
-// Configuration
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://oxdywhgcdqkdxmnzlofg.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94ZHl3aGdjZHFrZHhtbnpsb2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODI5MjgsImV4cCI6MjEwNjE1ODkyOH0.ZF2YPPq1Y4dyyinHBUXJjuw5bzsQT4yBZBOqYwlBP14';
+// Configuration with robust empty-string handling
+const getCleanEnv = (key) => (process.env[key] && process.env[key].trim().length > 0 ? process.env[key].trim() : null);
+
+const SUPABASE_URL = getCleanEnv('SUPABASE_URL') || getCleanEnv('VITE_SUPABASE_URL') || 'https://oxdywhgcdqkdxmnzlofg.supabase.co';
+const SUPABASE_KEY = getCleanEnv('SUPABASE_SERVICE_ROLE_KEY') || getCleanEnv('SUPABASE_KEY') || getCleanEnv('VITE_SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94ZHl3aGdjZHFrZHhtbnpsb2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODI5MjgsImV4cCI6MjEwNjE1ODkyOH0.ZF2YPPq1Y4dyyinHBUXJjuw5bzsQT4yBZBOqYwlBP14';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
