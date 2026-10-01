@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Sparkles, Building2 } from 'lucide-react';
 import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+import { NewsTicker } from './NewsTicker';
 
 interface HeroSectionProps {
   onSearch: (params: { keyword: string; district: string; upazila: string; unionWard: string }) => void;
@@ -167,6 +168,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
             </div>
           </form>
         </div>
+
+        {/* Scrolling News Bulletin Marquee right under the search bar */}
+        <NewsTicker />
 
         {/* Popular Searches */}
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">

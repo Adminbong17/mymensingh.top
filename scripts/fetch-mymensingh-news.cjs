@@ -593,20 +593,31 @@ async function run() {
   console.log(`- আন্তর্জাতিক: ${categoryPools['আন্তর্জাতিক'].length}`);
   console.log(`- খেলাধুলা: ${categoryPools['খেলাধুলা'].length}`);
 
-  // Step 2: Clear outdated news in Supabase
-  console.log('\nResetting Supabase news table...');
+  // Step 2: Auto-delete news older than 60 days
+  const sixtyDaysAgo = new Date(Date.now() - MAX_AGE_MS).toISOString();
+  console.log(`\nAuto-deleting news older than 60 days (before ${sixtyDaysAgo})...`);
   try {
-    const { error: resetErr } = await supabase.from('news').delete().neq('id', 'keep_none');
-    if (resetErr) {
-      console.warn('Reset warning:', resetErr.message);
+    const { data: purgedRows, error: purgeErr } = await supabase
+      .from('news')
+      .delete()
+      .lt('created_at', sixtyDaysAgo)
+      .select('id');
+    if (purgeErr) {
+      console.warn('Purge warning:', purgeErr.message);
     } else {
-      console.log('News table cleared.');
+      console.log(`Auto-deleted ${purgedRows ? purgedRows.length : 0} news items older than 60 days.`);
     }
   } catch (err) {
-    console.warn('Wipe notice:', err.message);
+    console.warn('Purge exception:', err.message);
   }
 
-  // Step 3: Insert balanced articles across categories using Round-Robin source selection
+  // Fetch currently existing news IDs and Titles so existing news is preserved and new news is added at top
+  const { data: dbExistingNews } = await supabase.from('news').select('id, title, category');
+  const existingTitles = new Set((dbExistingNews || []).map(item => item.title.trim().toLowerCase()));
+  const existingIds = new Set((dbExistingNews || []).map(item => item.id));
+  console.log(`Preserving ${existingIds.size} existing articles in database.`);
+
+  // Step 3: Insert balanced fresh articles across categories using Round-Robin source selection
   const TARGET_PER_CATEGORY = 10;
   const insertedCounts = {
     'ময়মনসিংহ': 0,
@@ -615,8 +626,6 @@ async function run() {
     'খেলাধুলা': 0
   };
 
-  const existingTitles = new Set();
-  const existingIds = new Set();
   const sourceInsertedCounts = {};
   const categories = ['ময়মনসিংহ', 'বাংলাদেশ', 'আন্তর্জাতিক', 'খেলাধুলা'];
 

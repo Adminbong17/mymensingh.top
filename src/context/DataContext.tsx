@@ -25,6 +25,7 @@ import {
   INITIAL_TRAIN_SCHEDULES,
   INITIAL_REVIEWS,
 } from '../data/initialData';
+import { sortNewsByDate, parseNewsTimestamp } from '../lib/newsUtils';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import {
   isCpanelConfigured,
@@ -310,7 +311,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('*')
           .order('created_at', { ascending: false });
         if (!newsErr && dbNews !== null && dbNews.length > 0) {
-          setNews(dbNews as NewsArticle[]);
+          // Automatic 60-day filter: keep only articles within 60 days
+          const sixtyDaysAgoMs = Date.now() - 60 * 24 * 60 * 60 * 1000;
+          const freshNews = (dbNews as NewsArticle[]).filter(item => {
+            const itemTime = parseNewsTimestamp(item.date, (item as any).created_at);
+            return itemTime === 0 || itemTime >= sixtyDaysAgoMs;
+          });
+          setNews(sortNewsByDate(freshNews));
+
+          // Background auto-purge: delete news older than 60 days from Supabase table
+          const sixtyDaysAgoIso = new Date(sixtyDaysAgoMs).toISOString();
+          (async () => {
+            try {
+              await supabase.from('news').delete().lt('created_at', sixtyDaysAgoIso);
+            } catch {
+              // Silently ignore background cleanup errors
+            }
+          })();
+
         }
       } catch {}
 
@@ -520,11 +538,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // News CRUD
   const addNews = async (article: Omit<NewsArticle, 'id'>): Promise<boolean> => {
+    const nowIso = new Date().toISOString();
     const newArticle: NewsArticle = {
       ...article,
-      id: `news-${Date.now()}`
+      id: `news-${Date.now()}`,
+      created_at: article.created_at || nowIso,
     };
-    setNews(prev => [newArticle, ...prev]);
+    setNews(prev => sortNewsByDate([newArticle, ...prev]));
 
     if (isCpanelConfigured()) {
       await cpanelAddNews(newArticle);
@@ -543,7 +563,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           date: newArticle.date || new Date().toISOString().split('T')[0],
           image_url: newArticle.image_url || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957',
           read_time: newArticle.read_time || '৩ মিনিট পাঠ',
-          content: newArticle.content || newArticle.title
+          content: newArticle.content || newArticle.title,
+          created_at: newArticle.created_at || nowIso,
         };
         await supabase.from('news').insert([cleanPayload]);
       } catch (e) {
