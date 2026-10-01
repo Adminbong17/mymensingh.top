@@ -23,6 +23,8 @@ import { formatNewsTimeDisplay } from '../lib/newsTime';
 
 const THEME_IMAGE = '/images/news-placeholder.svg';
 
+const getDisplayCategory = (cat: string) => (cat === 'ময়মনসিংহ' ? 'ময়মনসিংহ বিভাগ' : cat);
+
 export const NewsPage: React.FC = () => {
   const { news } = useData();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -31,7 +33,7 @@ export const NewsPage: React.FC = () => {
 
   const categories = [
     'All',
-    'ময়মনসিংহ',
+    'ময়মনসিংহ বিভাগ',
     'বাংলাদেশ',
     'আন্তর্জাতিক',
     'খেলাধুলা'
@@ -41,8 +43,12 @@ export const NewsPage: React.FC = () => {
   const sortedNews = sortNewsByDate(news);
 
   const filteredNews = sortedNews.filter((item) => {
-    if (selectedCategory !== 'All' && item.category !== selectedCategory) {
-      return false;
+    if (selectedCategory !== 'All') {
+      if (selectedCategory === 'ময়মনসিংহ বিভাগ') {
+        if (item.category !== 'ময়মনসিংহ' && item.category !== 'ময়মনসিংহ বিভাগ') return false;
+      } else if (item.category !== selectedCategory) {
+        return false;
+      }
     }
     if (searchKeyword.trim()) {
       const q = searchKeyword.toLowerCase();
@@ -64,13 +70,13 @@ export const NewsPage: React.FC = () => {
           <div className="relative z-10 max-w-2xl space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md">
               <Newspaper className="w-3.5 h-3.5" />
-              <span>Global, National & Local News</span>
+              <span>Division, National & World News</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
               দেশ ও বিদেশের সর্বশেষ সংবাদ
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              ময়মনসিংহ, জাতীয়, আন্তর্জাতিক ও খেলাধুলার গুরুত্বপূর্ণ সকল খবর সবার আগে জানুন।
+              ময়মনসিংহ বিভাগ (ময়মনসিংহ, জামালপুর, শেরপুর ও নেত্রকোণা), জাতীয়, আন্তর্জাতিক ও খেলাধুলার গুরুত্বপূর্ণ সকল খবর সবার আগে জানুন।
             </p>
           </div>
           <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -108,7 +114,7 @@ export const NewsPage: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
                   <span className="px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                    {featuredStory.category}
+                    {getDisplayCategory(featuredStory.category)}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-emerald-600" />
@@ -213,7 +219,7 @@ export const NewsPage: React.FC = () => {
                         />
                         <div className="absolute top-3 left-3">
                           <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-slate-800 shadow-xs">
-                            {item.category}
+                            {getDisplayCategory(item.category)}
                           </span>
                         </div>
                       </div>

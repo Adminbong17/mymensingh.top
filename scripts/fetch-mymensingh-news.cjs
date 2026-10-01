@@ -177,7 +177,7 @@ function parseBingRss(xml, defaultSource = '') {
     const itemXml = m[1];
     const rawTitle = itemXml.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '';
     const cleanTitle = cleanHtml(rawTitle).replace(/\s*-\s*[^|\n]+$/, '').trim();
-    if (!cleanTitle || cleanTitle.length < 12) continue;
+    if (!cleanTitle || cleanTitle.length < 12 || /^Add\b.*on Google/i.test(cleanTitle) || cleanTitle.includes('Google News')) continue;
 
     const linkMatch = itemXml.match(/url=([^&"'>\s]+)/)?.[1] || itemXml.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '';
     const directUrl = linkMatch ? decodeURIComponent(linkMatch) : '';
@@ -206,15 +206,43 @@ function parseBingRss(xml, defaultSource = '') {
 function classifyCategory(title = '', excerpt = '', url = '', rawCategory = '') {
   const normText = `${title} ${excerpt} ${url} ${rawCategory}`.toLowerCase().replace(/\u09AF\u09BC/g, '\u09DF');
 
-  // 1. Mymensingh Local News (division, districts, upazilas, landmarks)
+  // 1. Mymensingh Division News (All 4 Districts: ময়মনসিংহ, জামালপুর, শেরপুর, নেত্রকোণা)
   const mymensinghKeywords = [
-    'ময়মনসিংহ', 'ময়মনসিংহ', 'গফরগাঁও', 'ত্রিশাল', 'ভালুকা', 'মুক্তাগাছা',
-    'ফুলবাড়িয়া', 'ফুলবাড়িয়া', 'হালুয়াঘাট', 'হালুয়াঘাট', 'ধোবাউড়া', 'তারাকান্দা',
-    'ঈশ্বরগঞ্জ', 'নান্দাইল', 'গৌরীপুর', 'নেত্রকোনা', 'শেরপুর', 'জামালপুর',
-    'ব্রহ্মপুত্র', 'আনন্দ মোহন', 'বাকৃবি', 'কৃষি বিশ্ববিদ্যালয়', 'কৃষি বিশ্ববিদ্যালয়', 'mymensingh'
+    // Districts
+    'ময়মনসিংহ', 'ময়মনসিংহ', 'mymensingh',
+    'জামালপুর', 'jamalpur',
+    'শেরপুর', 'sherpur',
+    'নেত্রকোণা', 'নেত্রকোনা', 'netrokona', 'netrakona',
+    // Mymensingh District Upazilas & Places
+    'গফরগাঁও', 'ত্রিশাল', 'ভালুকা', 'মুক্তাগাছা', 'ফুলবাড়িয়া', 'ফুলবাড়িয়া',
+    'ফুলপুর', 'হালুয়াঘাট', 'হালুয়াঘাট', 'ধোবাউড়া', 'ধোবাউড়া', 'তারাকান্দা',
+    'ঈশ্বরগঞ্জ', 'নান্দাইল', 'গৌরীপুর', 'চরপাড়া', 'গাঙ্গিনারপাড়', 'গাঙ্গিনারপাড়',
+    'পাটগুদাম', 'শম্ভুগঞ্জ', 'বড়বাজার', 'বড়বাজার',
+    // Jamalpur District Upazilas & Places
+    'মেলান্দহ', 'মাদারগঞ্জ', 'ইসলামপুর', 'সরিষাবাড়ী', 'সরিষাবাড়ী',
+    'দেওয়ানগঞ্জ', 'দেওয়ানগঞ্জ', 'বকশীগঞ্জ', 'বকশিগঞ্জ', 'বাহাদুরাবাদ',
+    'যমুনা সার কারখানা',
+    // Sherpur District Upazilas & Places
+    'নালিতাবাড়ী', 'নালিতাবাড়ী', 'নকলা', 'শ্রীবরদী', 'ঝিনাইগাতী',
+    'মধুটিলা', 'গজনী অবকাশ',
+    // Netrokona District Upazilas & Places
+    'দুর্গাপুর', 'সুসং দুর্গাপুর', 'বিরিশিরি', 'কলমাকান্দা', 'পূর্বধলা',
+    'বারহাট্টা', 'মোহনগঞ্জ', 'আটপাড়া', 'আটপাড়া', 'কেন্দুয়া', 'মদন',
+    'খালিয়াজুড়ি', 'খালিয়াজুরী', 'সোমেশ্বরী', 'বিজয়পুর', 'বিজয়পুর',
+    // Key Divisional Landmarks & Institutions
+    'ব্রহ্মপুত্র', 'আনন্দ মোহন', 'বাকৃবি', 'কৃষি বিশ্ববিদ্যালয়', 'কৃষি বিশ্ববিদ্যালয়',
+    'ময়মনসিংহ বিভাগ', 'ময়মনসিংহ বিভাগ'
   ];
-  if (mymensinghKeywords.some(kw => normText.includes(kw))) {
-    return 'ময়মনসিংহ';
+
+  // If title explicitly targets another division and has no Mymensingh Division term in title, treat as national
+  const otherDivisions = ['চট্টগ্রাম', 'সিলেট', 'খুলনা', 'রাজশাহী', 'রংপুর', 'বরিশাল', 'কক্সবাজার'];
+  const titleHasOther = otherDivisions.some(d => title.includes(d));
+  const titleHasMymensingh = mymensinghKeywords.some(kw => title.toLowerCase().includes(kw));
+
+  if (!titleHasOther || titleHasMymensingh) {
+    if (mymensinghKeywords.some(kw => normText.includes(kw))) {
+      return 'ময়মনসিংহ';
+    }
   }
 
   // 2. Sports News (explicit sports terms, exclude 'আইসিসিবি' and innocent verbs like 'খেলতে গিয়ে')
@@ -271,6 +299,9 @@ async function fetchProthomAloNews() {
   const items = [];
   const queries = [
     { q: 'ময়মনসিংহ', cat: 'ময়মনসিংহ' },
+    { q: 'জামালপুর', cat: 'ময়মনসিংহ' },
+    { q: 'শেরপুর', cat: 'ময়মনসিংহ' },
+    { q: 'নেত্রকোণা', cat: 'ময়মনসিংহ' },
     { q: 'বাংলাদেশ', cat: 'বাংলাদেশ' },
     { q: 'আন্তর্জাতিক', cat: 'আন্তর্জাতিক' },
     { q: 'খেলাধুলা', cat: 'খেলাধুলা' }
@@ -358,14 +389,23 @@ async function fetchDailyStarNews() {
     }
   } catch (e) {}
 
-  try {
-    const bingXml = await fetchUrl('https://www.bing.com/news/search?q=site:bangla.thedailystar.net&format=rss');
-    const bingItems = parseBingRss(bingXml, 'দ্য ডেইলি স্টার');
-    for (const it of bingItems) {
-      it.category = classifyCategory(it.title, it.excerpt, it.url, 'দ্য ডেইলি স্টার');
-      items.push(it);
-    }
-  } catch (e) {}
+  const dailyStarQueries = [
+    'site:bangla.thedailystar.net',
+    'site:bangla.thedailystar.net ময়মনসিংহ',
+    'site:bangla.thedailystar.net জামালপুর',
+    'site:bangla.thedailystar.net শেরপুর',
+    'site:bangla.thedailystar.net নেত্রকোণা'
+  ];
+  for (const q of dailyStarQueries) {
+    try {
+      const bingXml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
+      const bingItems = parseBingRss(bingXml, 'দ্য ডেইলি স্টার');
+      for (const it of bingItems) {
+        it.category = classifyCategory(it.title, it.excerpt, it.url, 'দ্য ডেইলি স্টার');
+        items.push(it);
+      }
+    } catch (e) {}
+  }
 
   return items;
 }
@@ -465,7 +505,13 @@ async function fetchBanglaTribuneNews() {
 // ----------------------------------------------------------------------------
 async function fetchDhakaPostNews() {
   const items = [];
-  const queries = ['site:dhakapost.com', 'site:dhakapost.com ময়মনসিংহ'];
+  const queries = [
+    'site:dhakapost.com',
+    'site:dhakapost.com ময়মনসিংহ',
+    'site:dhakapost.com জামালপুর',
+    'site:dhakapost.com শেরপুর',
+    'site:dhakapost.com নেত্রকোণা'
+  ];
   for (const q of queries) {
     const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
     const parsed = parseBingRss(xml, 'ঢাকা পোস্ট');
@@ -482,7 +528,13 @@ async function fetchDhakaPostNews() {
 // ----------------------------------------------------------------------------
 async function fetchJagonewsNews() {
   const items = [];
-  const queries = ['site:jagonews24.com', 'site:jagonews24.com ময়মনসিংহ'];
+  const queries = [
+    'site:jagonews24.com',
+    'site:jagonews24.com ময়মনসিংহ',
+    'site:jagonews24.com জামালপুর',
+    'site:jagonews24.com শেরপুর',
+    'site:jagonews24.com নেত্রকোণা'
+  ];
   for (const q of queries) {
     const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
     const parsed = parseBingRss(xml, 'জাগোনিউজ২৪');
@@ -499,7 +551,13 @@ async function fetchJagonewsNews() {
 // ----------------------------------------------------------------------------
 async function fetchRisingbdNews() {
   const items = [];
-  const queries = ['site:risingbd.com', 'site:risingbd.com ময়মনসিংহ'];
+  const queries = [
+    'site:risingbd.com',
+    'site:risingbd.com ময়মনসিংহ',
+    'site:risingbd.com জামালপুর',
+    'site:risingbd.com শেরপুর',
+    'site:risingbd.com নেত্রকোণা'
+  ];
   for (const q of queries) {
     const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
     const parsed = parseBingRss(xml, 'রাইজিংবিডি');
@@ -516,7 +574,13 @@ async function fetchRisingbdNews() {
 // ----------------------------------------------------------------------------
 async function fetchBdPratidinNews() {
   const items = [];
-  const queries = ['site:bd-pratidin.com', 'site:bd-pratidin.com ময়মনসিংহ'];
+  const queries = [
+    'site:bd-pratidin.com',
+    'site:bd-pratidin.com ময়মনসিংহ',
+    'site:bd-pratidin.com জামালপুর',
+    'site:bd-pratidin.com শেরপুর',
+    'site:bd-pratidin.com নেত্রকোণা'
+  ];
   for (const q of queries) {
     const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
     const parsed = parseBingRss(xml, 'বাংলাদেশ প্রতিদিন');
@@ -533,7 +597,13 @@ async function fetchBdPratidinNews() {
 // ----------------------------------------------------------------------------
 async function fetchKalerKanthoNews() {
   const items = [];
-  const queries = ['"কালের কণ্ঠ"', 'site:kalerkantho.com ময়মনসিংহ'];
+  const queries = [
+    '"কালের কণ্ঠ"',
+    'site:kalerkantho.com ময়মনসিংহ',
+    'site:kalerkantho.com জামালপুর',
+    'site:kalerkantho.com শেরপুর',
+    'site:kalerkantho.com নেত্রকোণা'
+  ];
   for (const q of queries) {
     const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
     const parsed = parseBingRss(xml, 'কালের কণ্ঠ');
@@ -550,7 +620,13 @@ async function fetchKalerKanthoNews() {
 // ----------------------------------------------------------------------------
 async function fetchBanglanewsNews() {
   const items = [];
-  const queries = ['"বাংলানিউজ"', 'site:banglanews24.com ময়মনসিংহ'];
+  const queries = [
+    '"বাংলানিউজ"',
+    'site:banglanews24.com ময়মনসিংহ',
+    'site:banglanews24.com জামালপুর',
+    'site:banglanews24.com শেরপুর',
+    'site:banglanews24.com নেত্রকোণা'
+  ];
   for (const q of queries) {
     const xml = await fetchUrl(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`).catch(() => '');
     const parsed = parseBingRss(xml, 'বাংলানিউজ২৪');
@@ -717,6 +793,29 @@ async function run() {
     }
   } catch (err) {
     console.warn('Enrichment notice:', err.message);
+  }
+
+  // Step 2.6: Retroactive reclassification of existing articles in Supabase to ময়মনসিংহ বিভাগ
+  try {
+    const { data: allDbForCat } = await supabase.from('news').select('id, title, excerpt, content, category');
+    if (allDbForCat && allDbForCat.length > 0) {
+      let reclassifiedCount = 0;
+      for (const row of allDbForCat) {
+        if (row.category !== 'ময়মনসিংহ') {
+          const matchedCategory = classifyCategory(row.title, `${row.excerpt || ''} ${row.content || ''}`);
+          if (matchedCategory === 'ময়মনসিংহ') {
+            await supabase.from('news').update({ category: 'ময়মনসিংহ' }).eq('id', row.id);
+            reclassifiedCount++;
+            console.log(`  ✓ Re-classified to ময়মনসিংহ বিভাগ: "${row.title.slice(0, 35)}..."`);
+          }
+        }
+      }
+      if (reclassifiedCount > 0) {
+        console.log(`Re-classified ${reclassifiedCount} existing articles to ময়মনসিংহ বিভাগ.`);
+      }
+    }
+  } catch (err) {
+    console.warn('Reclassification notice:', err.message);
   }
 
   // Step 3: Insert balanced fresh articles across categories using Round-Robin source selection

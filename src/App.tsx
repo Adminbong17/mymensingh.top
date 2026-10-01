@@ -73,7 +73,7 @@ const HomePage: React.FC<{
     unionWard: string;
   }>({
     keyword: '',
-    district: 'ময়মনসিংহ',
+    district: '',
     upazila: '',
     unionWard: '',
   });
@@ -96,6 +96,9 @@ const HomePage: React.FC<{
           return false;
         }
       }
+      if (searchFilter.district && searchFilter.district !== 'সকল জেলা' && biz.district && biz.district !== searchFilter.district && !biz.location.includes(searchFilter.district)) {
+        return false;
+      }
       if (searchFilter.upazila && biz.upazila !== searchFilter.upazila && !biz.location.includes(searchFilter.upazila)) {
         return false;
       }
@@ -107,7 +110,7 @@ const HomePage: React.FC<{
   }, [businesses, selectedCategorySlug, searchFilter]);
 
   const isFilterActive = Boolean(
-    selectedCategorySlug || searchFilter.keyword || searchFilter.upazila || searchFilter.unionWard
+    selectedCategorySlug || searchFilter.keyword || searchFilter.district || searchFilter.upazila || searchFilter.unionWard
   );
 
   const handleHeroSearch = (params: { keyword: string; district: string; upazila: string; unionWard: string }) => {
@@ -161,7 +164,7 @@ const HomePage: React.FC<{
               <button
                 onClick={() => {
                   setSelectedCategorySlug('');
-                  setSearchFilter({ keyword: '', district: 'ময়মনসিংহ', upazila: '', unionWard: '' });
+                  setSearchFilter({ keyword: '', district: '', upazila: '', unionWard: '' });
                 }}
                 className="text-xs font-bold text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition-colors self-start sm:self-auto"
               >

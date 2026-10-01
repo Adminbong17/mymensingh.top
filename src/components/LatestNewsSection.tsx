@@ -41,7 +41,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
               দেশ ও বিদেশের সর্বশেষ সংবাদ
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              ময়মনসিংহ, বাংলাদেশ, আন্তর্জাতিক ঘটনাবলি ও খেলাধুলার সাম্প্রতিক খবর ও আপডেট
+              ময়মনসিংহ বিভাগ (ময়মনসিংহ, জামালপুর, শেরপুর ও নেত্রকোণা), বাংলাদেশ, আন্তর্জাতিক ঘটনাবলি ও খেলাধুলার সাম্প্রতিক খবর ও আপডেট
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export const LatestNewsSection: React.FC<LatestNewsSectionProps> = ({ news }) =>
                       />
                       <div className="absolute top-3 left-3 flex items-center gap-1.5">
                         <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-900/80 backdrop-blur-md text-white shadow-xs">
-                          {item.category}
+                          {item.category === 'ময়মনসিংহ' ? 'ময়মনসিংহ বিভাগ' : item.category}
                         </span>
                       </div>
                     </div>

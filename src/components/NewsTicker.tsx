@@ -65,7 +65,7 @@ export const NewsTicker: React.FC = () => {
                   >
                     {/* Category Tag */}
                     <span className={`px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold border ${catStyle}`}>
-                      {item.category}
+                      {item.category === 'ময়মনসিংহ' ? 'ময়মনসিংহ বিভাগ' : item.category}
                     </span>
 
                     {/* Headline */}

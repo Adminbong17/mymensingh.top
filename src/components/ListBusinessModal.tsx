@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { X, PlusCircle, CheckCircle, Building2, MapPin, Phone } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+import {
+  DIVISION_DISTRICTS,
+  DISTRICT_UPAZILAS_MAP,
+  MYMENSINGH_UNIONS_MAP
+} from '../data/initialData';
 import { VaultMediaUploader } from './VaultMediaUploader';
 
 interface ListBusinessModalProps {
@@ -15,8 +19,9 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
   const [name, setName] = useState('');
   const [nameBn, setNameBn] = useState('');
   const [category, setCategory] = useState(categories[0]?.slug || 'restaurants');
-  const [upazila, setUpazila] = useState(MYMENSINGH_UPAZILAS[0]);
-  const [unionWard, setUnionWard] = useState(MYMENSINGH_UNIONS_MAP[MYMENSINGH_UPAZILAS[0]][0]);
+  const [district, setDistrict] = useState(DIVISION_DISTRICTS[0]);
+  const [upazila, setUpazila] = useState(DISTRICT_UPAZILAS_MAP[DIVISION_DISTRICTS[0]][0]);
+  const [unionWard, setUnionWard] = useState(MYMENSINGH_UNIONS_MAP[DISTRICT_UPAZILAS_MAP[DIVISION_DISTRICTS[0]][0]]?.[0] || 'সদর');
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -25,10 +30,19 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
 
   if (!isOpen) return null;
 
+  const handleDistrictChange = (newDistrict: string) => {
+    setDistrict(newDistrict);
+    const districtUpazilas = DISTRICT_UPAZILAS_MAP[newDistrict] || [];
+    const firstUpazila = districtUpazilas[0] || '';
+    setUpazila(firstUpazila);
+    const unions = MYMENSINGH_UNIONS_MAP[firstUpazila] || ['সদর'];
+    setUnionWard(unions[0] || 'সদর');
+  };
+
   const handleUpazilaChange = (newUpazila: string) => {
     setUpazila(newUpazila);
     const unions = MYMENSINGH_UNIONS_MAP[newUpazila] || ['সদর'];
-    setUnionWard(unions[0]);
+    setUnionWard(unions[0] || 'সদর');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,8 +57,8 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
       category_slug: category,
       rating: 5.0,
       review_count: 1,
-      location: location || `${unionWard}, ${upazila}`,
-      district: 'ময়মনসিংহ',
+      location: location || `${unionWard}, ${upazila}, ${district}`,
+      district: district,
       upazila,
       union_ward: unionWard,
       phone: phone || '+880 1700-000000',
@@ -173,14 +187,19 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  জেলা
+                  জেলা *
                 </label>
-                <input
-                  type="text"
-                  readOnly
-                  value="ময়মনসিংহ"
-                  className="w-full text-xs px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-semibold"
-                />
+                <select
+                  value={district}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 outline-hidden focus:border-emerald-500 font-semibold text-slate-800"
+                >
+                  {DIVISION_DISTRICTS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -190,9 +209,9 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
                 <select
                   value={upazila}
                   onChange={(e) => handleUpazilaChange(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 outline-hidden focus:border-emerald-500"
+                  className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 outline-hidden focus:border-emerald-500 font-semibold text-slate-800"
                 >
-                  {MYMENSINGH_UPAZILAS.map((up) => (
+                  {(DISTRICT_UPAZILAS_MAP[district] || []).map((up) => (
                     <option key={up} value={up}>
                       {up}
                     </option>

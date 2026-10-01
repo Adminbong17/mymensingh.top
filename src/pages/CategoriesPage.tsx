@@ -32,7 +32,11 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { MYMENSINGH_UPAZILAS } from '../data/initialData';
+import {
+  DIVISION_DISTRICTS,
+  DISTRICT_UPAZILAS_MAP,
+  ALL_DIVISION_UPAZILAS
+} from '../data/initialData';
 import type { Business } from '../types';
 import { BusinessDetailModal } from '../components/BusinessDetailModal';
 
@@ -281,9 +285,13 @@ export const CategoriesPage: React.FC = () => {
                 onChange={(e) => setSelectedUpazila(e.target.value)}
                 className="w-full text-xs sm:text-sm pl-9 pr-6 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium cursor-pointer"
               >
-                <option value="">সকল উপজেলা</option>
-                {MYMENSINGH_UPAZILAS.map((up) => (
-                  <option key={up} value={up}>{up}</option>
+                <option value="">সকল উপজেলা ({ALL_DIVISION_UPAZILAS.length}টি)</option>
+                {DIVISION_DISTRICTS.map((dist) => (
+                  <optgroup key={dist} label={`${dist} জেলা`}>
+                    {(DISTRICT_UPAZILAS_MAP[dist] || []).map((up) => (
+                      <option key={up} value={up}>{up}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

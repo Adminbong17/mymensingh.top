@@ -9,7 +9,11 @@ import {
   Check
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+import {
+  DIVISION_DISTRICTS,
+  DISTRICT_UPAZILAS_MAP,
+  MYMENSINGH_UNIONS_MAP
+} from '../data/initialData';
 import { VaultMediaUploader } from '../components/VaultMediaUploader';
 
 export const ListBusinessPage: React.FC = () => {
@@ -21,7 +25,8 @@ export const ListBusinessPage: React.FC = () => {
     name: '',
     name_bn: '',
     category_slug: 'restaurants',
-    upazila: 'ময়মনসিংহ সদর',
+    district: DIVISION_DISTRICTS[0],
+    upazila: DISTRICT_UPAZILAS_MAP[DIVISION_DISTRICTS[0]][0],
     union_ward: '',
     location: '',
     phone: '',
@@ -57,8 +62,8 @@ export const ListBusinessPage: React.FC = () => {
       category_slug: formData.category_slug,
       rating: 5.0,
       review_count: 1,
-      location: `${formData.location}, ${formData.union_ward ? formData.union_ward + ', ' : ''}${formData.upazila}, ময়মনসিংহ`,
-      district: 'ময়মনসিংহ',
+      location: `${formData.location ? formData.location + ', ' : ''}${formData.union_ward ? formData.union_ward + ', ' : ''}${formData.upazila}, ${formData.district}`,
+      district: formData.district,
       upazila: formData.upazila,
       union_ward: formData.union_ward,
       phone: formData.phone,
@@ -302,7 +307,26 @@ export const ListBusinessPage: React.FC = () => {
                     ধাপ ২: অবস্থান ও যোগাযোগের বিবরণ
                   </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        জেলা *
+                      </label>
+                      <select
+                        value={formData.district}
+                        onChange={(e) => {
+                          const newDist = e.target.value;
+                          const firstUp = DISTRICT_UPAZILAS_MAP[newDist]?.[0] || '';
+                          setFormData({ ...formData, district: newDist, upazila: firstUp, union_ward: '' });
+                        }}
+                        className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium"
+                      >
+                        {DIVISION_DISTRICTS.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
                         উপজেলা *
@@ -312,7 +336,7 @@ export const ListBusinessPage: React.FC = () => {
                         onChange={(e) => setFormData({ ...formData, upazila: e.target.value, union_ward: '' })}
                         className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium"
                       >
-                        {MYMENSINGH_UPAZILAS.map((up) => (
+                        {(DISTRICT_UPAZILAS_MAP[formData.district] || []).map((up) => (
                           <option key={up} value={up}>{up}</option>
                         ))}
                       </select>

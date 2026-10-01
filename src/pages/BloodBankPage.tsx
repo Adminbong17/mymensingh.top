@@ -14,7 +14,11 @@ import {
   Clock
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { MYMENSINGH_UPAZILAS } from '../data/initialData';
+import {
+  DIVISION_DISTRICTS,
+  DISTRICT_UPAZILAS_MAP,
+  ALL_DIVISION_UPAZILAS
+} from '../data/initialData';
 import type { BloodDonor } from '../types';
 
 export const BloodBankPage: React.FC = () => {
@@ -135,11 +139,11 @@ export const BloodBankPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-              ময়মনসিংহ ব্লাড ব্যাংক ও <span className="text-red-400">রক্তদাতা ডিরেক্টরি</span>
+              ময়মনসিংহ বিভাগীয় ব্লাড ব্যাংক ও <span className="text-red-400">রক্তদাতা ডিরেক্টরি</span>
             </h1>
 
             <p className="text-xs sm:text-base text-red-100/90 leading-relaxed max-w-2xl">
-              মুহূর্তেই খুঁজে নিন আপনার প্রয়োজনীয় ব্লাড গ্রুপের স্বেচ্ছাসেবক রক্তদাতাদের। সরাসরি ফোন করে কথা বলুন অথবা নিজে রক্তদাতা হিসেবে নিবন্ধিত হয়ে জীবন বাঁচান।
+              ময়মনসিংহ বিভাগের ৪ জেলা (ময়মনসিংহ, জামালপুর, শেরপুর ও নেত্রকোণা) এর যেকোনো ব্লাড গ্রুপের রক্তদাতাদের সরাসরি খুঁজুন অথবা নিজে নিবন্ধিত হয়ে জীবন বাঁচান।
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -281,9 +285,13 @@ export const BloodBankPage: React.FC = () => {
                 onChange={(e) => setSelectedUpazila(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-slate-50/50 text-slate-700"
               >
-                <option value="all">সকল উপজেলা (All Upazilas)</option>
-                {MYMENSINGH_UPAZILAS.map((up) => (
-                  <option key={up} value={up}>{up}</option>
+                <option value="all">সকল উপজেলা ({ALL_DIVISION_UPAZILAS.length}টি - বিভাগ)</option>
+                {DIVISION_DISTRICTS.map((dist) => (
+                  <optgroup key={dist} label={`${dist} জেলা`}>
+                    {(DISTRICT_UPAZILAS_MAP[dist] || []).map((up) => (
+                      <option key={up} value={up}>{up}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
@@ -506,8 +514,12 @@ export const BloodBankPage: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, upazila: e.target.value })}
                       className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-red-500 bg-white"
                     >
-                      {MYMENSINGH_UPAZILAS.map((up) => (
-                        <option key={up} value={up}>{up}</option>
+                      {DIVISION_DISTRICTS.map((dist) => (
+                        <optgroup key={dist} label={`${dist} জেলা`}>
+                          {(DISTRICT_UPAZILAS_MAP[dist] || []).map((up) => (
+                            <option key={up} value={up}>{up}</option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>

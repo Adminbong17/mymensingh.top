@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Sparkles, Building2 } from 'lucide-react';
-import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+import {
+  DIVISION_DISTRICTS,
+  DISTRICT_UPAZILAS_MAP,
+  ALL_DIVISION_UPAZILAS,
+  MYMENSINGH_UNIONS_MAP
+} from '../data/initialData';
 import { NewsTicker } from './NewsTicker';
 
 interface HeroSectionProps {
@@ -10,11 +15,21 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCategory }) => {
   const [keyword, setKeyword] = useState('');
-  const [district] = useState('ময়মনসিংহ');
+  const [district, setDistrict] = useState('');
   const [selectedUpazila, setSelectedUpazila] = useState('');
   const [selectedUnion, setSelectedUnion] = useState('');
 
+  const availableUpazilas = district
+    ? (DISTRICT_UPAZILAS_MAP[district] || [])
+    : ALL_DIVISION_UPAZILAS;
+
   const unions = selectedUpazila ? (MYMENSINGH_UNIONS_MAP[selectedUpazila] || []) : [];
+
+  const handleDistrictChange = (d: string) => {
+    setDistrict(d);
+    setSelectedUpazila('');
+    setSelectedUnion('');
+  };
 
   const handleUpazilaChange = (up: string) => {
     setSelectedUpazila(up);
@@ -47,10 +62,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
 
       <div className="relative max-w-5xl mx-auto text-center space-y-4 sm:space-y-8">
         
-        {/* Badge: Discover Mymensingh */}
+        {/* Badge: Discover Mymensingh Division */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs sm:text-sm font-bold backdrop-blur-md shadow-xs">
           <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-          <span>Discover Mymensingh</span>
+          <span>Discover Mymensingh Division • ৪ জেলা</span>
         </div>
 
         {/* Main Heading: আমার শহর, আমাদের গাইড */}
@@ -63,7 +78,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
 
         {/* Description */}
         <p className="text-xs sm:text-base lg:text-lg text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed px-2">
-          ময়মনসিংহ শহরের প্রতিটি ব্যবসা, জরুরি সেবা, হাসপাতাল, রেস্টুরেন্ট, বাসা ভাড়া এবং শিক্ষা সংক্রান্ত তথ্যের সবচেয়ে নির্ভরযোগ্য ও সর্ববৃহৎ ডিজিটাল ডিরেক্টরি।
+          ময়মনসিংহ বিভাগের (ময়মনসিংহ, জামালপুর, শেরপুর ও নেত্রকোণা) প্রতিটি ব্যবসা, জরুরি সেবা, হাসপাতাল, রেস্টুরেন্ট, বাসা ভাড়া ও তথ্যের সর্ববৃহৎ ডিজিটাল ডিরেক্টরি।
         </p>
 
         {/* Big Search Box Container */}
@@ -92,23 +107,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
               </div>
 
               {/* Field 2: জেলা (District) */}
-              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 rounded-2xl p-2.5 px-3 border border-slate-200/70 flex flex-col justify-center">
+              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
                 <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   জেলা
                 </label>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
                   <select
-                    disabled
-                    className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-800 outline-hidden cursor-not-allowed"
+                    value={district}
+                    onChange={(e) => handleDistrictChange(e.target.value)}
+                    className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-800 outline-hidden cursor-pointer"
                   >
-                    <option value="ময়মনসিংহ">ময়মনসিংহ</option>
+                    <option value="">সকল জেলা</option>
+                    {DIVISION_DISTRICTS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               {/* Field 3: উপজেলা (Upazila) */}
-              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
+              <div className="lg:col-span-3 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
                 <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   উপজেলা
                 </label>
@@ -119,8 +140,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
                     onChange={(e) => handleUpazilaChange(e.target.value)}
                     className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-800 outline-hidden cursor-pointer"
                   >
-                    <option value="">সকল উপজেলা</option>
-                    {MYMENSINGH_UPAZILAS.map((up) => (
+                    <option value="">সকল উপজেলা ({availableUpazilas.length}টি)</option>
+                    {availableUpazilas.map((up) => (
                       <option key={up} value={up}>
                         {up}
                       </option>
@@ -130,9 +151,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
               </div>
 
               {/* Field 4: ইউনিয়ন / সিটি (Union/City) */}
-              <div className="lg:col-span-2 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
+              <div className="lg:col-span-3 col-span-1 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 transition-colors flex flex-col justify-center">
                 <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
-                  ইউনিয়ন / সিটি
+                  ইউনিয়ন / এলাকা
                 </label>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
@@ -143,11 +164,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
                     className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-800 outline-hidden cursor-pointer disabled:text-slate-400 truncate"
                   >
                     <option value="" className="truncate">
-                      {selectedUpazila ? 'সকল ইউনিয়ন / ওয়ার্ড' : 'উপজেলা নির্বাচন'}
+                      {selectedUpazila ? 'সকল ইউনিয়ন / ওয়ার্ড' : 'আগে উপজেলা বাছুন'}
                     </option>
-                    {unions.map((u) => (
-                      <option key={u} value={u}>
-                        {u}
+                    {unions.map((un) => (
+                      <option key={un} value={un} className="truncate">
+                        {un}
                       </option>
                     ))}
                   </select>

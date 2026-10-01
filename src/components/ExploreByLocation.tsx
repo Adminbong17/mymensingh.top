@@ -1,26 +1,37 @@
 import React, { useState } from 'react';
-import { MapPin, Search, Compass, Building } from 'lucide-react';
-import { MYMENSINGH_UPAZILAS, MYMENSINGH_UNIONS_MAP } from '../data/initialData';
+import { Search, Compass, Building } from 'lucide-react';
+import {
+  DIVISION_DISTRICTS,
+  DISTRICT_UPAZILAS_MAP,
+  ALL_DIVISION_UPAZILAS,
+  MYMENSINGH_UNIONS_MAP
+} from '../data/initialData';
 
 interface ExploreByLocationProps {
   onSelectArea: (upazila: string, union?: string) => void;
 }
 
 export const ExploreByLocation: React.FC<ExploreByLocationProps> = ({ onSelectArea }) => {
+  const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedUpazila, setSelectedUpazila] = useState('');
   const [selectedUnion, setSelectedUnion] = useState('');
 
   const quickAreas = [
     'ময়মনসিংহ সদর',
+    'জামালপুর সদর',
+    'শেরপুর সদর',
+    'নেত্রকোণা সদর',
     'মুক্তাগাছা',
     'ত্রিশাল',
-    'ভালুকা',
-    'ফুলপুর',
-    'গফরগাঁও',
-    'নান্দাইল',
-    'ঈশ্বরগঞ্জ',
-    'ধোবাউড়া',
+    'সরিষাবাড়ী',
+    'নালিতাবাড়ী',
+    'দুর্গাপুর',
+    'ভালুকা'
   ];
+
+  const availableUpazilas = selectedDistrict
+    ? (DISTRICT_UPAZILAS_MAP[selectedDistrict] || [])
+    : ALL_DIVISION_UPAZILAS;
 
   const unions = selectedUpazila ? (MYMENSINGH_UNIONS_MAP[selectedUpazila] || []) : [];
 
@@ -39,13 +50,13 @@ export const ExploreByLocation: React.FC<ExploreByLocationProps> = ({ onSelectAr
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-full">
             <Compass className="w-3.5 h-3.5" />
-            <span>Geo Search</span>
+            <span>Geo Search • ময়মনসিংহ বিভাগ</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
             Explore by Location
           </h2>
           <p className="text-xs sm:text-sm text-slate-500">
-            আপনার নির্দিষ্ট উপজেলা, ইউনিয়ন কিংবা ওয়ার্ড অনুযায়ী দোকান, সেবা ও হাসপাতাল খুঁজুন
+            ময়মনসিংহ বিভাগের ৪টি জেলা (ময়মনসিংহ, জামালপুর, শেরপুর, নেত্রকোণা) ও ৩৫টি উপজেলার সেবা খুঁজুন
           </p>
         </div>
 
@@ -59,10 +70,20 @@ export const ExploreByLocation: React.FC<ExploreByLocationProps> = ({ onSelectAr
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   জেলা
                 </label>
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="text-xs font-bold text-slate-900">ময়মনসিংহ</span>
-                </div>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => {
+                    setSelectedDistrict(e.target.value);
+                    setSelectedUpazila('');
+                    setSelectedUnion('');
+                  }}
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white font-medium"
+                >
+                  <option value="">সকল জেলা (বিভাগ)</option>
+                  {DIVISION_DISTRICTS.map((dist) => (
+                    <option key={dist} value={dist}>{dist}</option>
+                  ))}
+                </select>
               </div>
 
               {/* উপজেলা */}
@@ -79,8 +100,8 @@ export const ExploreByLocation: React.FC<ExploreByLocationProps> = ({ onSelectAr
                   }}
                   className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white font-medium"
                 >
-                  <option value="">উপজেলা নির্বাচন করুন</option>
-                  {MYMENSINGH_UPAZILAS.map((up) => (
+                  <option value="">উপজেলা নির্বাচন করুন ({availableUpazilas.length}টি)</option>
+                  {availableUpazilas.map((up) => (
                     <option key={up} value={up}>
                       {up}
                     </option>
