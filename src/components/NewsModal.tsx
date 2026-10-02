@@ -1,5 +1,5 @@
-import React from 'react';
-import { Newspaper, Calendar, Clock, X, ExternalLink, Sparkles, BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { Newspaper, Calendar, Clock, X, ExternalLink, Sparkles, BookOpen, Share2, Check } from 'lucide-react';
 import type { NewsArticle } from '../types';
 import { parseArticleSource, cleanNewsText, normalizePunctuation } from '../lib/newsUtils';
 import { formatNewsTimeDisplay } from '../lib/newsTime';
@@ -12,6 +12,8 @@ interface NewsModalProps {
 }
 
 export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!article) return null;
 
   const { cleanBody, sourceName, sourceUrl } = parseArticleSource(article.content);
@@ -19,27 +21,51 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
   const modalExcerpt = cleanNewsText(article.excerpt);
   const modalTime = formatNewsTimeDisplay(article.created_at, article.date);
 
-  // Extract body paragraphs
-  const rawBody = cleanBody || modalExcerpt || '';
-  const paragraphs = rawBody
+  // If cleanBody is long and distinct from excerpt, show excerpt as summary box
+  const hasDistinctBody = Boolean(
+    cleanBody &&
+    modalExcerpt &&
+    cleanBody.length > modalExcerpt.length + 40 &&
+    !cleanBody.startsWith(modalExcerpt.slice(0, 50))
+  );
+
+  // Effective text to show under full report
+  const reportText = hasDistinctBody ? cleanBody : (cleanBody || modalExcerpt || '');
+  const paragraphs = reportText
     .split(/\n+/)
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
 
-  // Determine if excerpt is a distinct short teaser compared to the body
-  const showExcerptBox = Boolean(
-    modalExcerpt &&
-    cleanBody &&
-    cleanBody.length > modalExcerpt.length + 30
-  );
+  const handleCopyLink = () => {
+    const url = sourceUrl || window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="fixed inset-0 -z-10" onClick={onClose} />
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 md:p-6 animate-in fade-in duration-200">
+      {/* Clickable backdrop overlay */}
+      <div className="fixed inset-0 -z-10" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 my-6 sm:my-8 max-h-[92vh] flex flex-col">
+      {/* Main Modal Card: Unified scroll container so scrolling works everywhere */}
+      <div className="relative w-full max-w-2xl lg:max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 my-auto z-10 max-h-[92vh] overflow-y-auto overscroll-contain flex flex-col scroll-smooth focus:outline-hidden">
+        
+        {/* Floating Sticky Close Button: Always visible even when user scrolls down */}
+        <div className="sticky top-0 z-30 flex justify-end p-3 pointer-events-none -mb-14">
+          <button
+            onClick={onClose}
+            className="p-2 sm:p-2.5 rounded-full bg-black/70 hover:bg-black text-white shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 cursor-pointer pointer-events-auto border border-white/20"
+            aria-label="Close"
+            title="বন্ধ করুন"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
         {/* Top Hero Image Banner */}
-        <div className="relative aspect-16/9 overflow-hidden bg-slate-900 shrink-0">
+        <div className="relative aspect-16/9 sm:aspect-21/9 lg:aspect-16/8 overflow-hidden bg-slate-900 shrink-0">
           <img
             src={article.image_url || THEME_IMAGE}
             alt={modalTitle}
@@ -53,22 +79,18 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
             }}
             className="w-full h-full object-cover"
           />
-          <button
-            onClick={onClose}
-            className="absolute top-3.5 right-3.5 p-2 rounded-full bg-black/60 hover:bg-black text-white transition-colors cursor-pointer shadow-md z-10"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute bottom-3.5 left-4 sm:left-6">
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-600/90 text-white shadow-md backdrop-blur-sm border border-emerald-400/30">
+              {article.category === 'ময়মনসিংহ' ? 'ময়মনসিংহ বিভাগ' : article.category}
+            </span>
+          </div>
         </div>
 
-        {/* Scrollable Article Body */}
-        <div className="p-5 sm:p-7 space-y-5 overflow-y-auto flex-1">
+        {/* Article Body Content */}
+        <div className="p-5 sm:p-7 md:p-8 space-y-6">
           {/* Metadata badges */}
-          <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-500 font-medium pb-1 border-b border-slate-100">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-100">
-              {article.category}
-            </span>
+          <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-500 font-medium pb-2 border-b border-slate-100">
             <span className="flex items-center gap-1.5">
               {modalTime.isWithin24h ? (
                 <>
@@ -88,31 +110,31 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
           </div>
 
           {/* Headline */}
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 leading-snug tracking-tight">
             {modalTitle}
           </h2>
 
-          {/* Summary Excerpt (if distinct from main body) */}
-          {showExcerptBox && (
-            <div className="bg-emerald-50/90 p-4 rounded-2xl border border-emerald-200/80 space-y-1">
+          {/* Summary Excerpt (shown only if distinct teaser from main body) */}
+          {hasDistinctBody && (
+            <div className="bg-emerald-50/90 p-4 sm:p-5 rounded-2xl border border-emerald-200/80 space-y-1.5 shadow-xs">
               <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                 <span>সংক্ষিপ্ত সারসংক্ষেপ</span>
               </div>
-              <p className="text-sm font-semibold text-emerald-950 leading-relaxed">
+              <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed">
                 {modalExcerpt}
               </p>
             </div>
           )}
 
           {/* মূল প্রতিবেদন (Full Article Body) */}
-          <div className="space-y-3.5 pt-1">
+          <div className="space-y-4 pt-1">
             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 pb-1">
               <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
               <span>মূল প্রতিবেদন</span>
             </div>
 
-            <div className="text-sm sm:text-base text-slate-800 leading-relaxed sm:leading-loose space-y-3.5 whitespace-pre-line font-normal">
+            <div className="text-sm sm:text-base text-slate-800 leading-relaxed sm:leading-loose space-y-4 font-normal">
               {paragraphs.map((para, idx) => (
                 <p key={idx} className="leading-relaxed sm:leading-loose">
                   {para}
@@ -120,20 +142,21 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
               ))}
             </div>
 
-            {/* Note if the article body is short */}
+            {/* Note if the article body is short bulletin */}
             {paragraphs.length <= 1 && sourceUrl && (
-              <div className="p-3 bg-amber-50/80 border border-amber-200/70 rounded-xl text-xs text-amber-900 flex items-center gap-2">
-                <span>ℹ️ সম্পূর্ণ ছবি ও প্রাসঙ্গিক বিস্তার দেখতে নিচের ‘মূল প্রতিবেদন পড়ুন’ বাটনে ক্লিক করুন।</span>
+              <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-xs text-amber-900 flex items-start gap-2.5">
+                <span className="text-base leading-none">ℹ️</span>
+                <span>এটি একটি সংক্ষেপিত তাজা সংবাদ বুলেটিন। সম্পূর্ণ বিস্তারিত ও প্রাসঙ্গিক তথ্য জানতে নিচে <strong>‘মূল প্রতিবেদন পড়ুন’</strong> বাটনে ক্লিক করে মূল সংবাদ পোর্টালে ভিজিট করুন।</span>
               </div>
             )}
           </div>
 
           {/* Source Attribution & Direct External Read Link */}
           {sourceUrl && (
-            <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <Newspaper className="w-4 h-4" />
+            <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <Newspaper className="w-5 h-5" />
                 </div>
                 <div>
                   <span className="text-[11px] font-semibold text-slate-400 block">সংবাদ সূত্র:</span>
@@ -155,15 +178,33 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
             </div>
           )}
 
-          {/* Close Action */}
-          <div className="pt-3 border-t border-slate-100 flex justify-end">
+          {/* Footer Actions: Share link & Close Button with generous spacing */}
+          <div className="pt-4 pb-2 border-t border-slate-100 flex items-center justify-between gap-3">
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span className="text-emerald-700">লিংক কপি হয়েছে!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4 text-slate-500" />
+                  <span>লিংক শেয়ার করুন</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
             >
               বন্ধ করুন
             </button>
           </div>
+
         </div>
       </div>
     </div>

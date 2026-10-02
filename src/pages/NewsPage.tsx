@@ -6,20 +6,17 @@ import {
   ArrowRight,
   Search,
   Sparkles,
-  Share2,
-  X,
-  MessageSquareQuote,
-  ExternalLink
+  MessageSquareQuote
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import type { NewsArticle } from '../types';
 import {
-  parseArticleSource,
   cleanNewsText,
   normalizePunctuation,
   sortNewsByDate
 } from '../lib/newsUtils';
 import { formatNewsTimeDisplay } from '../lib/newsTime';
+import { NewsModal } from '../components/NewsModal';
 
 const THEME_IMAGE = '/images/news-placeholder.svg';
 
@@ -295,137 +292,12 @@ export const NewsPage: React.FC = () => {
       </div>
 
       {/* Full Article Reader Modal */}
-      {activeArticle && (() => {
-        const { cleanBody, sourceName, sourceUrl } = parseArticleSource(activeArticle.content);
-        const modalTitle = normalizePunctuation(activeArticle.title);
-        const modalExcerpt = cleanNewsText(activeArticle.excerpt);
-
-        return (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 my-8 flex flex-col max-h-[92vh]">
-              {/* Modal Header */}
-              <div className="relative aspect-16/9 bg-slate-900 shrink-0">
-                <img
-                  src={activeArticle.image_url || THEME_IMAGE}
-                  alt={modalTitle}
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.src.includes('news-placeholder.svg')) {
-                      target.onerror = null;
-                      target.src = THEME_IMAGE;
-                    }
-                  }}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={() => setActiveArticle(null)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <div className="absolute bottom-4 left-4">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-md">
-                    {activeArticle.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Modal Body */}
-              <div className="overflow-y-auto p-6 sm:p-8 space-y-4">
-                {(() => {
-                  const modalTime = formatNewsTimeDisplay(activeArticle.created_at, activeArticle.date);
-                  return (
-                    <div className="flex items-center gap-2.5 text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        {modalTime.isWithin24h ? (
-                          <>
-                            <Clock className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-                            <strong className="text-emerald-700 font-bold">{modalTime.timeAgoText}</strong>
-                            <span className="text-slate-400">({activeArticle.date})</span>
-                          </>
-                        ) : (
-                          <>
-                            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>{activeArticle.date}</span>
-                          </>
-                        )}
-                      </span>
-                      <span className="text-slate-300">•</span>
-                      <span className="flex items-center gap-1 text-slate-400">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        {activeArticle.read_time}
-                      </span>
-                    </div>
-                  );
-                })()}
-
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
-                  {modalTitle}
-                </h2>
-
-                {modalExcerpt && (
-                  <p className="text-sm font-semibold text-emerald-800 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-100 leading-relaxed">
-                    {modalExcerpt}
-                  </p>
-                )}
-
-                {cleanBody && cleanBody !== modalExcerpt && (
-                  <div className="text-sm text-slate-700 leading-relaxed space-y-3 pt-2 whitespace-pre-line">
-                    <p>{cleanBody}</p>
-                  </div>
-                )}
-
-                {/* Styled Source Attribution & Clickable Link Button */}
-                {sourceUrl && (
-                  <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                        <Newspaper className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-[11px] font-medium text-slate-400 block">সংবাদ সূত্র:</span>
-                        <span className="text-xs font-bold text-slate-800">
-                          {sourceName || 'মূল পোর্টাল'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <a
-                      href={sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-sm hover:shadow transition-all shrink-0"
-                    >
-                      <span>মূল প্রতিবেদন পড়ুন</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-
-                <div className="pt-6 border-t border-slate-200 flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      alert('খবরের লিংক কপি করা হয়েছে!');
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                  >
-                    <Share2 className="w-4 h-4 text-emerald-600" />
-                    <span>লিংক শেয়ার করুন</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveArticle(null)}
-                    className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
-                  >
-                    বন্ধ করুন
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      {activeArticle && (
+        <NewsModal
+          article={activeArticle}
+          onClose={() => setActiveArticle(null)}
+        />
+      )}
     </div>
   );
 };

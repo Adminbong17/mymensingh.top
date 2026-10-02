@@ -82,31 +82,51 @@ function fetchUrl(url, headers = {}, timeoutMs = 8000) {
 // Scrapes the real multi-paragraph article body from portal web page
 async function fetchFullArticleBody(url) {
   if (!url || !url.startsWith('http')) return null;
+  // Never attempt to scrape video, tube, gallery, or photo stories for article text
+  if (/\/(tube|video|videos|gallery|photo|photos)\//i.test(url)) return null;
+
   try {
     const html = await fetchUrl(url, {}, 6000);
-    // Strip scripts, styles, headers, footers, navs
+    // Strip scripts, styles, headers, footers, navs, aside, widgets
     const cleanDoc = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
       .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, ' ')
       .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, ' ')
-      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, ' ');
+      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, ' ')
+      .replace(/<aside\b[^<]*(?:(?!<\/aside>)<[^<]*)*<\/aside>/gi, ' ');
+
+    const isJunkText = (text) => {
+      return (
+        text.length < 35 ||
+        text.includes('কপিরাইট') ||
+        text.includes('সর্বস্বত্ব') ||
+        text.includes('Google News') ||
+        text.includes('বিজ্ঞাপন') ||
+        text.includes('app_installed') ||
+        text.includes('ফেসবুক পেজে') ||
+        text.includes('Powered by') ||
+        text.includes('RSI Lab') ||
+        text.includes('thedailystar.net') ||
+        text.includes('বিডিনিউজ টোয়েন্টিফোর ডটকম নিউজ সার্ভিস') ||
+        text.includes('রাজনৈতিক অস্থিরতার') ||
+        text.includes('নারী ক্রিকেটের সংস্কার') ||
+        text.includes('হকার উচ্ছেদ') ||
+        text.includes('ভাতের নাকি অনুভূতির') ||
+        text.includes('আরও পড়ুন') ||
+        text.includes('মতামত') ||
+        text.includes('Copyright') ||
+        text.includes('All rights reserved') ||
+        text.startsWith('{') ||
+        text.includes('@context')
+      );
+    };
 
     const pMatches = [...cleanDoc.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
     const validParas = [];
     for (const m of pMatches) {
       const p = cleanHtml(m[1]);
-      if (
-        p.length > 35 &&
-        !p.includes('কপিরাইট') &&
-        !p.includes('সর্বস্বত্ব') &&
-        !p.includes('Google News') &&
-        !p.includes('বিজ্ঞাপন') &&
-        !p.includes('app_installed') &&
-        !p.startsWith('{') &&
-        !p.includes('@context') &&
-        !p.includes('ফেসবুক পেজে')
-      ) {
+      if (!isJunkText(p)) {
         validParas.push(p);
       }
     }
@@ -431,15 +451,16 @@ async function fetchBdnews24News() {
       const excerpt = cleanHtml(story.subheadline) || title;
       const category = classifyCategory(title, excerpt, story.url, sectionName);
 
-      // Extract full multi-paragraph article body if slug available
+      // Extract full multi-paragraph article body if slug available (and NOT a tube/video story)
       let body = excerpt;
-      if (story.slug) {
+      const isVideoStory = story.url && /\/(tube|video|videos)\//i.test(story.url);
+      if (story.slug && !isVideoStory) {
         try {
           const detailRaw = await fetchUrl(`https://bangla.bdnews24.com/api/v1/stories-by-slug?slug=${encodeURIComponent(story.slug)}`, {}, 4000);
           const detailJson = JSON.parse(detailRaw);
           const paras = (detailJson.story?.cards || [])
             .flatMap(c => (c['story-elements'] || []).filter(e => e.type === 'text').map(e => cleanHtml(e.text)))
-            .filter(t => t.length > 20);
+            .filter(t => t.length > 30 && !t.includes('রাজনৈতিক অস্থিরতার') && !t.includes('নারী ক্রিকেটের') && !t.includes('হকার উচ্ছেদ') && !t.includes('বিডিনিউজ টোয়েন্টিফোর'));
           if (paras.length > 0) {
             body = paras.join('\n\n');
           }
@@ -760,6 +781,9 @@ async function run() {
           if (urlMatch) {
             const articleUrl = urlMatch[1];
             let fullBody = null;
+            if (articleUrl.includes('/tube/') || articleUrl.includes('/video/') || articleUrl.includes('/videos/')) {
+              continue; // Skip video/tube stories which do not contain written article text
+            }
             if (articleUrl.includes('bdnews24.com')) {
               const slugMatch = articleUrl.match(/bdnews24\.com\/(.+?)(?:\?|$)/);
               if (slugMatch) {
@@ -768,7 +792,7 @@ async function run() {
                   const detailJson = JSON.parse(detailRaw);
                   const paras = (detailJson.story?.cards || [])
                     .flatMap(c => (c['story-elements'] || []).filter(e => e.type === 'text').map(e => cleanHtml(e.text)))
-                    .filter(t => t.length > 20);
+                    .filter(t => t.length > 30 && !t.includes('রাজনৈতিক অস্থিরতার') && !t.includes('নারী ক্রিকেটের') && !t.includes('হকার উচ্ছেদ') && !t.includes('বিডিনিউজ টোয়েন্টিফোর'));
                   if (paras.length > 0) fullBody = paras.join('\n\n');
                 } catch {}
               }

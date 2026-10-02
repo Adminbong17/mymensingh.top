@@ -123,6 +123,31 @@ export function cleanNewsText(text: string): string {
   return normalizePunctuation(stripped);
 }
 
+const JUNK_LINE_PATTERNS = [
+  /©\s*\d{4}\s*thedailystar\.net/i,
+  /Powered by:\s*RSI Lab/i,
+  /Copyright:\s*Any unauthorized use/i,
+  /বিডিনিউজ টোয়েন্টিফোর ডটকম নিউজ সার্ভিস/i,
+  /রাজনৈতিক অস্থিরতার ‘ভরকেন্দ্র’/i,
+  /রাজনৈতিক অস্থিরতার 'ভরকেন্দ্র'/i,
+  /নারী ক্রিকেটের সংস্কার/i,
+  /হকার উচ্ছেদ কি ঢাকার/i,
+  /ভাতের নাকি অনুভূতির অভাব/i,
+  /app_installed/i,
+  /Google News-এ ফলো করুন/i,
+  /ফেসবুক পেজে লাইক দিন/i,
+  /সর্বস্বত্ব স্বত্বাধিকার সংরক্ষিত/i
+];
+
+function purgeJunkLines(text: string): string {
+  if (!text) return '';
+  return text
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !JUNK_LINE_PATTERNS.some(p => p.test(line)))
+    .join('\n\n');
+}
+
 export function parseArticleSource(rawContent: string): ParsedNewsContent {
   if (!rawContent) {
     return { cleanBody: '', sourceName: null, sourceUrl: null };
@@ -142,12 +167,13 @@ export function parseArticleSource(rawContent: string): ParsedNewsContent {
     const sourceName = normalizePunctuation(match[1].trim());
     const sourceUrl = match[2].trim();
 
-    let cleanBody = sanitized
+    let rawBody = sanitized
       .replace(/\n*\(?(?:সংবাদ\s*উৎস|উৎস):.*$/is, '')
       .replace(/\n*ময়মনসিংহ\s*(?:সিটি|বিভাগ)?\s*ও?\s*সংলগ্ন\s*এলাকার\s*স্থানীয়\s*খবরের\s*বিস্তারিত\s*তথ্যের\s*জন্য\s*মূল\s*সংবাদ\s*লিংকে\s*প্রবেশ\s*করুন।?/g, '')
       .replace(/<[^>]+>/g, ' ')
       .trim();
 
+    const cleanBody = purgeJunkLines(rawBody);
     return { cleanBody: normalizePunctuation(cleanBody), sourceName, sourceUrl };
   }
 
@@ -155,14 +181,17 @@ export function parseArticleSource(rawContent: string): ParsedNewsContent {
   const urlFallback = sanitized.match(/(https?:\/\/[^\s)\n]+)/i);
   if (urlFallback) {
     const sourceUrl = urlFallback[1].trim();
-    let cleanBody = sanitized
+    let rawBody = sanitized
       .replace(sourceUrl, '')
       .replace(/\(?(?:সংবাদ\s*উৎস|উৎস|মূল\s*প্রতিবেদন\s*পড়ুন)[:\s—\-]*\)?/gi, '')
       .replace(/\n*ময়মনসিংহ\s*(?:সিটি|বিভাগ)?\s*ও?\s*সংলগ্ন\s*এলাকার\s*স্থানীয়\s*খবরের\s*বিস্তারিত\s*তথ্যের\s*জন্য\s*মূল\s*সংবাদ\s*লিংকে\s*প্রবেশ\s*করুন।?/g, '')
       .replace(/<[^>]+>/g, ' ')
       .trim();
+
+    const cleanBody = purgeJunkLines(rawBody);
     return { cleanBody: normalizePunctuation(cleanBody), sourceName: 'মূল পোর্টাল', sourceUrl };
   }
 
-  return { cleanBody: normalizePunctuation(sanitized.replace(/<[^>]+>/g, ' ').trim()), sourceName: null, sourceUrl: null };
+  const cleanBody = purgeJunkLines(sanitized.replace(/<[^>]+>/g, ' ').trim());
+  return { cleanBody: normalizePunctuation(cleanBody), sourceName: null, sourceUrl: null };
 }
