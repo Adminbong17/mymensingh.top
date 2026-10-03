@@ -126,17 +126,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
           </div>
 
-          {/* 2. Middle Search Bar (Visible on md+ screens, fully flexible) */}
+          {/* 2. Middle Search Bar (Visible on md+ screens, fully flexible & eye-catching rounded pill) */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-2 lg:mx-4">
             <button
               onClick={handleSearchClick}
-              className="w-full flex items-center justify-between px-3.5 py-2 rounded-2xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 text-slate-400 hover:text-slate-600 transition-all text-xs group cursor-pointer shadow-2xs"
+              className="w-full flex items-center justify-between p-1.5 pl-2 pr-3 rounded-full bg-white hover:bg-emerald-50/40 border-2 border-emerald-500/50 hover:border-emerald-600 shadow-sm hover:shadow-md hover:shadow-emerald-500/15 ring-4 ring-emerald-500/10 hover:ring-emerald-500/25 transition-all duration-200 group cursor-pointer"
             >
               <div className="flex items-center gap-2.5 truncate">
-                <Search className="w-4 h-4 text-emerald-600 shrink-0 group-hover:scale-110 transition-transform" />
-                <span className="text-slate-500 font-medium truncate">ময়মনসিংহের হাসপাতাল, রেস্টুরেন্ট বা সেবা খুঁজুন...</span>
+                <div className="w-8 h-8 rounded-full bg-emerald-600 group-hover:bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-all">
+                  <Search className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col text-left truncate">
+                  <span className="text-xs sm:text-[13px] font-bold text-slate-800 group-hover:text-emerald-950 truncate leading-tight">
+                    কী খুঁজছেন ময়মনসিংহে?
+                  </span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-emerald-700 font-medium truncate leading-tight">
+                    হাসপাতাল, রেস্টুরেন্ট, ডাক্তার, সেবা...
+                  </span>
+                </div>
               </div>
-              <span className="hidden lg:inline-flex text-[10px] font-bold bg-white border border-slate-200 text-slate-400 px-1.5 py-0.5 rounded-md font-mono shrink-0 ml-2">
+              <span className="hidden lg:inline-flex items-center text-[11px] font-black text-emerald-800 bg-emerald-100/90 group-hover:bg-emerald-200 px-3 py-1 rounded-full border border-emerald-300/80 shadow-2xs shrink-0 transition-colors ml-2">
                 অনুসন্ধান
               </span>
             </button>
@@ -148,11 +157,12 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             {/* Mobile Search Icon Trigger (md:hidden) */}
             <button
               onClick={handleSearchClick}
-              className="md:hidden p-2 rounded-xl text-slate-600 hover:text-emerald-600 hover:bg-slate-100 transition-all border border-slate-200/80 shadow-2xs shrink-0 cursor-pointer"
+              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-all border-2 border-emerald-400/60 shadow-xs shrink-0 cursor-pointer ring-2 ring-emerald-500/10"
               title="অনুসন্ধান করুন"
               aria-label="Search"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-xs font-bold">সার্চ</span>
             </button>
 
             {/* Desktop / Tablet Login / Admin Button */}
@@ -457,8 +467,24 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         {/* MOBILE DROPDOWN MENU DRAWER                                      */}
         {/* ================================================================= */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-slate-200 space-y-2.5 animate-in slide-in-from-top duration-200">
+          <div className="lg:hidden py-4 border-t border-slate-200 space-y-3 animate-in slide-in-from-top duration-200">
             
+            {/* Mobile Rounded Pill Search Button */}
+            <button
+              onClick={() => { handleSearchClick(); setMobileMenuOpen(false); }}
+              className="w-full flex items-center justify-between p-2 pl-3 pr-4 rounded-full bg-emerald-50/70 hover:bg-emerald-100/80 border-2 border-emerald-400 text-slate-800 text-xs font-semibold shadow-xs ring-2 ring-emerald-500/10 cursor-pointer transition-colors"
+            >
+              <div className="flex items-center gap-2.5 truncate">
+                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <Search className="w-3.5 h-3.5" />
+                </div>
+                <span className="truncate">ময়মনসিংহে কী খুঁজছেন? অনুসন্ধান...</span>
+              </div>
+              <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-1 rounded-full shrink-0">
+                খুঁজুন
+              </span>
+            </button>
+
             {/* Mobile Auth / Admin section */}
             <div className="pb-1">
               {user ? (
