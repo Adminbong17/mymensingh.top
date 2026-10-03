@@ -85,7 +85,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearch, onQuickCateg
         <div className="pt-2 w-full max-w-5xl xl:max-w-6xl mx-auto">
           <form
             onSubmit={handleSearchSubmit}
-            className="w-full bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl border border-white/20 text-slate-800"
+            className="w-full bg-white/98 backdrop-blur-xl rounded-3xl sm:rounded-4xl p-3 sm:p-4 shadow-2xl shadow-emerald-950/40 border-2 border-emerald-500/40 ring-4 ring-emerald-500/15 text-slate-800 transition-all"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 items-stretch">
               

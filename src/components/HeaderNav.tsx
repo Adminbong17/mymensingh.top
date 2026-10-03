@@ -126,43 +126,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </div>
           </div>
 
-          {/* 2. Middle Search Bar (Visible on md+ screens, fully flexible & eye-catching rounded pill) */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-2 lg:mx-4">
-            <button
-              onClick={handleSearchClick}
-              className="w-full flex items-center justify-between p-1.5 pl-2 pr-3 rounded-full bg-white hover:bg-emerald-50/40 border-2 border-emerald-500/50 hover:border-emerald-600 shadow-sm hover:shadow-md hover:shadow-emerald-500/15 ring-4 ring-emerald-500/10 hover:ring-emerald-500/25 transition-all duration-200 group cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5 truncate">
-                <div className="w-8 h-8 rounded-full bg-emerald-600 group-hover:bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-all">
-                  <Search className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col text-left truncate">
-                  <span className="text-xs sm:text-[13px] font-bold text-slate-800 group-hover:text-emerald-950 truncate leading-tight">
-                    কী খুঁজছেন ময়মনসিংহে?
-                  </span>
-                  <span className="text-[10px] text-slate-400 group-hover:text-emerald-700 font-medium truncate leading-tight">
-                    হাসপাতাল, রেস্টুরেন্ট, ডাক্তার, সেবা...
-                  </span>
-                </div>
-              </div>
-              <span className="hidden lg:inline-flex items-center text-[11px] font-black text-emerald-800 bg-emerald-100/90 group-hover:bg-emerald-200 px-3 py-1 rounded-full border border-emerald-300/80 shadow-2xs shrink-0 transition-colors ml-2">
-                অনুসন্ধান
-              </span>
-            </button>
-          </div>
-
-          {/* 3. Right Action Utilities (Never overflows or touches screen edge) */}
+          {/* Right Action Utilities (Never overflows or touches screen edge) */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             
-            {/* Mobile Search Icon Trigger (md:hidden) */}
+            {/* Search Icon Trigger */}
             <button
               onClick={handleSearchClick}
-              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-all border-2 border-emerald-400/60 shadow-xs shrink-0 cursor-pointer ring-2 ring-emerald-500/10"
+              className="p-2 sm:p-2.5 rounded-xl text-slate-600 hover:text-emerald-600 hover:bg-slate-100 transition-all border border-slate-200/80 shadow-2xs shrink-0 cursor-pointer"
               title="অনুসন্ধান করুন"
               aria-label="Search"
             >
-              <Search className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-xs font-bold">সার্চ</span>
+              <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
 
             {/* Desktop / Tablet Login / Admin Button */}
