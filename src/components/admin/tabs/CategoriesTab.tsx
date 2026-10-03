@@ -176,16 +176,32 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
   };
 
   // Move Order
-  const handleMoveOrder = async (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= categories.length) return;
+  const handleMoveOrder = async (cat: Category, direction: 'up' | 'down') => {
+    const isMain = !cat.parent_id;
+    // Sibling categories in current sorted order
+    const siblings = categories
+      .filter(c => isMain ? !c.parent_id : (c.parent_id === cat.parent_id))
+      .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
 
-    const updated = [...categories];
-    const temp = updated[index];
-    updated[index] = updated[targetIndex];
-    updated[targetIndex] = temp;
+    const currentIndex = siblings.findIndex(c => c.id === cat.id);
+    if (currentIndex === -1) return;
 
-    await reorderCategories(updated);
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= siblings.length) return;
+
+    // Swap positions in siblings list
+    const updatedSiblings = [...siblings];
+    const temp = updatedSiblings[currentIndex];
+    updatedSiblings[currentIndex] = updatedSiblings[targetIndex];
+    updatedSiblings[targetIndex] = temp;
+
+    // Assign new sequential order_index to siblings
+    const reorderedList = updatedSiblings.map((item, idx) => ({
+      ...item,
+      order_index: idx + 1
+    }));
+
+    await reorderCategories(reorderedList);
   };
 
   // Filtered categories
@@ -674,24 +690,36 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
                             </span>
                           </td>
                           <td className="py-3 px-2">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleMoveOrder(absoluteIndex, 'up')}
-                                disabled={absoluteIndex === 0}
-                                className="p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-30 cursor-pointer"
-                                title="Move Up"
-                              >
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleMoveOrder(absoluteIndex, 'down')}
-                                disabled={absoluteIndex === categories.length - 1}
-                                className="p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-30 cursor-pointer"
-                                title="Move Down"
-                              >
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                            {(() => {
+                              const isMain = !cat.parent_id;
+                              const siblings = categories
+                                .filter(c => isMain ? !c.parent_id : (c.parent_id === cat.parent_id))
+                                .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
+                              const siblingIndex = siblings.findIndex(c => c.id === cat.id);
+                              const canMoveUp = siblingIndex > 0;
+                              const canMoveDown = siblingIndex !== -1 && siblingIndex < siblings.length - 1;
+
+                              return (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleMoveOrder(cat, 'up')}
+                                    disabled={!canMoveUp}
+                                    className="p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-30 cursor-pointer"
+                                    title="Move Up"
+                                  >
+                                    <ChevronUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleMoveOrder(cat, 'down')}
+                                    disabled={!canMoveDown}
+                                    className="p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-30 cursor-pointer"
+                                    title="Move Down"
+                                  >
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="py-3 px-2 text-right">
                             <div className="flex items-center justify-end gap-1">

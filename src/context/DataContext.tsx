@@ -151,25 +151,32 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loaded = loadStoredArray(STORAGE_KEYS.CATEGORIES, ALL_INITIAL_CATEGORIES);
     const existingIds = new Set(loaded.map(c => c.id));
     const missing = INITIAL_SUBCATEGORIES.filter(sc => !existingIds.has(sc.id));
-    if (missing.length > 0) {
-      return [...loaded, ...missing];
-    }
-    return loaded;
+    const full = (missing.length > 0 ? [...loaded, ...missing] : loaded).map(c => ({
+      ...c,
+      parent_id: c.parent_id ? c.parent_id : null
+    }));
+    return full.sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
   });
 
   const mainCategories = useMemo(() => {
-    return categories.filter(c => !c.parent_id);
+    return categories
+      .filter(c => !c.parent_id)
+      .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
   }, [categories]);
 
   const subcategories = useMemo(() => {
-    return categories.filter(c => !!c.parent_id);
+    return categories
+      .filter(c => !!c.parent_id)
+      .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
   }, [categories]);
 
   const getSubcategories = useCallback((parentSlugOrId: string): Category[] => {
     if (!parentSlugOrId) return [];
     const parent = categories.find(c => c.slug === parentSlugOrId || c.id === parentSlugOrId);
     if (!parent) return [];
-    return categories.filter(c => c.parent_id === parent.id || c.parent_id === parent.slug);
+    return categories
+      .filter(c => c.parent_id === parent.id || c.parent_id === parent.slug)
+      .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
   }, [categories]);
   const [news, setNews] = useState<NewsArticle[]>(() =>
     loadStoredArray(STORAGE_KEYS.NEWS, [])
@@ -873,15 +880,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Categories CRUD
   const addCategory = async (catData: Omit<Category, 'id'>): Promise<boolean> => {
+    const isMain = !catData.parent_id;
+    const siblings = categories.filter(c => isMain ? !c.parent_id : (c.parent_id === catData.parent_id));
+    const maxOrder = siblings.reduce((max, c) => Math.max(max, c.order_index ?? 0), 0);
+
     const newCategory: Category = {
       ...catData,
       id: `cat-${Date.now()}`,
       count: catData.count ?? 0,
-      order_index: catData.order_index ?? categories.length + 1,
-      parent_id: catData.parent_id ?? null,
+      order_index: catData.order_index ?? (maxOrder + 1),
+      parent_id: catData.parent_id ? catData.parent_id : null,
     };
 
-    setCategories(prev => [...prev, newCategory]);
+    setCategories(prev => [...prev, newCategory].sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999)));
 
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
@@ -914,7 +925,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateCategory = async (id: string, catData: Partial<Category>): Promise<boolean> => {
     setCategories(prev =>
-      prev.map(cat => (cat.id === id ? { ...cat, ...catData } : cat))
+      prev
+        .map(cat => (cat.id === id ? { ...cat, ...catData, parent_id: catData.parent_id !== undefined ? (catData.parent_id || null) : cat.parent_id } : cat))
+        .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999))
     );
 
     const supabase = getSupabase();
@@ -928,7 +941,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (catData.color !== undefined) updatePayload.color = catData.color;
         if (catData.order_index !== undefined) updatePayload.order_index = catData.order_index;
         if (catData.count !== undefined) updatePayload.count = catData.count;
-        if (catData.parent_id !== undefined) updatePayload.parent_id = catData.parent_id;
+        if (catData.parent_id !== undefined) updatePayload.parent_id = catData.parent_id || null;
 
         const { error } = await supabase.from('categories').update(updatePayload).eq('id', id);
         if (error && error.message.includes('parent_id')) {
@@ -957,17 +970,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const reorderCategories = async (orderedList: Category[]): Promise<boolean> => {
-    const updated = orderedList.map((cat, idx) => ({
-      ...cat,
-      order_index: idx + 1
-    }));
-    setCategories(updated);
+    const orderMap = new Map<string, number>();
+    orderedList.forEach((cat, idx) => {
+      orderMap.set(cat.id, idx + 1);
+    });
+
+    setCategories(prev => {
+      const next = prev.map(cat => {
+        if (orderMap.has(cat.id)) {
+          return { ...cat, order_index: orderMap.get(cat.id)! };
+        }
+        return cat;
+      });
+      return next.sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
+    });
 
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        for (const cat of updated) {
-          await supabase.from('categories').update({ order_index: cat.order_index }).eq('id', cat.id);
+        for (const cat of orderedList) {
+          const newOrder = orderMap.get(cat.id);
+          if (newOrder !== undefined) {
+            await supabase.from('categories').update({ order_index: newOrder }).eq('id', cat.id);
+          }
         }
       } catch (err) {
         console.warn('Supabase reorderCategories error:', err);
