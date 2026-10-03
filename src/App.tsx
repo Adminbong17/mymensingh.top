@@ -44,7 +44,7 @@ import { AuthProvider } from './context/AuthContext';
 import { DataProvider, useData } from './context/DataContext';
 
 import type { Business } from './types';
-import { SearchX, Filter, Moon, ArrowRight } from 'lucide-react';
+import { SearchX, Filter } from 'lucide-react';
 
 // Scroll to top on route change
 const ScrollToTop: React.FC = () => {
@@ -232,43 +232,10 @@ const HomePage: React.FC<{
         onSeeAll={() => navigate('/categories')}
       />
 
-      {/* 4.5 Prayer Times & Islamic Bulletin Section */}
-      <section className="py-6 sm:py-8 bg-slate-50 border-y border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-            {/* Ambient background glows */}
-            <div className="absolute top-0 left-1/4 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Left text / info */}
-            <div className="space-y-3 max-w-xl text-left z-10">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30">
-                <Moon className="w-3.5 h-3.5 fill-rose-400" />
-                <span>দৈনন্দিন ইসলামিক সেবা</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-                নামাজ ও রোজার সময়সূচি
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                ময়মনসিংহ সহ বাংলাদেশের সকল বিভাগের সাহরি, ইফতার ও পাঁচ ওয়াক্ত নামাজের সঠিক সময়সূচি, লাইভ কাউন্টডাউন ও সঠিক কিবলা কম্পাস।
-              </p>
-              <div className="pt-2 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/prayer')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-600/30 transition-all cursor-pointer"
-                >
-                  <span>কিবলা ও সম্পূর্ণ সময়সূচি</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Right: The interactive PrayerWidget card */}
-            <div className="w-full lg:w-auto shrink-0 flex justify-center z-10">
-              <PrayerWidget />
-            </div>
-          </div>
+      {/* 4.5 Prayer Times & Islamic Bulletin Section (Compact Strip) */}
+      <section className="py-4 sm:py-6 bg-slate-50 border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <PrayerWidget />
         </div>
       </section>
 
