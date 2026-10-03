@@ -1,24 +1,24 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
-// Layout Components
+// Layout & Core Components
 import { HeaderNav } from './components/HeaderNav';
-import { Footer } from './components/Footer';
-
-// Homepage Sections
 import { HeroSection } from './components/HeroSection';
 import { SpecialServices } from './components/SpecialServices';
 import { ExploreCategories } from './components/ExploreCategories';
-import { LatestNewsSection } from './components/LatestNewsSection';
-import { FeaturedBusinesses } from './components/FeaturedBusinesses';
 import { ExploreByLocation } from './components/ExploreByLocation';
+import { FeaturedBusinesses } from './components/FeaturedBusinesses';
+import { LatestNewsSection } from './components/LatestNewsSection';
 import { UpcomingEventsSection } from './components/UpcomingEventsSection';
 import { LatestOffersSection } from './components/LatestOffersSection';
 import { BusinessCTA } from './components/BusinessCTA';
 import { NewsletterSection } from './components/NewsletterSection';
+import { Footer } from './components/Footer';
+import { PrayerWidget } from './components/PrayerWidget';
 
 // Dedicated Pages
 import { CategoriesPage } from './pages/CategoriesPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
 import { NewsPage } from './pages/NewsPage';
 import { EventsPage } from './pages/EventsPage';
 import { OffersPage } from './pages/OffersPage';
@@ -30,7 +30,6 @@ import { BloodBankPage } from './pages/BloodBankPage';
 import { TuitionMediaPage } from './pages/TuitionMediaPage';
 import { ToLetPage } from './pages/ToLetPage';
 import { PrayerTimesPage } from './pages/PrayerTimesPage';
-import { PrayerWidget } from './components/PrayerWidget';
 
 // Modals & Admin
 import { ListBusinessModal } from './components/ListBusinessModal';
@@ -44,7 +43,6 @@ import { AuthProvider } from './context/AuthContext';
 import { DataProvider, useData } from './context/DataContext';
 
 import type { Business } from './types';
-import { SearchX, Filter } from 'lucide-react';
 
 // Scroll to top on route change
 const ScrollToTop: React.FC = () => {
@@ -65,60 +63,20 @@ const HomePage: React.FC<{
   const navigate = useNavigate();
   const { businesses, categories, mainCategories, news, events, offers } = useData();
 
-  // Search & Filter State
-  const [searchFilter, setSearchFilter] = useState<{
+  // Search redirection to dedicated /search results page
+  const handleHeroSearch = (params: {
     keyword: string;
     district: string;
     upazila: string;
     unionWard: string;
-  }>({
-    keyword: '',
-    district: '',
-    upazila: '',
-    unionWard: '',
-  });
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params.keyword?.trim()) queryParams.set('q', params.keyword.trim());
+    if (params.district && params.district !== 'সকল জেলা') queryParams.set('district', params.district);
+    if (params.upazila) queryParams.set('upazila', params.upazila);
+    if (params.unionWard) queryParams.set('union', params.unionWard);
 
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>('');
-
-  // Filtered Businesses Logic
-  const filteredBusinesses = useMemo(() => {
-    return businesses.filter((biz) => {
-      if (selectedCategorySlug && biz.category_slug !== selectedCategorySlug) {
-        return false;
-      }
-      if (searchFilter.keyword.trim()) {
-        const q = searchFilter.keyword.toLowerCase().trim();
-        const matchName = biz.name.toLowerCase().includes(q) || (biz.name_bn && biz.name_bn.toLowerCase().includes(q));
-        const matchCategory = biz.category.toLowerCase().includes(q);
-        const matchDesc = biz.description && biz.description.toLowerCase().includes(q);
-        const matchLocation = biz.location.toLowerCase().includes(q);
-        if (!matchName && !matchCategory && !matchDesc && !matchLocation) {
-          return false;
-        }
-      }
-      if (searchFilter.district && searchFilter.district !== 'সকল জেলা' && biz.district && biz.district !== searchFilter.district && !biz.location.includes(searchFilter.district)) {
-        return false;
-      }
-      if (searchFilter.upazila && biz.upazila !== searchFilter.upazila && !biz.location.includes(searchFilter.upazila)) {
-        return false;
-      }
-      if (searchFilter.unionWard && biz.union_ward && !biz.union_ward.includes(searchFilter.unionWard)) {
-        return false;
-      }
-      return true;
-    });
-  }, [businesses, selectedCategorySlug, searchFilter]);
-
-  const isFilterActive = Boolean(
-    selectedCategorySlug || searchFilter.keyword || searchFilter.district || searchFilter.upazila || searchFilter.unionWard
-  );
-
-  const handleHeroSearch = (params: { keyword: string; district: string; upazila: string; unionWard: string }) => {
-    setSearchFilter(params);
-    const resultsEl = document.getElementById('search-results-section');
-    if (resultsEl) {
-      resultsEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    navigate(`/search?${queryParams.toString()}`);
   };
 
   const handleQuickCategory = (categorySlug: string) => {
@@ -130,15 +88,10 @@ const HomePage: React.FC<{
   };
 
   const handleAreaSelect = (upazila: string, union?: string) => {
-    setSearchFilter((prev) => ({
-      ...prev,
-      upazila,
-      unionWard: union || '',
-    }));
-    const resultsEl = document.getElementById('search-results-section');
-    if (resultsEl) {
-      resultsEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    const queryParams = new URLSearchParams();
+    if (upazila) queryParams.set('upazila', upazila);
+    if (union) queryParams.set('union', union);
+    navigate(`/search?${queryParams.toString()}`);
   };
 
   return (
@@ -150,72 +103,13 @@ const HomePage: React.FC<{
         onSelectBusiness={onSelectBusiness}
       />
 
-      {/* Filter / Search Results Section (Appears if user searched on homepage) */}
-      {isFilterActive && (
-        <div id="search-results-section" className="py-10 bg-emerald-50/40 border-b border-emerald-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-emerald-600" />
-                <h2 className="text-xl font-bold text-slate-900">
-                  অনুসন্ধানের ফলাফল ({filteredBusinesses.length}টি লিস্টিং পাওয়া গেছে)
-                </h2>
-              </div>
-
-              <button
-                onClick={() => {
-                  setSelectedCategorySlug('');
-                  setSearchFilter({ keyword: '', district: '', upazila: '', unionWard: '' });
-                }}
-                className="text-xs font-bold text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition-colors self-start sm:self-auto"
-              >
-                ফিল্টার রিসেট করুন (Clear)
-              </button>
-            </div>
-
-            {filteredBusinesses.length === 0 ? (
-              <div className="py-12 text-center bg-white rounded-3xl p-6 border border-slate-200">
-                <SearchX className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-bold text-slate-700">কোনো ফলাফল পাওয়া যায়নি।</p>
-                <p className="text-xs text-slate-500 mt-1">অন্য কোনো কি-ওয়ার্ড অথবা অন্য উপজেলা দিয়ে অনুসন্ধান করুন।</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBusinesses.map((biz) => (
-                  <div
-                    key={biz.id}
-                    onClick={() => onSelectBusiness(biz)}
-                    className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xs hover:shadow-xl transition-all cursor-pointer p-4 space-y-3"
-                  >
-                    <div className="aspect-16/9 rounded-2xl overflow-hidden bg-slate-100">
-                      <img src={biz.image_url} alt={biz.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                        {biz.category}
-                      </span>
-                      <h3 className="text-base font-bold text-slate-900 mt-1">{biz.name}</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">{biz.location}</p>
-                    </div>
-                    <div className="pt-2 border-t flex justify-between items-center text-xs">
-                      <span className="font-bold text-emerald-600">★ {biz.rating} ({biz.review_count})</span>
-                      <span className="font-semibold text-slate-700 underline">বিস্তারিত দেখুন</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* 3. Special Services (3 Big Cards) */}
       <SpecialServices onSelectService={(service) => navigate(`/${service}`)} />
 
-      {/* 4. Explore Categories (20 categories) */}
+      {/* 4. Explore Categories (Auto-Scroll Slider) */}
       <ExploreCategories
         categories={mainCategories.length > 0 ? mainCategories : categories}
-        selectedCategory={selectedCategorySlug}
+        selectedCategory=""
         onSelectCategory={(slug) => {
           if (slug === 'blood-bank' || slug === 'tuition-media' || slug === 'to-let') {
             navigate(`/${slug}`);
@@ -239,10 +133,10 @@ const HomePage: React.FC<{
         </div>
       </section>
 
-      {/* 5. Latest News Section (5 news cards) */}
+      {/* 5. Latest News Section (Slider) */}
       <LatestNewsSection news={news} />
 
-      {/* 6. Featured Businesses (6 verified business cards) */}
+      {/* 6. Featured Businesses (Slider) */}
       <FeaturedBusinesses
         businesses={businesses}
         onSelectBusiness={onSelectBusiness}
@@ -251,10 +145,10 @@ const HomePage: React.FC<{
       {/* 7. Explore by Location (District, Upazila, Union selector) */}
       <ExploreByLocation onSelectArea={handleAreaSelect} />
 
-      {/* 8. Upcoming Events (3 event cards) */}
+      {/* 8. Upcoming Events (Slider) */}
       <UpcomingEventsSection events={events} />
 
-      {/* 9. Latest Offers (3 discount cards) */}
+      {/* 9. Latest Offers (Slider) */}
       <LatestOffersSection offers={offers} />
 
       {/* 10. Business CTA */}
@@ -312,6 +206,7 @@ const AppContent: React.FC = () => {
               />
             }
           />
+          <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/events" element={<EventsPage />} />
