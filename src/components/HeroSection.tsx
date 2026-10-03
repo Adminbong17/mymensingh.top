@@ -157,7 +157,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </p>
 
         {/* Big Search Box Container */}
-        <div className="pt-2 w-full max-w-5xl xl:max-w-6xl mx-auto relative">
+        <div className="pt-2 w-full max-w-5xl xl:max-w-6xl mx-auto relative z-30">
           <form
             onSubmit={handleSearchSubmit}
             className="w-full bg-white/98 backdrop-blur-xl rounded-3xl sm:rounded-4xl p-3 sm:p-4 shadow-2xl shadow-emerald-950/40 border-2 border-emerald-500/40 ring-4 ring-emerald-500/15 text-slate-800 transition-all"
@@ -167,7 +167,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Field 1: কী খুঁজছেন (Keyword) with Instant Dropdown */}
               <div
                 ref={containerRef}
-                className="lg:col-span-4 col-span-1 sm:col-span-2 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all flex flex-col justify-center relative"
+                className="lg:col-span-4 col-span-1 sm:col-span-2 text-left bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-2.5 px-3 border border-slate-200/70 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all flex flex-col justify-center relative z-40"
               >
                 <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
                   কী খুঁজছেন?
@@ -205,7 +205,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {isDropdownOpen && keyword.trim().length > 0 && (
                   <div
                     ref={dropdownRef}
-                    className="absolute top-full left-0 w-full sm:w-[480px] lg:w-[540px] mt-2.5 bg-white rounded-3xl shadow-2xl border border-slate-200 p-3 sm:p-4 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3 text-left max-h-[420px] overflow-y-auto"
+                    className="absolute top-full left-0 w-full sm:w-[480px] lg:w-[540px] mt-2.5 bg-white rounded-3xl shadow-2xl border border-slate-200 p-3 sm:p-4 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3 text-left max-h-[420px] overflow-y-auto ring-1 ring-black/5"
                   >
                     {/* Dropdown Header */}
                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -413,7 +413,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         {/* Scrolling News Bulletin Marquee right under the search bar */}
-        <NewsTicker />
+        <div className="relative z-10">
+          <NewsTicker />
+        </div>
 
         {/* Popular Searches */}
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
