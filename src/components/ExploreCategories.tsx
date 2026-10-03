@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
 import type { Category } from '../types';
-import { renderCategoryIcon } from '../lib/categoryIcons';
+import { CATEGORY_VISUALS, renderCategoryIcon } from '../lib/categoryIcons';
 
 interface ExploreCategoriesProps {
   categories: Category[];
@@ -20,7 +20,7 @@ const SHORT_BN_NAMES: Record<string, string> = {
   'to-let': 'বাসা ভাড়া',
   'shopping': 'শপিং',
   'cafes': 'ক্যাফে',
-  'tourist-places': 'পর্যটন স্থান',
+  'tourist-places': 'দর্শনীয় স্থান',
   'education': 'শিক্ষা প্রতিষ্ঠান',
   'transport': 'পরিবহন',
   'mosques': 'মসজিদ',
@@ -33,6 +33,8 @@ const SHORT_BN_NAMES: Record<string, string> = {
   'more': 'আরও',
 };
 
+const DOTS_COUNT = 6;
+
 export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
   categories,
   selectedCategory,
@@ -42,19 +44,11 @@ export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeDotIndex, setActiveDotIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
-  // Group categories into 2-row columns (paired items)
-  const columns = useMemo(() => {
-    const cols: Category[][] = [];
-    for (let i = 0; i < categories.length; i += 2) {
-      cols.push(categories.slice(i, i + 2));
-    }
-    return cols;
-  }, [categories]);
-
-  // Update scroll navigation buttons state
-  const checkScrollState = () => {
+  // Update scroll navigation states and active dot indicator
+  const updateScrollState = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
     setCanScrollLeft(scrollLeft > 10);
@@ -62,168 +56,233 @@ export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
 
     const maxScroll = scrollWidth - clientWidth;
     if (maxScroll > 0) {
-      setScrollProgress((scrollLeft / maxScroll) * 100);
+      const ratio = scrollLeft / maxScroll;
+      const dotIdx = Math.min(DOTS_COUNT - 1, Math.max(0, Math.round(ratio * (DOTS_COUNT - 1))));
+      setActiveDotIndex(dotIdx);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    checkScrollState();
-    el.addEventListener('scroll', checkScrollState, { passive: true });
-    window.addEventListener('resize', checkScrollState);
+    updateScrollState();
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
     return () => {
-      el.removeEventListener('scroll', checkScrollState);
-      window.removeEventListener('resize', checkScrollState);
+      el.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
     };
-  }, [categories]);
+  }, [updateScrollState, categories]);
 
+  // Smooth Scroll handler for Left/Right buttons
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
-    const scrollAmount = scrollRef.current.clientWidth * 0.75;
+    const scrollAmount = Math.max(260, scrollRef.current.clientWidth * 0.6);
     scrollRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
     });
   };
 
+  // Scroll to a specific dot position
+  const scrollToDot = (dotIndex: number) => {
+    if (!scrollRef.current) return;
+    const { scrollWidth, clientWidth } = scrollRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll > 0) {
+      const targetLeft = (dotIndex / (DOTS_COUNT - 1)) * maxScroll;
+      scrollRef.current.scrollTo({
+        left: targetLeft,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // Auto-scroll loop effect
+  useEffect(() => {
+    if (isPaused) return;
+
+    const interval = setInterval(() => {
+      if (!scrollRef.current) return;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      const step = 200;
+
+      // If reached the end, smoothly loop back to start
+      if (scrollLeft + clientWidth >= scrollWidth - 15) {
+        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        scrollRef.current.scrollBy({ left: step, behavior: 'smooth' });
+      }
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, [isPaused, categories]);
+
   return (
-    <section id="categories" className="pt-6 pb-10 bg-white border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+    <section
+      id="categories"
+      className="pt-8 pb-14 bg-gradient-to-b from-slate-50/50 via-white to-slate-50/40 border-b border-slate-100"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
-        {/* Header & Controls */}
+        {/* ========================================================= */}
+        {/* HEADER & TOP SLIDER CONTROLS                              */}
+        {/* ========================================================= */}
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-8 sm:h-9 bg-emerald-600 rounded-full shrink-0" />
+          
+          {/* Left Title & Subtitle */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-2 h-10 sm:h-12 bg-emerald-600 rounded-full shrink-0 shadow-xs" />
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                  Explore Categories
-                </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <Sparkles className="w-3 h-3 text-emerald-600" />
-                  <span>{categories.length}টি ক্যাটাগরি</span>
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                Explore Categories
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
                 ময়মনসিংহের সব কিছু, এক জায়গায় (স্লাইড করে দেখুন)
               </p>
             </div>
           </div>
 
-          {/* Right Actions: Slider Arrows + See All Button */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Left/Right Slider Buttons */}
-            <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80">
-              <button
-                type="button"
-                onClick={() => handleScroll('left')}
-                disabled={!canScrollLeft}
-                aria-label="Scroll left"
-                className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
-                  canScrollLeft
-                    ? 'bg-white text-slate-800 shadow-2xs hover:bg-emerald-50 hover:text-emerald-700 active:scale-95'
-                    : 'text-slate-300 cursor-not-allowed opacity-50'
-                }`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleScroll('right')}
-                disabled={!canScrollRight}
-                aria-label="Scroll right"
-                className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
-                  canScrollRight
-                    ? 'bg-white text-slate-800 shadow-2xs hover:bg-emerald-50 hover:text-emerald-700 active:scale-95'
-                    : 'text-slate-300 cursor-not-allowed opacity-50'
-                }`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* See All Categories Link */}
+          {/* Right: Circular Navigation Arrow Buttons */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => {
-                if (onSeeAll) {
-                  onSeeAll();
-                } else {
-                  onSelectCategory('all');
-                }
-              }}
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50/60 border border-slate-200/80 hover:border-emerald-200 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl transition-all group cursor-pointer"
+              onClick={() => handleScroll('left')}
+              disabled={!canScrollLeft}
+              aria-label="Previous categories"
+              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                canScrollLeft
+                  ? 'bg-white text-slate-700 shadow-md hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-lg active:scale-95 border border-slate-200'
+                  : 'bg-slate-100/80 text-slate-300 border border-slate-200/60 cursor-not-allowed opacity-50'
+              }`}
             >
-              <span>সকল ক্যাটাগরি</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform text-emerald-600" />
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleScroll('right')}
+              disabled={!canScrollRight}
+              aria-label="Next categories"
+              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                canScrollRight
+                  ? 'bg-emerald-50 text-emerald-700 shadow-md hover:bg-emerald-600 hover:text-white hover:shadow-lg active:scale-95 border border-emerald-200'
+                  : 'bg-slate-100/80 text-slate-300 border border-slate-200/60 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
+
         </div>
 
         {/* ========================================================= */}
-        {/* COLUMN-WISE CATEGORY SLIDER (2-Row Column Pairs)           */}
+        {/* SINGLE-ROW AUTO-SCROLL CATEGORY CAROUSEL                  */}
         {/* ========================================================= */}
-        <div className="relative group/slider">
+        <div
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+        >
           <div
             ref={scrollRef}
-            className="flex gap-2.5 sm:gap-3.5 overflow-x-auto scroll-smooth pb-3 pt-1 px-1 scrollbar-none select-none -mx-2 px-2"
+            className="flex gap-3 sm:gap-4.5 overflow-x-auto scroll-smooth py-3 px-1 scrollbar-none select-none"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
             }}
           >
-            {columns.map((columnGroup, colIdx) => (
-              <div
-                key={colIdx}
-                className="flex flex-col gap-2.5 sm:gap-3 shrink-0 w-[130px] min-[480px]:w-[145px] sm:w-[160px] md:w-[170px]"
-              >
-                {columnGroup.map((cat) => {
-                  const isSelected = selectedCategory === cat.slug;
-                  const displayNameBn = SHORT_BN_NAMES[cat.slug] || cat.name_bn;
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat.slug;
+              const visual = CATEGORY_VISUALS[cat.slug] || CATEGORY_VISUALS[cat.icon || ''] || null;
+              const displayNameBn = SHORT_BN_NAMES[cat.slug] || cat.name_bn || (visual ? visual.nameBn : '');
+              const displayNameEn = cat.name_en || (visual ? visual.nameEn : cat.name_bn);
 
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => onSelectCategory(cat.slug)}
-                      className={`group/card flex flex-col items-center justify-center text-center p-2.5 sm:p-3 rounded-2xl border transition-all duration-200 cursor-pointer h-[96px] sm:h-[104px] w-full ${
-                        isSelected
-                          ? 'bg-emerald-50 text-emerald-900 border-emerald-500 ring-2 ring-emerald-400/50 shadow-md scale-101'
-                          : 'bg-white hover:bg-slate-50/70 border-slate-200/80 hover:border-emerald-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5'
-                      }`}
-                    >
-                      {/* Icon */}
-                      <div className="mb-1.5 shrink-0 flex items-center justify-center text-emerald-700">
-                        {renderCategoryIcon(
-                          cat.icon || cat.slug,
-                          "w-6 h-6 sm:w-6.5 sm:h-6.5 transition-transform group-hover/card:scale-110 duration-200"
-                        )}
-                      </div>
+              // Background tint & icon color
+              const bgLight = visual?.bgLight || 'bg-emerald-50';
+              const iconColor = visual?.color || '#059669';
 
-                      {/* English Title */}
-                      <h3 className="text-xs sm:text-[13px] font-bold text-slate-800 group-hover/card:text-emerald-700 transition-colors leading-tight truncate w-full px-1">
-                        {cat.name_en}
-                      </h3>
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => onSelectCategory(cat.slug)}
+                  className={`group relative shrink-0 w-[138px] min-[420px]:w-[150px] sm:w-[165px] md:w-[178px] h-[155px] sm:h-[168px] rounded-3xl p-3 sm:p-4 flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer ${
+                    isSelected
+                      ? 'bg-white border-2 border-emerald-500 shadow-xl shadow-emerald-500/15 ring-4 ring-emerald-500/10 scale-102 -translate-y-1'
+                      : 'bg-white border border-slate-200/80 hover:border-emerald-300 shadow-xs hover:shadow-xl hover:shadow-slate-300/40 hover:-translate-y-1.5'
+                  }`}
+                >
+                  {/* Pastel Rounded Icon Container */}
+                  <div
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shrink-0 mb-3 transition-transform duration-300 group-hover:scale-110 ${bgLight}`}
+                  >
+                    {renderCategoryIcon(
+                      cat.icon || cat.slug,
+                      "w-7 h-7 sm:w-8 sm:h-8 transition-transform duration-300"
+                    )}
+                  </div>
 
-                      {/* Bengali Subtitle */}
-                      <p className="text-[10.5px] sm:text-xs text-slate-500 group-hover/card:text-slate-700 transition-colors leading-tight truncate w-full px-1 mt-0.5 font-medium">
-                        {displayNameBn}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
+                  {/* English Name */}
+                  <h3
+                    className="text-xs sm:text-[14px] font-black text-slate-900 group-hover:text-emerald-700 transition-colors leading-tight truncate w-full px-1"
+                    title={displayNameEn}
+                  >
+                    {displayNameEn}
+                  </h3>
+
+                  {/* Bengali Subtitle */}
+                  <p
+                    className="text-[11px] sm:text-xs text-slate-500 group-hover:text-slate-700 font-semibold leading-tight truncate w-full px-1 mt-1"
+                    title={displayNameBn}
+                  >
+                    {displayNameBn}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* BOTTOM PAGINATION DOTS & SEE ALL BUTTON                   */}
+        {/* ========================================================= */}
+        <div className="pt-2 flex flex-col items-center justify-center gap-4">
+          
+          {/* Pagination Indicator Dots */}
+          <div className="flex items-center justify-center gap-1.5 py-1">
+            {Array.from({ length: DOTS_COUNT }).map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => scrollToDot(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+                className={`transition-all duration-300 cursor-pointer ${
+                  activeDotIndex === idx
+                    ? 'w-6 h-2 bg-emerald-600 rounded-full shadow-xs'
+                    : 'w-2 h-2 bg-slate-200 hover:bg-slate-300 rounded-full'
+                }`}
+              />
             ))}
           </div>
 
-          {/* Optional Subtle Horizontal Scroll Progress Bar */}
-          <div className="w-full max-w-xs mx-auto h-1 bg-slate-100 rounded-full overflow-hidden mt-1 sm:mt-2">
-            <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-150"
-              style={{ width: `${Math.max(15, scrollProgress)}%` }}
-            />
-          </div>
+          {/* "See All Categories" Button at the Bottom */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onSeeAll) {
+                onSeeAll();
+              } else {
+                onSelectCategory('all');
+              }
+            }}
+            className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-xl hover:shadow-emerald-600/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span>সকল ক্যাটাগরি দেখুন ({categories.length}টি)</span>
+          </button>
+
         </div>
 
       </div>
