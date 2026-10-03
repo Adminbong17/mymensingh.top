@@ -1,28 +1,7 @@
 import React from 'react';
-import {
-  Utensils,
-  Bed,
-  PlusSquare,
-  Pill,
-  Droplets,
-  GraduationCap,
-  Home,
-  ShoppingBag,
-  Coffee,
-  Trees,
-  BookOpen,
-  Bus,
-  Moon,
-  Calendar,
-  Tag,
-  Newspaper,
-  Building2,
-  Briefcase,
-  Settings,
-  MoreHorizontal,
-  ArrowRight
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type { Category } from '../types';
+import { renderCategoryIcon } from '../lib/categoryIcons';
 
 interface ExploreCategoriesProps {
   categories: Category[];
@@ -52,53 +31,6 @@ const SHORT_BN_NAMES: Record<string, string> = {
   'jobs': 'চাকরি',
   'services': 'সেবা',
   'more': 'আরও',
-};
-
-const getCategoryIcon = (slug: string) => {
-  const iconClass = "w-6 h-6 sm:w-7 sm:h-7 transition-transform group-hover:scale-110 duration-200";
-  switch (slug) {
-    case 'restaurants':
-      return <Utensils className={`${iconClass} text-[#F97316]`} />;
-    case 'hotels':
-      return <Bed className={`${iconClass} text-[#2563EB]`} />;
-    case 'hospitals':
-      return <PlusSquare className={`${iconClass} text-[#E11D48]`} />;
-    case 'pharmacy':
-      return <Pill className={`${iconClass} text-[#10B981]`} />;
-    case 'blood-bank':
-      return <Droplets className={`${iconClass} text-[#EF4444]`} />;
-    case 'tuition-media':
-      return <GraduationCap className={`${iconClass} text-[#7C3AED]`} />;
-    case 'to-let':
-      return <Home className={`${iconClass} text-[#F97316]`} />;
-    case 'shopping':
-      return <ShoppingBag className={`${iconClass} text-[#DB2777]`} />;
-    case 'cafes':
-      return <Coffee className={`${iconClass} text-[#92400E]`} />;
-    case 'tourist-places':
-      return <Trees className={`${iconClass} text-[#047857]`} />;
-    case 'education':
-      return <BookOpen className={`${iconClass} text-[#2563EB]`} />;
-    case 'transport':
-      return <Bus className={`${iconClass} text-[#0284C7]`} />;
-    case 'mosques':
-      return <Moon className={`${iconClass} text-[#0D9488]`} />;
-    case 'events':
-      return <Calendar className={`${iconClass} text-[#EA580C]`} />;
-    case 'offers':
-      return <Tag className={`${iconClass} text-[#EC4899]`} />;
-    case 'news':
-      return <Newspaper className={`${iconClass} text-[#059669]`} />;
-    case 'real-estate':
-      return <Building2 className={`${iconClass} text-[#4F46E5]`} />;
-    case 'jobs':
-      return <Briefcase className={`${iconClass} text-[#334155]`} />;
-    case 'services':
-      return <Settings className={`${iconClass} text-[#3B82F6]`} />;
-    case 'more':
-    default:
-      return <MoreHorizontal className={`${iconClass} text-[#3B82F6]`} />;
-  }
 };
 
 export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
@@ -160,7 +92,7 @@ export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
               >
                 {/* Icon */}
                 <div className="mb-2 shrink-0 flex items-center justify-center">
-                  {getCategoryIcon(cat.slug)}
+                  {renderCategoryIcon(cat.slug, "w-6 h-6 sm:w-7 sm:h-7 transition-transform group-hover:scale-110 duration-200")}
                 </div>
 
                 {/* English Title */}

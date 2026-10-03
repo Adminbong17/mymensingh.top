@@ -9,25 +9,12 @@ import {
   Navigation,
   SlidersHorizontal,
   Sparkles,
-  Utensils,
-  Hotel,
-  Hospital,
-  Pill,
   Droplets,
   GraduationCap,
   Home,
-  ShoppingBag,
-  Coffee,
-  Landmark,
-  BookOpen,
-  Train,
-  Moon,
   Calendar,
   Tag,
   Newspaper,
-  Building2,
-  Briefcase,
-  Wrench,
   ArrowRight,
   PlusCircle
 } from 'lucide-react';
@@ -37,6 +24,7 @@ import {
   DISTRICT_UPAZILAS_MAP,
   ALL_DIVISION_UPAZILAS
 } from '../data/initialData';
+import { renderCategoryIcon } from '../lib/categoryIcons';
 import type { Business } from '../types';
 import { BusinessDetailModal } from '../components/BusinessDetailModal';
 
@@ -73,30 +61,6 @@ export const CategoriesPage: React.FC = () => {
     setSelectedCategory(cat);
   }, [searchParams]);
 
-  const getCategoryIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Utensils': return <Utensils className="w-5 h-5" />;
-      case 'Hotel': return <Hotel className="w-5 h-5" />;
-      case 'Hospital': return <Hospital className="w-5 h-5" />;
-      case 'Pill': return <Pill className="w-5 h-5" />;
-      case 'Droplets': return <Droplets className="w-5 h-5" />;
-      case 'GraduationCap': return <GraduationCap className="w-5 h-5" />;
-      case 'Home': return <Home className="w-5 h-5" />;
-      case 'ShoppingBag': return <ShoppingBag className="w-5 h-5" />;
-      case 'Coffee': return <Coffee className="w-5 h-5" />;
-      case 'Landmark': return <Landmark className="w-5 h-5" />;
-      case 'BookOpen': return <BookOpen className="w-5 h-5" />;
-      case 'Train': return <Train className="w-5 h-5" />;
-      case 'Moon': return <Moon className="w-5 h-5" />;
-      case 'Calendar': return <Calendar className="w-5 h-5" />;
-      case 'Tag': return <Tag className="w-5 h-5" />;
-      case 'Newspaper': return <Newspaper className="w-5 h-5" />;
-      case 'Building2': return <Building2 className="w-5 h-5" />;
-      case 'Briefcase': return <Briefcase className="w-5 h-5" />;
-      case 'Wrench': return <Wrench className="w-5 h-5" />;
-      default: return <Grid className="w-5 h-5" />;
-    }
-  };
 
   const handleCategoryClick = (slug: string) => {
     const newSlug = selectedCategory === slug ? '' : slug;
@@ -243,8 +207,8 @@ export const CategoriesPage: React.FC = () => {
                       : 'bg-slate-50 hover:bg-white text-slate-700 hover:text-emerald-700 border-slate-200 hover:border-emerald-300'
                   }`}
                 >
-                  <div className={`p-2 rounded-xl shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-white text-emerald-600 shadow-2xs'}`}>
-                    {getCategoryIcon(cat.icon)}
+                  <div className={`p-2 rounded-xl shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-white shadow-2xs'}`}>
+                    {renderCategoryIcon(cat.slug, "w-5 h-5", !isSelected)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
