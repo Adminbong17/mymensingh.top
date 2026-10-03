@@ -18,13 +18,15 @@ import { VaultMediaUploader } from '../components/VaultMediaUploader';
 
 export const ListBusinessPage: React.FC = () => {
   const navigate = useNavigate();
-  const { categories, addBusiness } = useData();
+  const { categories, mainCategories, getSubcategories, addBusiness } = useData();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     name_bn: '',
     category_slug: 'restaurants',
+    subcategory: '',
+    subcategory_slug: '',
     district: DIVISION_DISTRICTS[0],
     upazila: DISTRICT_UPAZILAS_MAP[DIVISION_DISTRICTS[0]][0],
     union_ward: '',
@@ -60,6 +62,8 @@ export const ListBusinessPage: React.FC = () => {
       name_bn: formData.name_bn,
       category: cat ? cat.name_en : 'Services',
       category_slug: formData.category_slug,
+      subcategory: formData.subcategory,
+      subcategory_slug: formData.subcategory_slug,
       rating: 5.0,
       review_count: 1,
       location: `${formData.location ? formData.location + ', ' : ''}${formData.union_ward ? formData.union_ward + ', ' : ''}${formData.upazila}, ${formData.district}`,
@@ -243,14 +247,19 @@ export const ListBusinessPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        ক্যাটাগরি নির্বাচন করুন *
+                        মূল ক্যাটাগরি নির্বাচন করুন *
                       </label>
                       <select
                         value={formData.category_slug}
-                        onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
-                        className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium"
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          category_slug: e.target.value,
+                          subcategory: '',
+                          subcategory_slug: ''
+                        })}
+                        className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium cursor-pointer"
                       >
-                        {categories.map((c) => (
+                        {(mainCategories.length > 0 ? mainCategories : categories).map((c) => (
                           <option key={c.id} value={c.slug}>
                             {c.name_bn} ({c.name_en})
                           </option>
@@ -265,7 +274,7 @@ export const ListBusinessPage: React.FC = () => {
                       <select
                         value={formData.price_range}
                         onChange={(e) => setFormData({ ...formData, price_range: e.target.value })}
-                        className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium"
+                        className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50 font-medium cursor-pointer"
                       >
                         <option value="৳ - বাজেট ফ্রেন্ডলি">৳ - বাজেট ফ্রেন্ডলি (Affordable)</option>
                         <option value="৳৳ - মাঝারি (Moderate)">৳৳ - মাঝারি (Moderate)</option>
@@ -273,6 +282,38 @@ export const ListBusinessPage: React.FC = () => {
                       </select>
                     </div>
                   </div>
+
+                  {/* Subcategory dropdown if available for chosen main category */}
+                  {(() => {
+                    const availableSubs = getSubcategories(formData.category_slug);
+                    if (availableSubs.length === 0) return null;
+                    return (
+                      <div className="bg-purple-50/60 p-3.5 rounded-2xl border border-purple-100 space-y-1 animate-in fade-in duration-150">
+                        <label className="block text-xs font-bold text-purple-950">
+                          সাব-ক্যাটাগরি বা বিশেষ শাখা (ঐচ্ছিক)
+                        </label>
+                        <select
+                          value={formData.subcategory_slug}
+                          onChange={(e) => {
+                            const sub = availableSubs.find(s => s.slug === e.target.value);
+                            setFormData({
+                              ...formData,
+                              subcategory_slug: e.target.value,
+                              subcategory: sub ? (sub.name_bn || sub.name_en) : ''
+                            });
+                          }}
+                          className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-purple-200 outline-hidden focus:border-purple-600 bg-white font-medium cursor-pointer"
+                        >
+                          <option value="">-- সুনির্দিষ্ট উপ-বিভাগ নির্বাচন করুন (যেমন: ফাস্টফুড, ডেন্টাল ইত্যাদি) --</option>
+                          {availableSubs.map((sub) => (
+                            <option key={sub.id} value={sub.slug}>
+                              {sub.name_bn} ({sub.name_en})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })()}
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">

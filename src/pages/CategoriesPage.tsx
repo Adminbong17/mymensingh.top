@@ -16,7 +16,8 @@ import {
   Tag,
   Newspaper,
   ArrowRight,
-  PlusCircle
+  PlusCircle,
+  GitBranch
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import {
@@ -32,6 +33,8 @@ export const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
   const {
     categories,
+    mainCategories,
+    getSubcategories,
     businesses,
     bloodDonors,
     tuitionListings,
@@ -46,10 +49,17 @@ export const CategoriesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || '';
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const [selectedUpazila, setSelectedUpazila] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'rating' | 'reviews' | 'name'>('featured');
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+
+  // Active subcategories for selected category
+  const activeSubcategories = useMemo(() => {
+    if (!selectedCategory) return [];
+    return getSubcategories(selectedCategory);
+  }, [selectedCategory, getSubcategories]);
 
   // Special Category Sub-filters
   const [bloodGroupFilter, setBloodGroupFilter] = useState<string>('');
@@ -65,6 +75,7 @@ export const CategoriesPage: React.FC = () => {
   const handleCategoryClick = (slug: string) => {
     const newSlug = selectedCategory === slug ? '' : slug;
     setSelectedCategory(newSlug);
+    setSelectedSubcategory('');
     if (newSlug) {
       setSearchParams({ category: newSlug });
     } else {
@@ -89,6 +100,15 @@ export const CategoriesPage: React.FC = () => {
       if (selectedCategory && biz.category_slug !== selectedCategory) {
         return false;
       }
+      if (selectedSubcategory) {
+        const subObj = activeSubcategories.find(s => s.slug === selectedSubcategory);
+        const subName = subObj ? (subObj.name_bn || subObj.name_en) : '';
+        const matchSubSlug = biz.subcategory_slug === selectedSubcategory;
+        const matchSubName = subName && (biz.subcategory === subName || biz.subcategory === subObj?.name_en || biz.subcategory === subObj?.name_bn);
+        if (!matchSubSlug && !matchSubName) {
+          return false;
+        }
+      }
       if (selectedUpazila && biz.upazila !== selectedUpazila && !biz.location.includes(selectedUpazila)) {
         return false;
       }
@@ -108,7 +128,7 @@ export const CategoriesPage: React.FC = () => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0);
     });
-  }, [businesses, selectedCategory, selectedUpazila, keyword, sortBy]);
+  }, [businesses, selectedCategory, selectedSubcategory, activeSubcategories, selectedUpazila, keyword, sortBy]);
 
   // Filtered Blood Donors
   const filteredDonors = useMemo(() => {
@@ -176,16 +196,16 @@ export const CategoriesPage: React.FC = () => {
           <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         </div>
 
-        {/* 20 Categories Badges Grid */}
+        {/* Main Categories Badges Grid */}
         <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-xs border border-slate-200 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <Grid className="w-5 h-5 text-emerald-600" />
-              <span>ক্যাটাগরি নির্বাচন করুন ({categories.length}টি)</span>
+              <span>ক্যাটাগরি নির্বাচন করুন ({(mainCategories.length > 0 ? mainCategories : categories).length}টি)</span>
             </h2>
-            {selectedCategory && (
+            {(selectedCategory || selectedSubcategory) && (
               <button
-                onClick={() => { setSelectedCategory(''); setSearchParams({}); }}
+                onClick={() => { setSelectedCategory(''); setSelectedSubcategory(''); setSearchParams({}); }}
                 className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors cursor-pointer"
               >
                 ফিল্টার রিসেট (All)
@@ -194,7 +214,7 @@ export const CategoriesPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 sm:gap-3">
-            {categories.map((cat) => {
+            {(mainCategories.length > 0 ? mainCategories : categories).map((cat) => {
               const isSelected = selectedCategory === cat.slug;
               const count = getCategoryCount(cat.slug);
               return (
@@ -225,6 +245,66 @@ export const CategoriesPage: React.FC = () => {
               );
             })}
           </div>
+
+          {/* Subcategory Pills Bar (When a main category is selected and has subcategories) */}
+          {selectedCategory && activeSubcategories.length > 0 && (
+            <div className="pt-3 border-t border-slate-100 space-y-2 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-purple-950 flex items-center gap-1.5">
+                  <GitBranch className="w-4 h-4 text-purple-600" />
+                  <span>উপ-বিভাগ ফিল্টার ({activeSubcategories.length}টি সাব-ক্যাটাগরি):</span>
+                </span>
+                {selectedSubcategory && (
+                  <button
+                    onClick={() => setSelectedSubcategory('')}
+                    className="text-[11px] text-purple-700 hover:underline font-bold cursor-pointer"
+                  >
+                    সকল উপ-বিভাগ দেখান
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedSubcategory('')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    !selectedSubcategory
+                      ? 'bg-purple-700 text-white shadow-xs'
+                      : 'bg-slate-50 hover:bg-purple-50 text-slate-700 border border-slate-200'
+                  }`}
+                >
+                  সব ({getCategoryCount(selectedCategory)})
+                </button>
+                {activeSubcategories.map((sub) => {
+                  const isSubActive = selectedSubcategory === sub.slug;
+                  const subCount = businesses.filter(
+                    b => (b.category_slug === selectedCategory || !selectedCategory) &&
+                         (b.subcategory_slug === sub.slug || b.subcategory === (sub.name_bn || sub.name_en))
+                  ).length;
+
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => setSelectedSubcategory(isSubActive ? '' : sub.slug)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        isSubActive
+                          ? 'bg-purple-700 text-white shadow-xs'
+                          : 'bg-white hover:bg-purple-50 text-purple-950 border border-purple-200'
+                      }`}
+                    >
+                      <span className="text-purple-600">{renderCategoryIcon(sub.icon, "w-3.5 h-3.5")}</span>
+                      <span>{sub.name_bn || sub.name_en}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                        isSubActive ? 'bg-white/25 text-white' : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {subCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Search & Filter Bar */}
@@ -717,10 +797,15 @@ export const CategoriesPage: React.FC = () => {
                             alt={biz.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute top-3 left-3 flex gap-2">
+                          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-emerald-800 shadow-xs">
                               {biz.category}
                             </span>
+                            {biz.subcategory && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-600/90 text-white shadow-xs">
+                                {biz.subcategory}
+                              </span>
+                            )}
                           </div>
                           <div className="absolute top-3 right-3">
                             <button

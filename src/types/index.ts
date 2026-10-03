@@ -9,6 +9,7 @@ export interface Category {
   color: string;
   order_index: number;
   count?: number;
+  parent_id?: string | null;
 }
 
 export interface Business {
@@ -19,6 +20,9 @@ export interface Business {
   category: string;
   category_id?: string;
   category_slug: string;
+  subcategory?: string;
+  subcategory_id?: string;
+  subcategory_slug?: string;
   rating: number;
   review_count: number;
   location: string;

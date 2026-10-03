@@ -45,6 +45,11 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
   };
 
   const sampleSql = `-- Run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql):
+-- Add Subcategories & Parent ID support:
+alter table if exists public.categories add column if not exists parent_id text;
+alter table if exists public.businesses add column if not exists subcategory text;
+alter table if exists public.businesses add column if not exists subcategory_slug text;
+
 -- Disable Row Level Security (RLS) so the frontend API can write data seamlessly:
 alter table if exists public.businesses disable row level security;
 alter table if exists public.places disable row level security;

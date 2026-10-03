@@ -14,11 +14,13 @@ interface ListBusinessModalProps {
 }
 
 export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, onClose }) => {
-  const { categories, addBusiness } = useData();
+  const { categories, mainCategories, getSubcategories, addBusiness } = useData();
 
   const [name, setName] = useState('');
   const [nameBn, setNameBn] = useState('');
-  const [category, setCategory] = useState(categories[0]?.slug || 'restaurants');
+  const [category, setCategory] = useState(mainCategories[0]?.slug || categories[0]?.slug || 'restaurants');
+  const [subcategory, setSubcategory] = useState('');
+  const [subcategorySlug, setSubcategorySlug] = useState('');
   const [district, setDistrict] = useState(DIVISION_DISTRICTS[0]);
   const [upazila, setUpazila] = useState(DISTRICT_UPAZILAS_MAP[DIVISION_DISTRICTS[0]][0]);
   const [unionWard, setUnionWard] = useState(MYMENSINGH_UNIONS_MAP[DISTRICT_UPAZILAS_MAP[DIVISION_DISTRICTS[0]][0]]?.[0] || 'সদর');
@@ -55,6 +57,8 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
       name_bn: nameBn || name,
       category: selectedCategoryObj?.name_en || 'Services',
       category_slug: category,
+      subcategory,
+      subcategory_slug: subcategorySlug,
       rating: 5.0,
       review_count: 1,
       location: location || `${unionWard}, ${upazila}, ${district}`,
@@ -154,10 +158,14 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
                 </label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white"
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setSubcategory('');
+                    setSubcategorySlug('');
+                  }}
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white cursor-pointer font-medium"
                 >
-                  {categories.map((c) => (
+                  {(mainCategories.length > 0 ? mainCategories : categories).map((c) => (
                     <option key={c.id} value={c.slug}>
                       {c.name_en} ({c.name_bn})
                     </option>
@@ -176,12 +184,41 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="017xxxxxxxx"
-                    className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
+                    placeholder="যেমন: +880 1712-345678"
+                    className="w-full text-xs pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500"
                   />
                 </div>
               </div>
             </div>
+
+            {/* Subcategory selector if available */}
+            {(() => {
+              const availableSubs = getSubcategories(category);
+              if (availableSubs.length === 0) return null;
+              return (
+                <div className="bg-purple-50/60 p-3 rounded-2xl border border-purple-100 space-y-1">
+                  <label className="block text-xs font-bold text-purple-950">
+                    উপ-বিভাগ / বিশেষ শাখা (ঐচ্ছিক)
+                  </label>
+                  <select
+                    value={subcategorySlug}
+                    onChange={(e) => {
+                      const sub = availableSubs.find(s => s.slug === e.target.value);
+                      setSubcategorySlug(e.target.value);
+                      setSubcategory(sub ? (sub.name_bn || sub.name_en) : '');
+                    }}
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-purple-200 outline-hidden focus:border-purple-600 bg-white font-medium cursor-pointer"
+                  >
+                    <option value="">-- সুনির্দিষ্ট উপ-বিভাগ নির্বাচন করুন (ঐচ্ছিক) --</option>
+                    {availableSubs.map((sub) => (
+                      <option key={sub.id} value={sub.slug}>
+                        {sub.name_bn} ({sub.name_en})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })()}
 
             {/* Location Fields: Upazila & Union */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">

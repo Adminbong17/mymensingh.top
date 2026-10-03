@@ -17,7 +17,7 @@ export const PlaceFormModal: React.FC<PlaceFormModalProps> = ({
   placeToEdit,
 }) => {
   const { language, t } = useLanguage();
-  const { categories, addPlace, updatePlace } = useData();
+  const { categories, mainCategories, getSubcategories, addPlace, updatePlace } = useData();
 
   const [formData, setFormData] = useState<Partial<Place>>({
     name_en: '',
@@ -26,7 +26,9 @@ export const PlaceFormModal: React.FC<PlaceFormModalProps> = ({
     tagline_bn: '',
     description_en: '',
     description_bn: '',
-    category_id: categories[0]?.id || 'cat-heritage',
+    category_id: mainCategories[0]?.id || categories[0]?.id || 'cat-heritage',
+    subcategory: '',
+    subcategory_slug: '',
     area: 'Town Hall',
     address_en: '',
     address_bn: '',
@@ -184,10 +186,15 @@ export const PlaceFormModal: React.FC<PlaceFormModalProps> = ({
               </label>
               <select
                 value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white"
+                onChange={(e) => setFormData({
+                  ...formData,
+                  category_id: e.target.value,
+                  subcategory: '',
+                  subcategory_slug: ''
+                })}
+                className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-white cursor-pointer"
               >
-                {categories.map((c) => (
+                {(mainCategories.length > 0 ? mainCategories : categories).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name_en} ({c.name_bn})
                   </option>
@@ -209,6 +216,39 @@ export const PlaceFormModal: React.FC<PlaceFormModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Subcategory if available */}
+          {(() => {
+            const currentCat = categories.find(c => c.id === formData.category_id);
+            const availableSubs = currentCat ? getSubcategories(currentCat.slug || currentCat.id) : [];
+            if (availableSubs.length === 0) return null;
+            return (
+              <div className="bg-purple-50/60 p-3 rounded-2xl border border-purple-100 space-y-1">
+                <label className="block text-xs font-bold text-purple-950">
+                  উপ-বিভাগ (Subcategory - Optional)
+                </label>
+                <select
+                  value={formData.subcategory_slug || ''}
+                  onChange={(e) => {
+                    const sub = availableSubs.find(s => s.slug === e.target.value);
+                    setFormData({
+                      ...formData,
+                      subcategory_slug: e.target.value,
+                      subcategory: sub ? (sub.name_bn || sub.name_en) : ''
+                    });
+                  }}
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-purple-200 outline-hidden focus:border-purple-600 bg-white font-medium cursor-pointer"
+                >
+                  <option value="">-- সুনির্দিষ্ট উপ-বিভাগ নির্বাচন করুন (ঐচ্ছিক) --</option>
+                  {availableSubs.map((sub) => (
+                    <option key={sub.id} value={sub.slug}>
+                      {sub.name_bn} ({sub.name_en})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })()}
 
           {/* Taglines */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

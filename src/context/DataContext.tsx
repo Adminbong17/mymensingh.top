@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type {
   Business,
   Category,
@@ -14,6 +14,8 @@ import type {
 } from '../types';
 import {
   INITIAL_CATEGORIES,
+  INITIAL_SUBCATEGORIES,
+  ALL_INITIAL_CATEGORIES,
   INITIAL_BUSINESSES,
   INITIAL_NEWS,
   INITIAL_EVENTS,
@@ -54,6 +56,9 @@ interface DataContextType {
   businesses: Business[];
   places: Business[]; // Alias for backward compatibility
   categories: Category[];
+  mainCategories: Category[];
+  subcategories: Category[];
+  getSubcategories: (parentSlugOrId: string) => Category[];
   news: NewsArticle[];
   events: EventItem[];
   offers: OfferItem[];
@@ -142,9 +147,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [businesses, setBusinesses] = useState<Business[]>(() =>
     loadStoredArray(STORAGE_KEYS.BUSINESSES, [])
   );
-  const [categories, setCategories] = useState<Category[]>(() =>
-    loadStoredArray(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES)
-  );
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const loaded = loadStoredArray(STORAGE_KEYS.CATEGORIES, ALL_INITIAL_CATEGORIES);
+    const existingIds = new Set(loaded.map(c => c.id));
+    const missing = INITIAL_SUBCATEGORIES.filter(sc => !existingIds.has(sc.id));
+    if (missing.length > 0) {
+      return [...loaded, ...missing];
+    }
+    return loaded;
+  });
+
+  const mainCategories = useMemo(() => {
+    return categories.filter(c => !c.parent_id);
+  }, [categories]);
+
+  const subcategories = useMemo(() => {
+    return categories.filter(c => !!c.parent_id);
+  }, [categories]);
+
+  const getSubcategories = useCallback((parentSlugOrId: string): Category[] => {
+    if (!parentSlugOrId) return [];
+    const parent = categories.find(c => c.slug === parentSlugOrId || c.id === parentSlugOrId);
+    if (!parent) return [];
+    return categories.filter(c => c.parent_id === parent.id || c.parent_id === parent.slug);
+  }, [categories]);
   const [news, setNews] = useState<NewsArticle[]>(() =>
     loadStoredArray(STORAGE_KEYS.NEWS, [])
   );
@@ -852,6 +878,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: `cat-${Date.now()}`,
       count: catData.count ?? 0,
       order_index: catData.order_index ?? categories.length + 1,
+      parent_id: catData.parent_id ?? null,
     };
 
     setCategories(prev => [...prev, newCategory]);
@@ -859,7 +886,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {
       try {
-        await supabase.from('categories').insert([{
+        const payload: Record<string, any> = {
           id: newCategory.id,
           name_en: newCategory.name_en,
           name_bn: newCategory.name_bn,
@@ -868,7 +895,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           color: newCategory.color || 'emerald',
           order_index: newCategory.order_index,
           count: newCategory.count || 0
-        }]);
+        };
+
+        if (newCategory.parent_id) {
+          const { error } = await supabase.from('categories').insert([{ ...payload, parent_id: newCategory.parent_id }]);
+          if (error && error.message.includes('parent_id')) {
+            await supabase.from('categories').insert([payload]);
+          }
+        } else {
+          await supabase.from('categories').insert([payload]);
+        }
       } catch (err) {
         console.warn('Supabase addCategory error:', err);
       }
@@ -892,8 +928,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (catData.color !== undefined) updatePayload.color = catData.color;
         if (catData.order_index !== undefined) updatePayload.order_index = catData.order_index;
         if (catData.count !== undefined) updatePayload.count = catData.count;
+        if (catData.parent_id !== undefined) updatePayload.parent_id = catData.parent_id;
 
-        await supabase.from('categories').update(updatePayload).eq('id', id);
+        const { error } = await supabase.from('categories').update(updatePayload).eq('id', id);
+        if (error && error.message.includes('parent_id')) {
+          delete updatePayload.parent_id;
+          await supabase.from('categories').update(updatePayload).eq('id', id);
+        }
       } catch (err) {
         console.warn('Supabase updateCategory error:', err);
       }
@@ -1069,6 +1110,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         businesses,
         places: businesses,
         categories,
+        mainCategories,
+        subcategories,
+        getSubcategories,
         news,
         events,
         offers,

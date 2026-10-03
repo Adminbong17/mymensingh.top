@@ -63,7 +63,7 @@ const HomePage: React.FC<{
   onSelectBusiness: (biz: Business) => void;
 }> = ({ onOpenListBusiness, onSelectBusiness }) => {
   const navigate = useNavigate();
-  const { businesses, categories, news, events, offers } = useData();
+  const { businesses, categories, mainCategories, news, events, offers } = useData();
 
   // Search & Filter State
   const [searchFilter, setSearchFilter] = useState<{
@@ -213,7 +213,7 @@ const HomePage: React.FC<{
 
       {/* 4. Explore Categories (20 categories) */}
       <ExploreCategories
-        categories={categories}
+        categories={mainCategories.length > 0 ? mainCategories : categories}
         selectedCategory={selectedCategorySlug}
         onSelectCategory={(slug) => {
           if (slug === 'blood-bank' || slug === 'tuition-media' || slug === 'to-let') {

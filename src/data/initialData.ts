@@ -16,26 +16,81 @@ import type {
 // 1. 20 CATEGORIES (Taxonomy definitions with count initialized to 0)
 // ============================================================================
 export const INITIAL_CATEGORIES: Category[] = [
-  { id: 'cat-1', name_en: 'Restaurants', name_bn: 'রেস্টুরেন্ট', slug: 'restaurants', icon: 'Utensils', color: 'orange', order_index: 1, count: 0 },
-  { id: 'cat-2', name_en: 'Hotels', name_bn: 'হোটেল', slug: 'hotels', icon: 'Bed', color: 'blue', order_index: 2, count: 0 },
-  { id: 'cat-3', name_en: 'Hospitals', name_bn: 'হাসপাতাল', slug: 'hospitals', icon: 'PlusSquare', color: 'rose', order_index: 3, count: 0 },
-  { id: 'cat-4', name_en: 'Pharmacy', name_bn: 'ফার্মেসি', slug: 'pharmacy', icon: 'Pill', color: 'emerald', order_index: 4, count: 0 },
-  { id: 'cat-5', name_en: 'Blood Bank', name_bn: 'ব্লাড ব্যাংক', slug: 'blood-bank', icon: 'Droplets', color: 'red', order_index: 5, count: 0 },
-  { id: 'cat-6', name_en: 'Tuition Media', name_bn: 'টিউশন মিডিয়া', slug: 'tuition-media', icon: 'GraduationCap', color: 'purple', order_index: 6, count: 0 },
-  { id: 'cat-7', name_en: 'To Let', name_bn: 'বাসা ভাড়া / টু-লেট', slug: 'to-let', icon: 'Home', color: 'orange', order_index: 7, count: 0 },
-  { id: 'cat-8', name_en: 'Shopping', name_bn: 'শপিং ও মার্কেট', slug: 'shopping', icon: 'ShoppingBag', color: 'pink', order_index: 8, count: 0 },
-  { id: 'cat-9', name_en: 'Cafes', name_bn: 'ক্যাফে ও কফি শপ', slug: 'cafes', icon: 'Coffee', color: 'amber', order_index: 9, count: 0 },
-  { id: 'cat-10', name_en: 'Tourist Places', name_bn: 'দর্শনীয় স্থান', slug: 'tourist-places', icon: 'Trees', color: 'emerald', order_index: 10, count: 0 },
-  { id: 'cat-11', name_en: 'Education', name_bn: 'শিক্ষা প্রতিষ্ঠান', slug: 'education', icon: 'BookOpen', color: 'blue', order_index: 11, count: 0 },
-  { id: 'cat-12', name_en: 'Transport', name_bn: 'পরিবহন ও যাতায়াত', slug: 'transport', icon: 'Bus', color: 'sky', order_index: 12, count: 0 },
-  { id: 'cat-13', name_en: 'Mosques', name_bn: 'মসজিদ ও ধর্মীয় স্থান', slug: 'mosques', icon: 'Moon', color: 'teal', order_index: 13, count: 0 },
-  { id: 'cat-14', name_en: 'Events', name_bn: 'ইভেন্ট ও উৎসব', slug: 'events', icon: 'Calendar', color: 'orange', order_index: 14, count: 0 },
-  { id: 'cat-15', name_en: 'Offers', name_bn: 'অফার ও ডিসকাউন্ট', slug: 'offers', icon: 'Tag', color: 'pink', order_index: 15, count: 0 },
-  { id: 'cat-16', name_en: 'News', name_bn: 'সংবাদ ও বুলেটিন', slug: 'news', icon: 'Newspaper', color: 'emerald', order_index: 16, count: 0 },
-  { id: 'cat-17', name_en: 'Real Estate', name_bn: 'রিয়েল এস্টেট ও জমি', slug: 'real-estate', icon: 'Building2', color: 'indigo', order_index: 17, count: 0 },
-  { id: 'cat-18', name_en: 'Jobs', name_bn: 'চাকরি ও ক্যারিয়ার', slug: 'jobs', icon: 'Briefcase', color: 'slate', order_index: 18, count: 0 },
-  { id: 'cat-19', name_en: 'Services', name_bn: 'পেশাদার সার্ভিস', slug: 'services', icon: 'Settings', color: 'blue', order_index: 19, count: 0 },
-  { id: 'cat-20', name_en: 'More', name_bn: 'আরও সেবা', slug: 'more', icon: 'MoreHorizontal', color: 'blue', order_index: 20, count: 0 },
+  { id: 'cat-1', name_en: 'Restaurants', name_bn: 'রেস্টুরেন্ট', slug: 'restaurants', icon: 'Utensils', color: 'orange', order_index: 1, count: 0, parent_id: null },
+  { id: 'cat-2', name_en: 'Hotels', name_bn: 'হোটেল', slug: 'hotels', icon: 'Bed', color: 'blue', order_index: 2, count: 0, parent_id: null },
+  { id: 'cat-3', name_en: 'Hospitals', name_bn: 'হাসপাতাল', slug: 'hospitals', icon: 'PlusSquare', color: 'rose', order_index: 3, count: 0, parent_id: null },
+  { id: 'cat-4', name_en: 'Pharmacy', name_bn: 'ফার্মেসি', slug: 'pharmacy', icon: 'Pill', color: 'emerald', order_index: 4, count: 0, parent_id: null },
+  { id: 'cat-5', name_en: 'Blood Bank', name_bn: 'ব্লাড ব্যাংক', slug: 'blood-bank', icon: 'Droplets', color: 'red', order_index: 5, count: 0, parent_id: null },
+  { id: 'cat-6', name_en: 'Tuition Media', name_bn: 'টিউশন মিডিয়া', slug: 'tuition-media', icon: 'GraduationCap', color: 'purple', order_index: 6, count: 0, parent_id: null },
+  { id: 'cat-7', name_en: 'To Let', name_bn: 'বাসা ভাড়া / টু-লেট', slug: 'to-let', icon: 'Home', color: 'orange', order_index: 7, count: 0, parent_id: null },
+  { id: 'cat-8', name_en: 'Shopping', name_bn: 'শপিং ও মার্কেট', slug: 'shopping', icon: 'ShoppingBag', color: 'pink', order_index: 8, count: 0, parent_id: null },
+  { id: 'cat-9', name_en: 'Cafes', name_bn: 'ক্যাফে ও কফি শপ', slug: 'cafes', icon: 'Coffee', color: 'amber', order_index: 9, count: 0, parent_id: null },
+  { id: 'cat-10', name_en: 'Tourist Places', name_bn: 'দর্শনীয় স্থান', slug: 'tourist-places', icon: 'Trees', color: 'emerald', order_index: 10, count: 0, parent_id: null },
+  { id: 'cat-11', name_en: 'Education', name_bn: 'শিক্ষা প্রতিষ্ঠান', slug: 'education', icon: 'BookOpen', color: 'blue', order_index: 11, count: 0, parent_id: null },
+  { id: 'cat-12', name_en: 'Transport', name_bn: 'পরিবহন ও যাতায়াত', slug: 'transport', icon: 'Bus', color: 'sky', order_index: 12, count: 0, parent_id: null },
+  { id: 'cat-13', name_en: 'Mosques', name_bn: 'মসজিদ ও ধর্মীয় স্থান', slug: 'mosques', icon: 'Moon', color: 'teal', order_index: 13, count: 0, parent_id: null },
+  { id: 'cat-14', name_en: 'Events', name_bn: 'ইভেন্ট ও উৎসব', slug: 'events', icon: 'Calendar', color: 'orange', order_index: 14, count: 0, parent_id: null },
+  { id: 'cat-15', name_en: 'Offers', name_bn: 'অফার ও ডিসকাউন্ট', slug: 'offers', icon: 'Tag', color: 'pink', order_index: 15, count: 0, parent_id: null },
+  { id: 'cat-16', name_en: 'News', name_bn: 'সংবাদ ও বুলেটিন', slug: 'news', icon: 'Newspaper', color: 'emerald', order_index: 16, count: 0, parent_id: null },
+  { id: 'cat-17', name_en: 'Real Estate', name_bn: 'রিয়েল এস্টেট ও জমি', slug: 'real-estate', icon: 'Building2', color: 'indigo', order_index: 17, count: 0, parent_id: null },
+  { id: 'cat-18', name_en: 'Jobs', name_bn: 'চাকরি ও ক্যারিয়ার', slug: 'jobs', icon: 'Briefcase', color: 'slate', order_index: 18, count: 0, parent_id: null },
+  { id: 'cat-19', name_en: 'Services', name_bn: 'পেশাদার সার্ভিস', slug: 'services', icon: 'Settings', color: 'blue', order_index: 19, count: 0, parent_id: null },
+  { id: 'cat-20', name_en: 'More', name_bn: 'আরও সেবা', slug: 'more', icon: 'MoreHorizontal', color: 'blue', order_index: 20, count: 0, parent_id: null },
+];
+
+export const INITIAL_SUBCATEGORIES: Category[] = [
+  // Restaurants
+  { id: 'sub-101', name_en: 'Bengali & Biryani', name_bn: 'বাংলা খাবার ও বিরিয়ানি', slug: 'bengali-biryani', icon: 'Utensils', color: 'orange', parent_id: 'cat-1', order_index: 1, count: 0 },
+  { id: 'sub-102', name_en: 'Fast Food & Pizza', name_bn: 'ফাস্ট ফুড ও পিৎজা', slug: 'fast-food', icon: 'Pizza', color: 'orange', parent_id: 'cat-1', order_index: 2, count: 0 },
+  { id: 'sub-103', name_en: 'Chinese & Thai', name_bn: 'চাইনিজ ও থাই', slug: 'chinese-thai', icon: 'Utensils', color: 'orange', parent_id: 'cat-1', order_index: 3, count: 0 },
+  { id: 'sub-104', name_en: 'Cafe & Coffee', name_bn: 'ক্যাফে ও কফি', slug: 'cafe-coffee', icon: 'Coffee', color: 'amber', parent_id: 'cat-1', order_index: 4, count: 0 },
+  { id: 'sub-105', name_en: 'Bakery & Sweets', name_bn: 'বেকারি ও মিষ্টি', slug: 'bakery-sweets', icon: 'Cake', color: 'pink', parent_id: 'cat-1', order_index: 5, count: 0 },
+
+  // Hotels
+  { id: 'sub-201', name_en: 'Residential Hotel', name_bn: 'আবাসিক হোটেল', slug: 'residential-hotel', icon: 'Bed', color: 'blue', parent_id: 'cat-2', order_index: 1, count: 0 },
+  { id: 'sub-202', name_en: 'Resort & Guest House', name_bn: 'রিসোর্ট ও গেস্ট হাউজ', slug: 'resort-guesthouse', icon: 'Trees', color: 'emerald', parent_id: 'cat-2', order_index: 2, count: 0 },
+  { id: 'sub-203', name_en: 'Hostel & Mess', name_bn: 'হোস্টেল ও মেস', slug: 'hostel-mess', icon: 'Home', color: 'blue', parent_id: 'cat-2', order_index: 3, count: 0 },
+
+  // Hospitals
+  { id: 'sub-301', name_en: 'Government Hospital', name_bn: 'সরকারি হাসপাতাল', slug: 'government-hospital', icon: 'PlusSquare', color: 'rose', parent_id: 'cat-3', order_index: 1, count: 0 },
+  { id: 'sub-302', name_en: 'Private Clinic & Hospital', name_bn: 'বেসরকারি ক্লিনিক ও হাসপাতাল', slug: 'private-clinic', icon: 'Building2', color: 'rose', parent_id: 'cat-3', order_index: 2, count: 0 },
+  { id: 'sub-303', name_en: 'Diagnostic & Lab', name_bn: 'ডায়াগনস্টিক ও ল্যাব', slug: 'diagnostic-lab', icon: 'HeartPulse', color: 'rose', parent_id: 'cat-3', order_index: 3, count: 0 },
+  { id: 'sub-304', name_en: 'Dental Care', name_bn: 'ডেন্টাল ক্লিনিক', slug: 'dental-care', icon: 'Stethoscope', color: 'sky', parent_id: 'cat-3', order_index: 4, count: 0 },
+  { id: 'sub-305', name_en: 'Eye Hospital', name_bn: 'চক্ষু হাসপাতাল', slug: 'eye-hospital', icon: 'Glasses', color: 'sky', parent_id: 'cat-3', order_index: 5, count: 0 },
+
+  // Pharmacy
+  { id: 'sub-401', name_en: 'Retail Pharmacy', name_bn: 'খুচরা ফার্মেসি', slug: 'retail-pharmacy', icon: 'Pill', color: 'emerald', parent_id: 'cat-4', order_index: 1, count: 0 },
+  { id: 'sub-402', name_en: 'Model Pharmacy', name_bn: 'মডেল ফার্মেসি', slug: 'model-pharmacy', icon: 'ShieldCheck', color: 'emerald', parent_id: 'cat-4', order_index: 2, count: 0 },
+
+  // Shopping
+  { id: 'sub-801', name_en: 'Shopping Mall', name_bn: 'শপিং মল ও মার্কেট', slug: 'shopping-mall', icon: 'ShoppingBag', color: 'pink', parent_id: 'cat-8', order_index: 1, count: 0 },
+  { id: 'sub-802', name_en: 'Clothing & Fashion', name_bn: 'পোশাক ও ফ্যাশন', slug: 'clothing-fashion', icon: 'Shirt', color: 'purple', parent_id: 'cat-8', order_index: 2, count: 0 },
+  { id: 'sub-803', name_en: 'Mobile & Gadgets', name_bn: 'মোবাইল ও গ্যাজেট', slug: 'mobile-gadgets', icon: 'Smartphone', color: 'blue', parent_id: 'cat-8', order_index: 3, count: 0 },
+  { id: 'sub-804', name_en: 'Jewelry Shop', name_bn: 'জুয়েলারি ও অলংকার', slug: 'jewelry-shop', icon: 'Sparkles', color: 'amber', parent_id: 'cat-8', order_index: 4, count: 0 },
+
+  // Education
+  { id: 'sub-1101', name_en: 'School & College', name_bn: 'স্কুল ও কলেজ', slug: 'school-college', icon: 'BookOpen', color: 'blue', parent_id: 'cat-11', order_index: 1, count: 0 },
+  { id: 'sub-1102', name_en: 'University', name_bn: 'বিশ্ববিদ্যালয়', slug: 'university', icon: 'GraduationCap', color: 'purple', parent_id: 'cat-11', order_index: 2, count: 0 },
+  { id: 'sub-1103', name_en: 'Coaching Center', name_bn: 'কোচিং সেন্টার', slug: 'coaching-center', icon: 'BookOpen', color: 'blue', parent_id: 'cat-11', order_index: 3, count: 0 },
+
+  // Transport
+  { id: 'sub-1201', name_en: 'Bus Service', name_bn: 'বাস সার্ভিস', slug: 'bus-service', icon: 'Bus', color: 'sky', parent_id: 'cat-12', order_index: 1, count: 0 },
+  { id: 'sub-1202', name_en: 'Rent-A-Car', name_bn: 'রেন্ট-এ-কার', slug: 'rent-a-car', icon: 'Car', color: 'sky', parent_id: 'cat-12', order_index: 2, count: 0 },
+  { id: 'sub-1203', name_en: 'Courier & Parcel', name_bn: 'কুরিয়ার ও পার্সেল', slug: 'courier-parcel', icon: 'Truck', color: 'sky', parent_id: 'cat-12', order_index: 3, count: 0 },
+
+  // Services
+  { id: 'sub-1901', name_en: 'Electrician & Plumber', name_bn: 'ইলেকট্রিশিয়ান ও প্লাম্বার', slug: 'electrician-plumber', icon: 'Wrench', color: 'blue', parent_id: 'cat-19', order_index: 1, count: 0 },
+  { id: 'sub-1902', name_en: 'Salon & Parlour', name_bn: 'সেলুন ও বিউটি পার্লার', slug: 'salon-parlour', icon: 'Scissors', color: 'pink', parent_id: 'cat-19', order_index: 2, count: 0 },
+  { id: 'sub-1903', name_en: 'Appliance Repair', name_bn: 'টিভি, ফ্রিজ ও এসি মেরামত', slug: 'appliance-repair', icon: 'Settings', color: 'blue', parent_id: 'cat-19', order_index: 3, count: 0 },
+
+  // Real Estate
+  { id: 'sub-1701', name_en: 'Land & Plots', name_bn: 'জমি ও প্লট', slug: 'land-plots', icon: 'Building2', color: 'indigo', parent_id: 'cat-17', order_index: 1, count: 0 },
+  { id: 'sub-1702', name_en: 'Flat & Apartment', name_bn: 'ফ্ল্যাট ও অ্যাপার্টমেন্ট', slug: 'flat-apartment', icon: 'Home', color: 'indigo', parent_id: 'cat-17', order_index: 2, count: 0 }
+];
+
+export const ALL_INITIAL_CATEGORIES: Category[] = [
+  ...INITIAL_CATEGORIES,
+  ...INITIAL_SUBCATEGORIES
 ];
 
 // ============================================================================
