@@ -147,6 +147,7 @@ const HomePage: React.FC<{
       <HeroSection
         onSearch={handleHeroSearch}
         onQuickCategory={handleQuickCategory}
+        onSelectBusiness={onSelectBusiness}
       />
 
       {/* Filter / Search Results Section (Appears if user searched on homepage) */}
