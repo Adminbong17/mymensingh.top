@@ -199,9 +199,8 @@ export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
               const displayNameBn = SHORT_BN_NAMES[cat.slug] || cat.name_bn || (visual ? visual.nameBn : '');
               const displayNameEn = cat.name_en || (visual ? visual.nameEn : cat.name_bn);
 
-              // Background tint & icon color
+              // Background tint
               const bgLight = visual?.bgLight || 'bg-emerald-50';
-              const iconColor = visual?.color || '#059669';
 
               return (
                 <button
