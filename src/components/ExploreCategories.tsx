@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, ArrowRightLeft } from 'lucide-react';
 import type { Category } from '../types';
 import { CATEGORY_VISUALS, renderCategoryIcon } from '../lib/categoryIcons';
 
@@ -130,16 +130,34 @@ export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({
         {/* ========================================================= */}
         <div className="flex items-center justify-between gap-4">
           
-          {/* Left Title & Subtitle */}
+          {/* Left Title & Subtitle with Animated Indicator */}
           <div className="flex items-center gap-3.5">
             <div className="w-2 h-10 sm:h-12 bg-emerald-600 rounded-full shrink-0 shadow-xs" />
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                Explore Categories
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
-                ময়মনসিংহের সব কিছু, এক জায়গায় (স্লাইড করে দেখুন)
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                  Explore Categories
+                </h2>
+                {/* Visual Slide Indicator Badge */}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 text-[11px] sm:text-xs font-bold shadow-2xs">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+                  </span>
+                  <span>স্লাইডার</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                  ময়মনসিংহের সব কিছু, এক জায়গায়
+                </p>
+                <span className="hidden sm:inline text-slate-300">•</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-2xs">
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                  <span>স্লাইড করে দেখুন ⟵ ⟶</span>
+                </span>
+              </div>
             </div>
           </div>
 
