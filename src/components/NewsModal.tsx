@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Newspaper, Calendar, Clock, X, ExternalLink, Sparkles, BookOpen, Share2, Check } from 'lucide-react';
+import { Newspaper, Calendar, Clock, X, ExternalLink, Sparkles, BookOpen, Share2, Check, Tv } from 'lucide-react';
 import type { NewsArticle } from '../types';
 import { parseArticleSource, cleanNewsText, normalizePunctuation } from '../lib/newsUtils';
 import { formatNewsTimeDisplay } from '../lib/newsTime';
@@ -9,6 +9,18 @@ const THEME_IMAGE = '/images/news-placeholder.svg';
 interface NewsModalProps {
   article: NewsArticle | null;
   onClose: () => void;
+}
+
+// Regex to detect schedule/fixture lines:
+// e.g. "বাংলাদেশ-শ্রীলঙ্কা সকাল ৬টা, সনি স্পোর্টস ১" or "ক্রোয়েশিয়া-ইংল্যান্ড রাত ১০টা, সনি স্পোর্টস ২"
+const SCHEDULE_REGEX = /^([^\n]+?)\s+((?:সকাল|দুপুর|বেলা|বিকাল|সন্ধ্যা|রাত)\s*[০-৯0-9]+(?:[-–:][০-৯0-9]+)?\s*(?:মি\.)?\s*,?\s*.*)$/;
+
+function splitCombinedFixtures(str: string): string[] {
+  return str
+    .replace(/(ইউটিউব\/[^\s]+|সনি\s*স্পোর্টস\s*[০-৯0-9\sও]+|টি\s*স্পোর্টস|স্টার\s*স্পোর্টস\s*[০-৯0-9]+)\s+([^\n0-9,.:;?!–—\-]+[–—\-][^\n0-9,.:;?!]+)/gi, '$1\n$2')
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
 export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
@@ -25,16 +37,18 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
   const hasDistinctBody = Boolean(
     cleanBody &&
     modalExcerpt &&
-    cleanBody.length > modalExcerpt.length + 40 &&
+    cleanBody.length > modalExcerpt.length + 50 &&
     !cleanBody.startsWith(modalExcerpt.slice(0, 50))
   );
 
   // Effective text to show under full report
   const reportText = hasDistinctBody ? cleanBody : (cleanBody || modalExcerpt || '');
-  const paragraphs = reportText
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
+  
+  // Split into major chunks (by double newline)
+  const chunks = reportText
+    .split(/\n\n+/)
+    .map((c) => c.trim())
+    .filter((c) => c.length > 0);
 
   const handleCopyLink = () => {
     const url = sourceUrl || window.location.href;
@@ -134,16 +148,73 @@ export const NewsModal: React.FC<NewsModalProps> = ({ article, onClose }) => {
               <span>মূল প্রতিবেদন</span>
             </div>
 
-            <div className="text-sm sm:text-base text-slate-800 leading-relaxed sm:leading-loose space-y-4 font-normal">
-              {paragraphs.map((para, idx) => (
-                <p key={idx} className="leading-relaxed sm:leading-loose">
-                  {para}
-                </p>
-              ))}
+            <div className="space-y-3.5">
+              {chunks.map((chunk, idx) => {
+                // 1. Is it a Section Heading (e.g. ### এশিয়ান গেমস: ক্রিকেট)?
+                if (chunk.startsWith('###') || chunk.startsWith('##')) {
+                  const headingText = chunk.replace(/^###?\s*/, '').trim();
+                  return (
+                    <div key={idx} className="pt-3 pb-1">
+                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-extrabold shadow-sm">
+                        <Tv className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{headingText}</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // 2. Split chunk into sublines and check for TV schedule / fixture items
+                const lines = splitCombinedFixtures(chunk);
+                const hasScheduleItems = lines.some(l => SCHEDULE_REGEX.test(l));
+
+                if (hasScheduleItems) {
+                  return (
+                    <div key={idx} className="space-y-2">
+                      {lines.map((line, lIdx) => {
+                        const schedMatch = line.match(SCHEDULE_REGEX);
+                        if (schedMatch) {
+                          const matchTitle = schedMatch[1].replace(/\*\*/g, '').trim();
+                          const timing = schedMatch[2].trim();
+                          return (
+                            <div
+                              key={lIdx}
+                              className="bg-slate-50/90 hover:bg-emerald-50/40 border border-slate-200/80 hover:border-emerald-300/80 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all shadow-xs group"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 group-hover:scale-125 transition-transform" />
+                                <span className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+                                  {matchTitle}
+                                </span>
+                              </div>
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100/70 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm font-bold self-start sm:self-auto shrink-0 shadow-2xs">
+                                <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>{timing}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <p key={lIdx} className="text-sm sm:text-base text-slate-800 leading-relaxed sm:leading-loose">
+                            {line}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                // 3. Regular news article paragraph
+                return (
+                  <p key={idx} className="text-sm sm:text-base text-slate-800 leading-relaxed sm:leading-loose font-normal">
+                    {chunk}
+                  </p>
+                );
+              })}
             </div>
 
             {/* Note if the article body is short bulletin */}
-            {paragraphs.length <= 1 && sourceUrl && (
+            {reportText.length < 150 && sourceUrl && (
               <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-xs text-amber-900 flex items-start gap-2.5">
                 <span className="text-base leading-none">ℹ️</span>
                 <span>এটি একটি সংক্ষেপিত তাজা সংবাদ বুলেটিন। সম্পূর্ণ বিস্তারিত ও প্রাসঙ্গিক তথ্য জানতে নিচে <strong>‘মূল প্রতিবেদন পড়ুন’</strong> বাটনে ক্লিক করে মূল সংবাদ পোর্টালে ভিজিট করুন।</span>

@@ -86,22 +86,25 @@ export function normalizePunctuation(str: string): string {
   if (!str) return '';
   return str
     // Strip trailing publisher suffix pipes from titles (e.g. | খেলাধুলা | বাংলাদেশ সংবাদ সংস্থা)
-    .replace(/\s*\|\s*[\s\S]*$/g, '')
+    .replace(/[ \t]*\|\s*[\s\S]*$/g, '')
     // Normalize quotes
     .replace(/[\u2018\u2019]/g, "'") // Left/Right single quotation mark (‘, ’)
     .replace(/[\u201C\u201D]/g, '"') // Left/Right double quotation mark (“, ”)
     // Normalize en-dash and em-dash with clean spaced hyphen so words don't break improperly
-    .replace(/\s*[\u2013\u2014]\s*/g, ' - ')
+    .replace(/[ \t]*[\u2013\u2014][ \t]*/g, ' - ')
     // Fix spaces before punctuation (never allow punctuation to break onto a new line)
-    .replace(/\s+([,:;?!।])/g, '$1')
+    .replace(/[ \t]+([,:;?!।])/g, '$1')
     // Fix missing space after punctuation (protecting URLs)
-    .replace(/(https?:\/\/[^\s]+)|([,:;?!।])([^\s0-9'",।?!:;])/gi, (_m, url, punc, char) => {
+    .replace(/(https?:\/\/[^\s]+)|([,:;?!।])([^\s0-9'",।?!:;\r\n])/gi, (_m, url, punc, char) => {
       if (url) return url;
       return punc + ' ' + char;
     })
     // Remove replacement character \uFFFD if present anywhere
     .replace(/\uFFFD+/g, '')
-    .replace(/\s+/g, ' ')
+    // Collapse horizontal whitespace only (spaces/tabs), preserving newlines!
+    .replace(/[^\S\r\n]+/g, ' ')
+    // Normalize multiple consecutive blank lines to max double newline
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 

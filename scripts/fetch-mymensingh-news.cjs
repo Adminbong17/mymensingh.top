@@ -342,11 +342,20 @@ async function fetchProthomAloNews() {
         if (it.cards && Array.isArray(it.cards)) {
           for (const c of it.cards) {
             for (const el of c['story-elements'] || []) {
-              if (el.type === 'text' && el.text) {
+              if (el.type === 'title' && el.text) {
+                const titleText = cleanHtml(el.text);
+                if (titleText && titleText.length > 2) {
+                  paragraphs.push(`### ${titleText}`);
+                }
+              } else if (el.type === 'text' && el.text) {
                 const pMatches = [...el.text.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
-                for (const pm of pMatches) {
-                  const cleaned = cleanHtml(pm[1]);
-                  if (cleaned.length > 25) paragraphs.push(cleaned);
+                const elements = pMatches.length > 0 ? pMatches.map(m => m[1]) : [el.text];
+                for (const rawP of elements) {
+                  const withBreaks = rawP.replace(/<br\s*[\/]?>/gi, '\n');
+                  const lines = withBreaks.split('\n').map(l => cleanHtml(l).trim()).filter(l => l.length > 0);
+                  if (lines.length > 0) {
+                    paragraphs.push(lines.join('\n'));
+                  }
                 }
               }
             }
