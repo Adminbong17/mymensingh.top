@@ -15,58 +15,16 @@ import {
   FileText,
   Eye,
   X,
-  Check,
-  Utensils,
-  Hotel,
-  Hospital,
-  Pill,
-  Droplets,
-  GraduationCap,
-  Home,
-  ShoppingBag,
-  Coffee,
-  Landmark,
-  BookOpen,
-  Train,
-  Moon,
-  Calendar,
-  Tag,
-  Newspaper,
-  Building2,
-  Briefcase,
-  Wrench,
-  Grid
+  Check
 } from 'lucide-react';
 import { useData } from '../../../context/DataContext';
 import type { Category } from '../../../types';
+import { AVAILABLE_CATEGORY_ICONS, renderCategoryIcon } from '../../../lib/categoryIcons';
 
 interface CategoriesTabProps {
   categories?: Category[];
   businessesCount?: number;
 }
-
-const AVAILABLE_ICONS = [
-  { name: 'Utensils', label: 'রেস্টুরেন্ট / খাবার' },
-  { name: 'Hotel', label: 'হোটেল ও রিসোর্ট' },
-  { name: 'Hospital', label: 'হাসপাতাল ও ক্লিনিক' },
-  { name: 'Pill', label: 'ফার্মেসি ও ঔষধ' },
-  { name: 'Droplets', label: 'রক্তদান / ব্লাড ব্যাংক' },
-  { name: 'GraduationCap', label: 'শিক্ষা ও টিউটর' },
-  { name: 'Home', label: 'বাসা ভাড়া / টু-লেট' },
-  { name: 'ShoppingBag', label: 'শপিং ও মার্কেট' },
-  { name: 'Coffee', label: 'ক্যাফে ও কফি' },
-  { name: 'Landmark', label: 'দর্শনীয় স্থান' },
-  { name: 'BookOpen', label: 'বই ও লাইব্রেরি' },
-  { name: 'Train', label: 'পরিবহন ও যাতায়াত' },
-  { name: 'Moon', label: 'মসজিদ ও ধর্মীয়' },
-  { name: 'Calendar', label: 'ইভেন্ট ও উৎসব' },
-  { name: 'Tag', label: 'অফার ও ডিসকাউন্ট' },
-  { name: 'Newspaper', label: 'সংবাদ ও বুলেটিন' },
-  { name: 'Building2', label: 'রিয়েল এস্টেট' },
-  { name: 'Briefcase', label: 'চাকরি ও ক্যারিয়ার' },
-  { name: 'Wrench', label: 'পেশাদার সার্ভিস' },
-  { name: 'Grid', label: 'অন্যান্য সেবা' }
-];
 
 const COLOR_OPTIONS = [
   { name: 'emerald', bg: 'bg-emerald-500', text: 'text-emerald-700' },
@@ -109,33 +67,25 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
   const [formNameBn, setFormNameBn] = useState('');
   const [formNameEn, setFormNameEn] = useState('');
   const [formSlug, setFormSlug] = useState('');
-  const [formIcon, setFormIcon] = useState('Grid');
+  const [formIcon, setFormIcon] = useState('Settings');
   const [formColor, setFormColor] = useState('emerald');
+  const [iconSearch, setIconSearch] = useState('');
 
   const renderIconComponent = (iconName: string, className = "w-4 h-4") => {
-    switch (iconName) {
-      case 'Utensils': return <Utensils className={className} />;
-      case 'Hotel': return <Hotel className={className} />;
-      case 'Hospital': return <Hospital className={className} />;
-      case 'Pill': return <Pill className={className} />;
-      case 'Droplets': return <Droplets className={className} />;
-      case 'GraduationCap': return <GraduationCap className={className} />;
-      case 'Home': return <Home className={className} />;
-      case 'ShoppingBag': return <ShoppingBag className={className} />;
-      case 'Coffee': return <Coffee className={className} />;
-      case 'Landmark': return <Landmark className={className} />;
-      case 'BookOpen': return <BookOpen className={className} />;
-      case 'Train': return <Train className={className} />;
-      case 'Moon': return <Moon className={className} />;
-      case 'Calendar': return <Calendar className={className} />;
-      case 'Tag': return <Tag className={className} />;
-      case 'Newspaper': return <Newspaper className={className} />;
-      case 'Building2': return <Building2 className={className} />;
-      case 'Briefcase': return <Briefcase className={className} />;
-      case 'Wrench': return <Wrench className={className} />;
-      default: return <Grid className={className} />;
-    }
+    return renderCategoryIcon(iconName, className);
   };
+
+  const filteredAvailableIcons = useMemo(() => {
+    if (!iconSearch.trim()) return AVAILABLE_CATEGORY_ICONS;
+    const q = iconSearch.toLowerCase().trim();
+    return AVAILABLE_CATEGORY_ICONS.filter(
+      ic =>
+        ic.name.toLowerCase().includes(q) ||
+        ic.labelBn.toLowerCase().includes(q) ||
+        ic.labelEn.toLowerCase().includes(q) ||
+        ic.group.toLowerCase().includes(q)
+    );
+  }, [iconSearch]);
 
   // Open modal for Create
   const handleOpenAddModal = () => {
@@ -143,8 +93,9 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
     setFormNameBn('');
     setFormNameEn('');
     setFormSlug('');
-    setFormIcon('Grid');
+    setFormIcon('Settings');
     setFormColor('emerald');
+    setIconSearch('');
     setIsModalOpen(true);
   };
 
@@ -154,8 +105,9 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
     setFormNameBn(cat.name_bn || '');
     setFormNameEn(cat.name_en || '');
     setFormSlug(cat.slug || '');
-    setFormIcon(cat.icon || 'Grid');
+    setFormIcon(cat.icon || 'Settings');
     setFormColor(cat.color || 'emerald');
+    setIconSearch('');
     setIsModalOpen(true);
   };
 
@@ -714,27 +666,72 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = () => {
                 />
               </div>
 
-              {/* Icon Selector */}
+              {/* Icon Selector with Search & Lucide Link */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Select Icon
-                </label>
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 border border-slate-100 rounded-xl bg-slate-50">
-                  {AVAILABLE_ICONS.map((ic) => (
-                    <button
-                      type="button"
-                      key={ic.name}
-                      onClick={() => setFormIcon(ic.name)}
-                      className={`p-2 rounded-lg flex flex-col items-center gap-1 text-center transition-all cursor-pointer ${
-                        formIcon === ic.name
-                          ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-                      }`}
-                    >
-                      {renderIconComponent(ic.name, "w-4 h-4")}
-                      <span className="text-[9px] truncate w-full">{ic.name}</span>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Select Icon ({filteredAvailableIcons.length} found)
+                  </label>
+                  <a
+                    href="https://lucide.dev/icons"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline flex items-center gap-1"
+                    title="Open Lucide Icons Directory in new tab"
+                  >
+                    <span>1,500+ Lucide Icons ↗</span>
+                  </a>
+                </div>
+
+                <div className="relative mb-2">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                  <input
+                    type="text"
+                    value={iconSearch}
+                    onChange={(e) => setIconSearch(e.target.value)}
+                    placeholder="আইকন সার্চ করুন (যেমন: car, doctor, salon, food, bike)..."
+                    className="w-full text-xs pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1.5 border border-slate-100 rounded-xl bg-slate-50">
+                  {filteredAvailableIcons.map((ic) => {
+                    const isSelected = formIcon.toLowerCase() === ic.name.toLowerCase();
+                    return (
+                      <button
+                        type="button"
+                        key={ic.name}
+                        onClick={() => setFormIcon(ic.name)}
+                        className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}
+                      >
+                        <div className={isSelected ? 'text-white' : ''}>
+                          {renderCategoryIcon(ic.name, "w-4 h-4", !isSelected)}
+                        </div>
+                        <span className="text-[10px] font-bold truncate w-full">{ic.name}</span>
+                        <span className={`text-[8px] truncate w-full ${isSelected ? 'text-emerald-100' : 'text-slate-400'}`}>
+                          {ic.labelBn}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[11px] text-slate-500 font-medium shrink-0">কাস্টম আইকন নাম:</span>
+                  <input
+                    type="text"
+                    value={formIcon}
+                    onChange={(e) => setFormIcon(e.target.value)}
+                    placeholder="e.g. Flame, Shield, Heart"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500 font-mono flex-1"
+                  />
+                  <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                    {renderCategoryIcon(formIcon, "w-4 h-4")}
+                  </div>
                 </div>
               </div>
 
