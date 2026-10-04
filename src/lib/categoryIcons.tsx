@@ -100,6 +100,22 @@ export const CATEGORY_VISUALS: Record<string, CategoryVisual> = {
     nameBn: 'হাসপাতাল',
     nameEn: 'Hospitals'
   },
+  'doctors': {
+    icon: Stethoscope,
+    color: '#0D9488',
+    bgLight: 'bg-teal-50',
+    borderLight: 'border-teal-200',
+    nameBn: 'ডাক্তার',
+    nameEn: 'Doctors'
+  },
+  'doctor': {
+    icon: Stethoscope,
+    color: '#0D9488',
+    bgLight: 'bg-teal-50',
+    borderLight: 'border-teal-200',
+    nameBn: 'ডাক্তার',
+    nameEn: 'Doctor'
+  },
   'pharmacy': {
     icon: Pill,
     color: '#10B981',
