@@ -59,6 +59,17 @@ export const INITIAL_SUBCATEGORIES: Category[] = [
   { id: 'sub-304', name_en: 'Dental Care', name_bn: 'ডেন্টাল ক্লিনিক', slug: 'dental-care', icon: 'Stethoscope', color: 'sky', parent_id: 'cat-3', order_index: 4, count: 0 },
   { id: 'sub-305', name_en: 'Eye Hospital', name_bn: 'চক্ষু হাসপাতাল', slug: 'eye-hospital', icon: 'Glasses', color: 'sky', parent_id: 'cat-3', order_index: 5, count: 0 },
 
+  // Doctors & Specialists
+  { id: 'sub-doc-1', name_en: 'Medicine Specialist', name_bn: 'মেডিসিন বিশেষজ্ঞ', slug: 'medicine-specialist', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 1, count: 0 },
+  { id: 'sub-doc-2', name_en: 'Child & Pediatrician', name_bn: 'শিশু ও নবজাতক রোগ', slug: 'child-pediatrician', icon: 'Baby', color: 'teal', parent_id: 'cat-doctor', order_index: 2, count: 0 },
+  { id: 'sub-doc-3', name_en: 'Gynecology & Obstetrics', name_bn: 'গাইনি ও প্রসূতি বিশেষজ্ঞ', slug: 'gynecology-obstetrics', icon: 'HeartPulse', color: 'teal', parent_id: 'cat-doctor', order_index: 3, count: 0 },
+  { id: 'sub-doc-4', name_en: 'Cardiology (Heart)', name_bn: 'হৃদরোগ বিশেষজ্ঞ (কার্ডিওলজি)', slug: 'cardiology', icon: 'HeartPulse', color: 'teal', parent_id: 'cat-doctor', order_index: 4, count: 0 },
+  { id: 'sub-doc-5', name_en: 'Orthopedics', name_bn: 'অর্থোপেডিক ও হাড় জোড়া', slug: 'orthopedics', icon: 'Hammer', color: 'teal', parent_id: 'cat-doctor', order_index: 5, count: 0 },
+  { id: 'sub-doc-6', name_en: 'Skin, Allergy & VD', name_bn: 'চর্ম, অ্যালার্জি ও যৌন রোগ', slug: 'skin-allergy-vd', icon: 'Sparkles', color: 'teal', parent_id: 'cat-doctor', order_index: 6, count: 0 },
+  { id: 'sub-doc-7', name_en: 'Dental Surgeon', name_bn: 'ডেন্টাল সার্জন ও দন্ত বিশেষজ্ঞ', slug: 'dental-surgeon', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 7, count: 0 },
+  { id: 'sub-doc-8', name_en: 'Eye Specialist', name_bn: 'চক্ষু বিশেষজ্ঞ (অপথ্যালমোলজি)', slug: 'eye-specialist', icon: 'Glasses', color: 'teal', parent_id: 'cat-doctor', order_index: 8, count: 0 },
+  { id: 'sub-doc-9', name_en: 'ENT Specialist', name_bn: 'নাক, কান ও গলা বিশেষজ্ঞ', slug: 'ent-specialist', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 9, count: 0 },
+
   // Pharmacy
   { id: 'sub-401', name_en: 'Retail Pharmacy', name_bn: 'খুচরা ফার্মেসি', slug: 'retail-pharmacy', icon: 'Pill', color: 'emerald', parent_id: 'cat-4', order_index: 1, count: 0 },
   { id: 'sub-402', name_en: 'Model Pharmacy', name_bn: 'মডেল ফার্মেসি', slug: 'model-pharmacy', icon: 'ShieldCheck', color: 'emerald', parent_id: 'cat-4', order_index: 2, count: 0 },

@@ -18,6 +18,7 @@ import { PrayerWidget } from './components/PrayerWidget';
 
 // Dedicated Pages
 import { CategoriesPage } from './pages/CategoriesPage';
+import { CategoryDetailPage } from './pages/CategoryDetailPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { NewsPage } from './pages/NewsPage';
 import { EventsPage } from './pages/EventsPage';
@@ -84,7 +85,11 @@ const HomePage: React.FC<{
       navigate(`/${categorySlug}`);
       return;
     }
-    navigate(`/categories?category=${categorySlug}`);
+    if (categorySlug === 'all') {
+      navigate('/categories');
+      return;
+    }
+    navigate(`/category/${categorySlug}`);
   };
 
   const handleAreaSelect = (upazila: string, union?: string) => {
@@ -120,7 +125,7 @@ const HomePage: React.FC<{
           } else if (slug === 'all') {
             navigate('/categories');
           } else {
-            navigate(`/categories?category=${slug}`);
+            navigate(`/category/${slug}`);
           }
         }}
         onSeeAll={() => navigate('/categories')}
@@ -208,6 +213,9 @@ const AppContent: React.FC = () => {
           />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/category/:categorySlug" element={<CategoryDetailPage />} />
+          <Route path="/category/:categorySlug/:subCategorySlug" element={<CategoryDetailPage />} />
+          <Route path="/categories/:categorySlug" element={<CategoryDetailPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/offers" element={<OffersPage />} />
@@ -246,7 +254,7 @@ const AppContent: React.FC = () => {
       {/* Footer */}
       <Footer
         onOpenListBusiness={() => navigate('/list-business')}
-        onSelectCategory={(slug) => navigate(`/categories?category=${slug}`)}
+        onSelectCategory={(slug) => navigate(`/category/${slug}`)}
       />
 
       {/* Modals */}

@@ -73,14 +73,27 @@ export const CategoriesPage: React.FC = () => {
 
 
   const handleCategoryClick = (slug: string) => {
-    const newSlug = selectedCategory === slug ? '' : slug;
-    setSelectedCategory(newSlug);
-    setSelectedSubcategory('');
-    if (newSlug) {
-      setSearchParams({ category: newSlug });
-    } else {
-      setSearchParams({});
+    if (slug === 'blood-bank' || slug === 'tuition-media' || slug === 'to-let') {
+      navigate(`/${slug}`);
+      return;
     }
+    if (slug === 'news') {
+      navigate('/news');
+      return;
+    }
+    if (slug === 'events') {
+      navigate('/events');
+      return;
+    }
+    if (slug === 'offers') {
+      navigate('/offers');
+      return;
+    }
+    if (slug === 'mosques') {
+      navigate('/prayer');
+      return;
+    }
+    navigate(`/category/${slug}`);
   };
 
   // Live item count for each category
