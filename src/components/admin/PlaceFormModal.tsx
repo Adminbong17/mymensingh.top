@@ -341,13 +341,13 @@ export const PlaceFormModal: React.FC<PlaceFormModalProps> = ({
             </div>
           </div>
 
-          {/* Image Upload via FileVault */}
+          {/* Image Upload */}
           <VaultMediaUploader
             value={formData.image_url || ''}
             onChange={(url) => setFormData({ ...formData, image_url: url })}
-            label={`${t('image_url')} (FileVault Media)`}
+            label={`${t('image_url')} (Image Upload)`}
             required
-            helperText="সরাসরি vault.bongbangla.top-এ আপলোড হয়ে সুপাবেজ ডাটাবেজের সাথে লাইভ কানেক্ট হবে।"
+            helperText="ছবি আপলোড করে ডাটাবেজের সাথে সরাসরি যুক্ত করুন।"
           />
 
           {/* Contact & Hours */}

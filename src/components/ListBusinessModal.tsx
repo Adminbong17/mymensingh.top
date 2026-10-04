@@ -293,9 +293,9 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
             <VaultMediaUploader
               value={imageUrl}
               onChange={setImageUrl}
-              label="ছবি বা লোগো (FileVault Media)"
+              label="ছবি বা লোগো (Image Upload)"
               placeholder="https://..."
-              helperText="ছবি আপলোড করলে স্বয়ংক্রিয়ভাবে vault.bongbangla.top-এ সেভ হবে এবং লাইভ প্রিভিউ দেখতে পাবেন।"
+              helperText="ছবি আপলোড করলে স্বয়ংক্রিয়ভাবে ক্লাউডে সেভ হবে এবং লাইভ প্রিভিউ দেখতে পাবেন।"
             />
 
             <div>

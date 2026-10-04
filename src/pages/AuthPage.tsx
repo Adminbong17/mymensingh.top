@@ -146,7 +146,7 @@ export const AuthPage: React.FC = () => {
       const res = await signUp(email, password, {
         full_name: fullName,
         phone,
-        role: email.toLowerCase().trim() === 'admin@bongbangla.top' ? 'admin' : 'user',
+        role: (email.toLowerCase().trim() === 'admin@mymensingh.top' || email.toLowerCase().trim() === 'admin@bongbangla.top') ? 'admin' : 'user',
         business_name: businessName,
       });
 
@@ -736,7 +736,7 @@ export const AuthPage: React.FC = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="admin@bongbangla.top বা আপনার ইমেইল"
+                        placeholder="admin@mymensingh.top বা আপনার ইমেইল"
                         required
                         className="w-full text-xs sm:text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-hidden focus:border-emerald-500 bg-slate-50"
                       />

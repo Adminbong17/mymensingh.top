@@ -258,7 +258,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
           onVisitWebsite={onBackToApp}
           onLogout={logout}
           onSelectTab={setActiveTab}
-          userEmail={user?.email || 'admin@bongbangla.top'}
+          userEmail={user?.email || 'admin@mymensingh.top'}
         />
 
         {/* Tab Page Body */}

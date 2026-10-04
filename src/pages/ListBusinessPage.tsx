@@ -512,9 +512,9 @@ export const ListBusinessPage: React.FC = () => {
                   <VaultMediaUploader
                     value={formData.image_url}
                     onChange={(url) => setFormData({ ...formData, image_url: url })}
-                    label="প্রতিষ্ঠানের ছবির লিঙ্ক (FileVault Media)"
+                    label="প্রতিষ্ঠানের ছবি বা ব্যানার (Image Upload)"
                     placeholder="https://..."
-                    helperText="ছবি আপলোড করলে সরাসরি vault.bongbangla.top-এ সংরক্ষিত হবে এবং লাইভ প্রিভিউ দেখতে পাবেন।"
+                    helperText="ছবি আপলোড করলে স্বয়ংক্রিয়ভাবে ক্লাউডে সংরক্ষিত হবে এবং লাইভ প্রিভিউ দেখতে পাবেন।"
                   />
 
                   <div className="flex justify-between pt-4 border-t border-slate-100">

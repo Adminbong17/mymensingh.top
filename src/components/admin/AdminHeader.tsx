@@ -32,7 +32,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   onVisitWebsite,
   onLogout,
   onSelectTab,
-  userEmail = 'admin@bongbangla.top'
+  userEmail = 'admin@mymensingh.top'
 }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

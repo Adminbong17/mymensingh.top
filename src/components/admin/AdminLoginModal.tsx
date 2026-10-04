@@ -98,7 +98,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             onClick={handleDemoLogin}
             className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>👑 admin@bongbangla.top হিসেবে প্রবেশ করুন</span>
+            <span>👑 admin@mymensingh.top হিসেবে প্রবেশ করুন</span>
           </button>
         </div>
 

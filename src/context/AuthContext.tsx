@@ -20,8 +20,8 @@ export interface SignUpMetadata {
 const STORAGE_ADMIN_EMAILS = 'mymensingh_admin_emails_v1';
 
 export const DEFAULT_ADMIN_EMAILS = [
-  'admin@bongbangla.top',
-  'admin@mymensingh.top'
+  'admin@mymensingh.top',
+  'admin@bongbangla.top'
 ];
 
 interface AuthContextType {
@@ -80,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
 
     const isEmailAdmin = Boolean(
+      cleanEmail === 'admin@mymensingh.top' ||
       cleanEmail === 'admin@bongbangla.top' ||
       DEFAULT_ADMIN_EMAILS.includes(cleanEmail) ||
       localList.includes(cleanEmail) ||
@@ -87,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     const role: 'admin' | 'user' = isEmailAdmin ? 'admin' : 'user';
     const fullName = (supabaseUser.user_metadata?.full_name as string) || 
-      (cleanEmail === 'admin@bongbangla.top' ? 'Super Admin (BongBangla)' : supabaseUser.email?.split('@')[0]) || 
+      (cleanEmail === 'admin@mymensingh.top' || cleanEmail === 'admin@bongbangla.top' ? 'Super Admin (Mymensingh.top)' : supabaseUser.email?.split('@')[0]) || 
       'User';
 
     return {
@@ -112,10 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check demo admin
     if (localStorage.getItem('mymensingh_demo_admin') === 'true') {
       setUser({
-        id: 'admin-bongbangla',
-        email: 'admin@bongbangla.top',
+        id: 'admin-mymensingh',
+        email: 'admin@mymensingh.top',
         role: 'admin',
-        full_name: 'Super Admin (BongBangla)'
+        full_name: 'Super Admin (Mymensingh.top)'
       });
       setIsLoading(false);
       return;
@@ -167,13 +168,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Direct Super Admin Master Login for admin@bongbangla.top
-    if (cleanEmail === 'admin@bongbangla.top' && (password === '12345678' || password === 'admin123456' || password === 'admin2026' || password === 'password123')) {
+    // 1. Direct Super Admin Master Login for admin@mymensingh.top or admin@bongbangla.top
+    if ((cleanEmail === 'admin@mymensingh.top' || cleanEmail === 'admin@bongbangla.top') && (password === '12345678' || password === 'admin123456' || password === 'admin2026' || password === 'password123')) {
       const profile: UserProfile = {
-        id: 'admin-bongbangla',
-        email: 'admin@bongbangla.top',
+        id: 'admin-mymensingh',
+        email: cleanEmail,
         role: 'admin',
-        full_name: 'Super Admin (BongBangla)'
+        full_name: 'Super Admin (Mymensingh.top)'
       };
       setUser(profile);
       localStorage.setItem('mymensingh_admin_session', JSON.stringify(profile));
@@ -190,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const profile: UserProfile = {
             id: res.user.id,
             email: res.user.email,
-            role: cleanEmail === 'admin@bongbangla.top' ? 'admin' : (res.user.role || 'user'),
+            role: (cleanEmail === 'admin@mymensingh.top' || cleanEmail === 'admin@bongbangla.top') ? 'admin' : (res.user.role || 'user'),
             full_name: res.user.full_name || res.user.email.split('@')[0],
           };
           setUser(profile);
@@ -357,10 +358,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('mymensingh_demo_admin', 'true');
     setIsDemoAdmin(true);
     setUser({
-      id: 'admin-bongbangla',
-      email: 'admin@bongbangla.top',
+      id: 'admin-mymensingh',
+      email: 'admin@mymensingh.top',
       role: 'admin',
-      full_name: 'Super Admin (BongBangla)'
+      full_name: 'Super Admin (Mymensingh.top)'
     });
   };
 
@@ -405,7 +406,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const removeAdminEmail = (emailToRemove: string) => {
     const clean = emailToRemove.toLowerCase().trim();
-    if (!clean || clean === 'admin@bongbangla.top') return;
+    if (!clean || clean === 'admin@mymensingh.top' || clean === 'admin@bongbangla.top') return;
     setAdminEmails(prev => {
       const updated = prev.filter(e => e !== clean);
       localStorage.setItem(STORAGE_ADMIN_EMAILS, JSON.stringify(updated));

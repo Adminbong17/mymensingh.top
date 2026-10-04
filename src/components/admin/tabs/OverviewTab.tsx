@@ -43,9 +43,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   const recentUsers = [
     {
       id: 1,
-      name: 'Mehedi Hasan',
+      name: 'System Admin',
       phone: '01712-345678',
-      email: 'admin@bongbangla.top',
+      email: 'admin@mymensingh.top',
       role: 'Super Admin',
       joinedAt: 'Today',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'

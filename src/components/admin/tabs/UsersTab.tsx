@@ -35,25 +35,14 @@ const STORAGE_USERS_KEY = 'mymensingh_registered_users_v2';
 const INITIAL_USERS: UserRecord[] = [
   {
     id: 'u-super-admin',
-    name: 'Mehedi Hasan',
-    email: 'admin@bongbangla.top',
+    name: 'Super Admin',
+    email: 'admin@mymensingh.top',
     phone: '01712-345678',
     role: 'Admin',
     joinedDate: '28 Sep 2026',
     joinedAgo: 'Active now',
     status: 'Active',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'
-  },
-  {
-    id: 'u-system-admin',
-    name: 'System Admin',
-    email: 'admin@mymensingh.top',
-    phone: '01700-000000',
-    role: 'Admin',
-    joinedDate: '28 Sep 2026',
-    joinedAgo: 'Active now',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80'
   }
 ];
 
@@ -66,8 +55,7 @@ export const UsersTab: React.FC = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Make sure admin@bongbangla.top is always present
-          const hasSuper = parsed.some(u => u.email.toLowerCase() === 'admin@bongbangla.top');
+          const hasSuper = parsed.some(u => u.email.toLowerCase() === 'admin@mymensingh.top');
           if (!hasSuper) {
             return [INITIAL_USERS[0], ...parsed];
           }
@@ -210,7 +198,7 @@ export const UsersTab: React.FC = () => {
     e.preventDefault();
     if (!activeUser) return;
 
-    const updatedRole = activeUser.email.toLowerCase() === 'admin@bongbangla.top' ? 'Admin' : formRole;
+    const updatedRole = (activeUser.email.toLowerCase() === 'admin@mymensingh.top' || activeUser.email.toLowerCase() === 'admin@bongbangla.top') ? 'Admin' : formRole;
 
     setUsers(prev =>
       prev.map(u =>
@@ -250,7 +238,7 @@ export const UsersTab: React.FC = () => {
 
   // Delete User
   const handleDeleteUser = (id: string, email: string, name: string) => {
-    if (email.toLowerCase() === 'admin@bongbangla.top') {
+    if (email.toLowerCase() === 'admin@mymensingh.top' || email.toLowerCase() === 'admin@bongbangla.top') {
       alert('সুপার অ্যাডমিন অ্যাকাউন্ট মুছে ফেলা সম্ভব নয়।');
       return;
     }
@@ -266,7 +254,7 @@ export const UsersTab: React.FC = () => {
 
   // Quick Toggle Status
   const handleToggleStatus = (u: UserRecord) => {
-    if (u.email.toLowerCase() === 'admin@bongbangla.top') {
+    if (u.email.toLowerCase() === 'admin@mymensingh.top' || u.email.toLowerCase() === 'admin@bongbangla.top') {
       alert('সুপার অ্যাডমিন সবসময় Active থাকবে।');
       return;
     }
@@ -281,7 +269,7 @@ export const UsersTab: React.FC = () => {
 
   // Quick Toggle Role
   const handleToggleRole = (u: UserRecord) => {
-    if (u.email.toLowerCase() === 'admin@bongbangla.top') {
+    if (u.email.toLowerCase() === 'admin@mymensingh.top' || u.email.toLowerCase() === 'admin@bongbangla.top') {
       alert('সুপার অ্যাডমিনের ভূমিকা পরিবর্তন করা সম্ভব নয়।');
       return;
     }
@@ -584,7 +572,7 @@ export const UsersTab: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleDeleteUser(u.id, u.email, u.name)}
-                            disabled={u.email.toLowerCase() === 'admin@bongbangla.top'}
+                            disabled={u.email.toLowerCase() === 'admin@mymensingh.top' || u.email.toLowerCase() === 'admin@bongbangla.top'}
                             className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors disabled:opacity-30 cursor-pointer"
                             title="Delete User"
                           >
@@ -796,7 +784,7 @@ export const UsersTab: React.FC = () => {
                   <select
                     value={formRole}
                     onChange={(e) => setFormRole(e.target.value as any)}
-                    disabled={activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
+                    disabled={activeUser.email.toLowerCase() === 'admin@mymensingh.top' || activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
                     className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500 disabled:opacity-50 cursor-pointer"
                   >
                     <option value="User">Regular User</option>
@@ -808,7 +796,7 @@ export const UsersTab: React.FC = () => {
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as any)}
-                    disabled={activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
+                    disabled={activeUser.email.toLowerCase() === 'admin@mymensingh.top' || activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
                     className="w-full text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-hidden focus:border-emerald-500 disabled:opacity-50 cursor-pointer"
                   >
                     <option value="Active">Active</option>
@@ -907,14 +895,14 @@ export const UsersTab: React.FC = () => {
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => handleToggleRole(activeUser)}
-                disabled={activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
+                disabled={activeUser.email.toLowerCase() === 'admin@mymensingh.top' || activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
                 className="flex-1 py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors disabled:opacity-40 cursor-pointer"
               >
                 {activeUser.role === 'Admin' ? 'Demote to User' : 'Make Admin'}
               </button>
               <button
                 onClick={() => handleToggleStatus(activeUser)}
-                disabled={activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
+                disabled={activeUser.email.toLowerCase() === 'admin@mymensingh.top' || activeUser.email.toLowerCase() === 'admin@bongbangla.top'}
                 className="flex-1 py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors disabled:opacity-40 cursor-pointer"
               >
                 {activeUser.status === 'Active' ? 'Deactivate' : 'Activate'}

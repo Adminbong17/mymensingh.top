@@ -14,10 +14,10 @@ interface VaultMediaUploaderProps {
 export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
   value,
   onChange,
-  label = 'ছবি / মিডিয়া আপলোড (Vault Storage)',
+  label = 'ছবি বা ব্যানার আপলোড (Image Upload)',
   required = false,
   placeholder = 'https://...',
-  helperText = 'ছবি নির্বাচন করলে সরাসরি vault.bongbangla.top-এ সংরক্ষিত হবে এবং লাইভ লিঙ্ক তৈরি হবে।'
+  helperText = 'ছবি নির্বাচন করলে স্বয়ংক্রিয়ভাবে আপলোড হবে এবং লাইভ প্রিভিউ দেখতে পাবেন।'
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (err: any) {
-      console.error('Vault upload failed:', err);
+      console.error('Upload failed:', err);
       setUploadError(err.message || 'আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
     } finally {
       setIsUploading(false);
@@ -73,7 +73,7 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
           ) : (
             <>
               <LinkIcon className="w-3.5 h-3.5" />
-              <span>সরাসরি লিঙ্ক দিন</span>
+              <span>সরাসরি ছবির লিঙ্ক দিন</span>
             </>
           )}
         </button>
@@ -111,7 +111,7 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
                 ছবি নির্বাচন করতে এখানে ক্লিক করুন
               </div>
               <p className="text-[11px] text-slate-500">
-                PNG, JPG, WEBP অথবা MP4 (সর্বোচ্চ সাইজ সীমা নেই)
+                PNG, JPG, WEBP অথবা MP4 ফরম্যাট সমর্থিত
               </p>
             </div>
           )}
@@ -120,7 +120,7 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
             <div className="border border-emerald-200 rounded-2xl p-4 sm:p-5 text-center bg-emerald-50/50 flex flex-col items-center justify-center gap-2 animate-pulse">
               <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
               <div className="text-xs font-bold text-emerald-900">
-                vault.bongbangla.top-এ ফাইল আপলোড হচ্ছে...
+                ছবি আপলোড হচ্ছে...
               </div>
               <p className="text-[11px] text-emerald-600">অনুগ্রহ করে একটু অপেক্ষা করুন</p>
             </div>
@@ -134,7 +134,6 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
                   alt="Uploaded Media"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    // Fallback icon if not direct renderable image
                     e.currentTarget.style.display = 'none';
                   }}
                 />
@@ -143,17 +142,17 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
               <div className="flex-1 min-w-0 pr-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Vault-এ সংরক্ষিত ও লিঙ্ক যুক্ত</span>
+                  <span>ছবি সফলভাবে সংযুক্ত হয়েছে</span>
                 </div>
-                <div className="text-[11px] text-slate-500 truncate mt-0.5" title={value}>
-                  {value}
+                <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                  ✓ ক্লাউড স্টোরেজে সংরক্ষিত
                 </div>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="mt-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 underline"
                 >
-                  অন্য ছবি নির্বাচন করুন
+                  অন্য ছবি পরিবর্তন করুন
                 </button>
               </div>
 
@@ -173,7 +172,7 @@ export const VaultMediaUploader: React.FC<VaultMediaUploaderProps> = ({
       {uploadSuccess && (
         <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold animate-in fade-in">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>ছবি সফলভাবে আপনার Vault-এ সংরক্ষিত হয়েছে!</span>
+          <span>ছবি সফলভাবে আপলোড হয়েছে!</span>
         </div>
       )}
 
