@@ -280,13 +280,13 @@ export const CategoryDetailPage: React.FC = () => {
           <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
         </div>
 
-        {/* 3. Subcategories Pills Filter Bar */}
+        {/* 3. Subcategories Multi-Column Grid (No Slider) */}
         {subcategoriesList.length > 0 && (
-          <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/80 shadow-xs space-y-3">
+          <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/80 shadow-xs space-y-3.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-900">
-                <Layers className="w-4 h-4 text-emerald-600" />
-                <span>উপ-ক্যাটাগরি বা বিশেষত্ব নির্বাচন করুন:</span>
+                <Layers className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>উপ-ক্যাটাগরি বা বিশেষত্ব ({subcategoriesList.length}টি):</span>
               </div>
               {activeSubcategorySlug && (
                 <button
@@ -298,23 +298,25 @@ export const CategoryDetailPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-200">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-2.5">
+              {/* All Subcategories Button */}
               <button
                 onClick={() => handleSubcategorySelect('')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 border text-left ${
                   !activeSubcategorySlug
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/20'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                 }`}
               >
-                <span>সকল উপ-ক্যাটাগরি</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                  !activeSubcategorySlug ? 'bg-white/30 text-white' : 'bg-slate-300 text-slate-700'
+                <span className="truncate">সকল উপ-ক্যাটাগরি</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black shrink-0 ${
+                  !activeSubcategorySlug ? 'bg-white/30 text-white' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {businesses.filter(b => b.category_slug === currentCategory?.slug).length}
                 </span>
               </button>
 
+              {/* Subcategories List */}
               {subcategoriesList.map(sub => {
                 const isSelected = activeSubcategorySlug === sub.slug;
                 const subCount = getSubcategoryCount(sub.slug);
@@ -323,14 +325,14 @@ export const CategoryDetailPage: React.FC = () => {
                   <button
                     key={sub.id}
                     onClick={() => handleSubcategorySelect(sub.slug)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 border ${
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between gap-2 border text-left ${
                       isSelected
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
-                        : 'bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border-slate-200'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/20'
+                        : 'bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-800 border-slate-200'
                     }`}
                   >
-                    <span>{sub.name_bn || sub.name_en}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    <span className="truncate">{sub.name_bn || sub.name_en}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black shrink-0 ${
                       isSelected ? 'bg-white/30 text-white' : 'bg-slate-100 text-slate-600'
                     }`}>
                       {subCount}
