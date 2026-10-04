@@ -116,9 +116,19 @@ export const CategoryDetailPage: React.FC = () => {
 
       // 2. Subcategory Filter
       if (activeSubcategorySlug) {
+        const subObj = subcategoriesList.find(s => s.slug === activeSubcategorySlug);
+        const subName = subObj ? (subObj.name_bn || subObj.name_en) : '';
         const matchSub =
           biz.subcategory_slug === activeSubcategorySlug ||
-          (biz as any).subcategory?.toLowerCase() === activeSubcategorySlug.toLowerCase();
+          (biz as any).subcategory === activeSubcategorySlug ||
+          (biz as any).subcategory === subName ||
+          biz.area === activeSubcategorySlug ||
+          biz.area === subName ||
+          (subName && (
+            (biz.name_bn && biz.name_bn.includes(subName)) ||
+            (biz.description && biz.description.includes(subName)) ||
+            (subObj?.name_en && biz.description && biz.description.toLowerCase().includes(subObj.name_en.toLowerCase()))
+          ));
         if (!matchSub) return false;
       }
 
@@ -158,15 +168,29 @@ export const CategoryDetailPage: React.FC = () => {
       if (!a.is_featured && b.is_featured) return 1;
       return (b.rating || 0) - (a.rating || 0);
     });
-  }, [businesses, currentCategory, categorySlug, activeSubcategorySlug, keyword, selectedUpazila, onlyFeatured, minRating, sortBy]);
+  }, [businesses, currentCategory, categorySlug, activeSubcategorySlug, subcategoriesList, keyword, selectedUpazila, onlyFeatured, minRating, sortBy]);
 
   // Subcategory Item Counts
   const getSubcategoryCount = (subSlug: string) => {
     if (!currentCategory) return 0;
-    return businesses.filter(b => 
-      (b.category_slug === currentCategory.slug || b.category_slug === categorySlug) &&
-      (b.subcategory_slug === subSlug || (b as any).subcategory === subSlug)
-    ).length;
+    const subObj = subcategoriesList.find(s => s.slug === subSlug);
+    const subName = subObj ? (subObj.name_bn || subObj.name_en) : '';
+    return businesses.filter(b => {
+      const matchCat = b.category_slug === currentCategory.slug || b.category_slug === categorySlug;
+      if (!matchCat) return false;
+      return (
+        b.subcategory_slug === subSlug ||
+        (b as any).subcategory === subSlug ||
+        (b as any).subcategory === subName ||
+        b.area === subSlug ||
+        b.area === subName ||
+        (subName && (
+          (b.name_bn && b.name_bn.includes(subName)) ||
+          (b.description && b.description.includes(subName)) ||
+          (subObj?.name_en && b.description && b.description.toLowerCase().includes(subObj.name_en.toLowerCase()))
+        ))
+      );
+    }).length;
   };
 
   // Other Related Categories
