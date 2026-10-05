@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, useParams } from 'react-router-dom';
 
 // Layout & Core Components
 import { HeaderNav } from './components/HeaderNav';
@@ -54,6 +54,16 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+// Unified Doctor category redirect helper: ensures all variants point to /category/doctors
+const DoctorAliasRedirect: React.FC = () => {
+  const { subCategorySlug } = useParams<{ subCategorySlug?: string }>();
+  const location = useLocation();
+  const target = subCategorySlug
+    ? `/category/doctors/${subCategorySlug}${location.search}`
+    : `/category/doctors${location.search}`;
+  return <Navigate to={target} replace />;
+};
+
 // ============================================================================
 // Main Homepage Component
 // ============================================================================
@@ -87,6 +97,10 @@ const HomePage: React.FC<{
     }
     if (categorySlug === 'all') {
       navigate('/categories');
+      return;
+    }
+    if (categorySlug === 'doctor' || categorySlug === 'doctors') {
+      navigate('/category/doctors');
       return;
     }
     navigate(`/category/${categorySlug}`);
@@ -213,6 +227,15 @@ const AppContent: React.FC = () => {
           />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          {/* Unified Doctor category routes: merge /category/doctor & /category/doctors into one */}
+          <Route path="/doctor" element={<DoctorAliasRedirect />} />
+          <Route path="/doctors" element={<DoctorAliasRedirect />} />
+          <Route path="/category/doctor" element={<DoctorAliasRedirect />} />
+          <Route path="/category/doctor/:subCategorySlug" element={<DoctorAliasRedirect />} />
+          <Route path="/categories/doctor" element={<DoctorAliasRedirect />} />
+          <Route path="/categories/doctor/:subCategorySlug" element={<DoctorAliasRedirect />} />
+          <Route path="/categories/doctors" element={<DoctorAliasRedirect />} />
+          <Route path="/categories/doctors/:subCategorySlug" element={<DoctorAliasRedirect />} />
           <Route path="/category/:categorySlug" element={<CategoryDetailPage />} />
           <Route path="/category/:categorySlug/:subCategorySlug" element={<CategoryDetailPage />} />
           <Route path="/categories/:categorySlug" element={<CategoryDetailPage />} />

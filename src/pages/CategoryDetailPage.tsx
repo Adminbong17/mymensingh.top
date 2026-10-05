@@ -36,6 +36,17 @@ export const CategoryDetailPage: React.FC = () => {
   // Selected Business for Detail Modal
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
+  // Canonical URL unification: automatically redirect /category/doctor to /category/doctors
+  React.useEffect(() => {
+    if (categorySlug?.toLowerCase() === 'doctor') {
+      const canonicalPath = subCategorySlug 
+        ? `/category/doctors/${subCategorySlug}` 
+        : '/category/doctors';
+      const search = window.location.search;
+      navigate(`${canonicalPath}${search}`, { replace: true });
+    }
+  }, [categorySlug, subCategorySlug, navigate]);
+
   // Active Category Object (Supports alias slugs)
   const currentCategory = useMemo(() => {
     if (!categorySlug) return null;
@@ -47,7 +58,7 @@ export const CategoryDetailPage: React.FC = () => {
 
     // Common alias matching
     if (cleanSlug === 'doctor' || cleanSlug === 'doctors') {
-      found = categories.find(c => c.slug === 'doctors' || c.slug === 'doctor');
+      found = categories.find(c => c.slug === 'doctors') || categories.find(c => c.slug === 'doctor');
     } else if (cleanSlug === 'hospital' || cleanSlug === 'hospitals') {
       found = categories.find(c => c.slug === 'hospitals' || c.slug === 'hospital');
     } else if (cleanSlug === 'restaurant' || cleanSlug === 'restaurants') {
@@ -110,7 +121,8 @@ export const CategoryDetailPage: React.FC = () => {
         biz.category_slug === currentCategory.slug ||
         biz.category_slug === categorySlug ||
         biz.category?.toLowerCase() === currentCategory.name_en?.toLowerCase() ||
-        biz.category_id === currentCategory.id;
+        biz.category_id === currentCategory.id ||
+        (currentCategory.slug === 'doctors' && (biz.category_slug === 'doctor' || biz.category?.toLowerCase() === 'doctor'));
 
       if (!matchCat) return false;
 

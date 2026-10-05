@@ -77,6 +77,10 @@ export const CategoriesPage: React.FC = () => {
       navigate(`/${slug}`);
       return;
     }
+    if (slug === 'doctor' || slug === 'doctors') {
+      navigate('/category/doctors');
+      return;
+    }
     if (slug === 'news') {
       navigate('/news');
       return;
@@ -104,13 +108,13 @@ export const CategoriesPage: React.FC = () => {
     if (slug === 'news') return news.length;
     if (slug === 'events') return events.length;
     if (slug === 'offers') return offers.length;
-    return businesses.filter(b => b.category_slug === slug).length;
+    return businesses.filter(b => b.category_slug === slug || (slug === 'doctors' && b.category_slug === 'doctor')).length;
   };
 
   // Filtered Businesses Logic
   const filteredBusinesses = useMemo(() => {
     const list = businesses.filter((biz) => {
-      if (selectedCategory && biz.category_slug !== selectedCategory) {
+      if (selectedCategory && biz.category_slug !== selectedCategory && !(selectedCategory === 'doctors' && biz.category_slug === 'doctor')) {
         return false;
       }
       if (selectedSubcategory) {

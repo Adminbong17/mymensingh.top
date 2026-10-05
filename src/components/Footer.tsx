@@ -33,6 +33,11 @@ export const Footer: React.FC<FooterProps> = ({
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+    if (slug === 'doctors' || slug === 'doctor') {
+      navigate('/category/doctors');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (onSelectCategory) onSelectCategory(slug);
     navigate(`/categories?category=${slug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -189,6 +194,14 @@ export const Footer: React.FC<FooterProps> = ({
                   className="hover:text-emerald-400 transition-colors"
                 >
                   Hospitals (হাসপাতাল)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => handleCategoryClick('doctors')}
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Doctors (ডাক্তার ও বিশেষজ্ঞ)
                 </button>
               </li>
               <li>
