@@ -331,7 +331,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('*')
           .order('order_index');
         if (!catErr && dbCat && dbCat.length > 0) {
-          setCategories(prev => mergeWithLocal(dbCat as Category[], prev));
+          setCategories(prev => {
+            const merged = mergeWithLocal(dbCat as Category[], prev);
+            const existingIds = new Set(merged.map(c => c.id));
+            const missing = INITIAL_SUBCATEGORIES.filter(sc => !existingIds.has(sc.id));
+            const full = (missing.length > 0 ? [...merged, ...missing] : merged).map(c => ({
+              ...c,
+              parent_id: c.parent_id ? c.parent_id : null
+            }));
+            return full.sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
+          });
         }
       } catch (err) {
         console.warn('Could not fetch categories from Supabase:', err);

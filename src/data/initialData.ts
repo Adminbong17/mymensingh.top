@@ -69,6 +69,11 @@ export const INITIAL_SUBCATEGORIES: Category[] = [
   { id: 'sub-doc-7', name_en: 'Dental Surgeon', name_bn: 'ডেন্টাল সার্জন ও দন্ত বিশেষজ্ঞ', slug: 'dental-surgeon', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 7, count: 0 },
   { id: 'sub-doc-8', name_en: 'Eye Specialist', name_bn: 'চক্ষু বিশেষজ্ঞ (অপথ্যালমোলজি)', slug: 'eye-specialist', icon: 'Glasses', color: 'teal', parent_id: 'cat-doctor', order_index: 8, count: 0 },
   { id: 'sub-doc-9', name_en: 'ENT Specialist', name_bn: 'নাক, কান ও গলা বিশেষজ্ঞ', slug: 'ent-specialist', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 9, count: 0 },
+  { id: 'sub-doc-10', name_en: 'Urology & Kidney', name_bn: 'ইউরোলজি ও কিডনি রোগ', slug: 'urology-kidney', icon: 'Activity', color: 'teal', parent_id: 'cat-doctor', order_index: 10, count: 0 },
+  { id: 'sub-doc-11', name_en: 'Neurology & Brain', name_bn: 'নিউরোমেডিসিন ও স্নায়ুরোগ', slug: 'neurology', icon: 'Brain', color: 'teal', parent_id: 'cat-doctor', order_index: 11, count: 0 },
+  { id: 'sub-doc-12', name_en: 'Oncology / Cancer', name_bn: 'ক্যান্সার ও টিউমার বিশেষজ্ঞ', slug: 'oncology-cancer', icon: 'ShieldAlert', color: 'teal', parent_id: 'cat-doctor', order_index: 12, count: 0 },
+  { id: 'sub-doc-13', name_en: 'Gastroenterology & Liver', name_bn: 'গ্যাস্ট্রোএন্টারোলজি ও লিভার', slug: 'gastroenterology-liver', icon: 'HeartPulse', color: 'teal', parent_id: 'cat-doctor', order_index: 13, count: 0 },
+  { id: 'sub-doc-14', name_en: 'Surgery & Laparoscopy', name_bn: 'সার্জারি ও ল্যাপারোস্কপিক', slug: 'surgery-laparoscopy', icon: 'Scissors', color: 'teal', parent_id: 'cat-doctor', order_index: 14, count: 0 },
 
   // Pharmacy
   { id: 'sub-401', name_en: 'Retail Pharmacy', name_bn: 'খুচরা ফার্মেসি', slug: 'retail-pharmacy', icon: 'Pill', color: 'emerald', parent_id: 'cat-4', order_index: 1, count: 0 },
