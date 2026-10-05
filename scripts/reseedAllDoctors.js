@@ -648,7 +648,7 @@ async function seed() {
       description: `${doc.specialty}। চেম্বার: ${doc.chamber}। ${doc.description}`,
       opening_hours: doc.opening_hours,
       price_range: '৳৮০০ - ৳১৫০০',
-      is_featured: doc.is_featured,
+      is_featured: false,
       latitude: 24.7337,
       longitude: 90.4132,
       updated_at: new Date().toISOString(),

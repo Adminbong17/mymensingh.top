@@ -74,6 +74,22 @@ const HomePage: React.FC<{
   const navigate = useNavigate();
   const { businesses, categories, mainCategories, news, events, offers } = useData();
 
+  // Exclude doctors from commercial businesses lists on homepage
+  const commercialBusinesses = React.useMemo(() => {
+    return businesses.filter(b => {
+      const slug = (b.category_slug || '').toLowerCase();
+      const cat = (b.category || '').toLowerCase();
+      const id = (b.category_id || '').toLowerCase();
+      return (
+        slug !== 'doctors' &&
+        slug !== 'doctor' &&
+        cat !== 'doctors' &&
+        cat !== 'doctor' &&
+        id !== 'cat-doctor'
+      );
+    });
+  }, [businesses]);
+
   // Search redirection to dedicated /search results page
   const handleHeroSearch = (params: {
     keyword: string;
@@ -157,7 +173,7 @@ const HomePage: React.FC<{
 
       {/* 6. Featured Businesses (Slider) */}
       <FeaturedBusinesses
-        businesses={businesses}
+        businesses={commercialBusinesses}
         onSelectBusiness={onSelectBusiness}
       />
 

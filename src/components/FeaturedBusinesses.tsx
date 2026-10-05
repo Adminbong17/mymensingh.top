@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Star,
@@ -37,8 +37,30 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeDotIndex, setActiveDotIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  // Filter out any doctor entries — Featured Businesses must only display commercial establishments/businesses
+  const actualBusinesses = useMemo(() => {
+    return businesses.filter(b => {
+      const catSlug = (b.category_slug || '').toLowerCase();
+      const catName = (b.category || '').toLowerCase();
+      const catId = (b.category_id || '').toLowerCase();
+      
+      const isDoctor = 
+        catSlug === 'doctors' || 
+        catSlug === 'doctor' || 
+        catName === 'doctors' || 
+        catName === 'doctor' ||
+        catId === 'cat-doctor';
 
-  const displayBusinesses = businesses.slice(0, 12); // Show top 12 in slider
+      return !isDoctor;
+    });
+  }, [businesses]);
+
+  // Prioritize verified featured businesses, then others (limit to top 12 in slider)
+  const displayBusinesses = useMemo(() => {
+    const featured = actualBusinesses.filter(b => b.is_featured);
+    const nonFeatured = actualBusinesses.filter(b => !b.is_featured);
+    return [...featured, ...nonFeatured].slice(0, 12);
+  }, [actualBusinesses]);
 
   const handleCall = (e: React.MouseEvent, phone?: string) => {
     e.stopPropagation();
@@ -183,7 +205,7 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({
         </div>
 
         {/* Empty state or Slider */}
-        {businesses.length === 0 ? (
+        {displayBusinesses.length === 0 ? (
           <div className="text-center py-16 px-4 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 max-w-xl mx-auto space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs">
               <Building2 className="w-7 h-7" />
@@ -350,14 +372,14 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({
             </div>
           )}
 
-          {businesses.length > 0 && (
+          {actualBusinesses.length > 0 && (
             <button
               type="button"
               onClick={() => navigate('/categories')}
               className="inline-flex items-center gap-2.5 px-6 py-2.5 sm:py-3 rounded-full bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-xl hover:shadow-emerald-600/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <LayoutGrid className="w-4 h-4" />
-              <span>সকল {businesses.length}টি প্রতিষ্ঠান ও ডিরেক্টরি দেখুন</span>
+              <span>সকল {actualBusinesses.length}টি প্রতিষ্ঠান ও ডিরেক্টরি দেখুন</span>
             </button>
           )}
         </div>
