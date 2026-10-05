@@ -46,9 +46,7 @@ export const CategoryDetailPage: React.FC = () => {
     if (found) return found;
 
     // Common alias matching
-    if (cleanSlug === 'doctor' || cleanSlug === 'doctors') {
-      found = categories.find(c => c.slug === 'doctors' || c.slug === 'doctor');
-    } else if (cleanSlug === 'hospital' || cleanSlug === 'hospitals') {
+    if (cleanSlug === 'hospital' || cleanSlug === 'hospitals') {
       found = categories.find(c => c.slug === 'hospitals' || c.slug === 'hospital');
     } else if (cleanSlug === 'restaurant' || cleanSlug === 'restaurants') {
       found = categories.find(c => c.slug === 'restaurants' || c.slug === 'restaurant');

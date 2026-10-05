@@ -144,17 +144,21 @@ function mergeWithLocal<T extends { id: string }>(cloudItems: T[] | null | undef
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Real data initialized with persistent localStorage cache
-  const [businesses, setBusinesses] = useState<Business[]>(() =>
-    loadStoredArray(STORAGE_KEYS.BUSINESSES, [])
-  );
+  const [businesses, setBusinesses] = useState<Business[]>(() => {
+    const raw = loadStoredArray<Business>(STORAGE_KEYS.BUSINESSES, []);
+    return raw.filter(b => b.category_id !== 'cat-doctor' && b.category_slug !== 'doctors' && b.category_slug !== 'doctor');
+  });
   const [categories, setCategories] = useState<Category[]>(() => {
-    const loaded = loadStoredArray(STORAGE_KEYS.CATEGORIES, ALL_INITIAL_CATEGORIES);
+    const loaded = loadStoredArray(STORAGE_KEYS.CATEGORIES, ALL_INITIAL_CATEGORIES)
+      .filter(c => c.id !== 'cat-doctor' && c.slug !== 'doctors' && c.slug !== 'doctor' && !c.id.startsWith('sub-doc-'));
     const existingIds = new Set(loaded.map(c => c.id));
     const missing = INITIAL_SUBCATEGORIES.filter(sc => !existingIds.has(sc.id));
-    const full = (missing.length > 0 ? [...loaded, ...missing] : loaded).map(c => ({
-      ...c,
-      parent_id: c.parent_id ? c.parent_id : null
-    }));
+    const full = (missing.length > 0 ? [...loaded, ...missing] : loaded)
+      .filter(c => c.id !== 'cat-doctor' && c.slug !== 'doctors' && c.slug !== 'doctor' && !c.id.startsWith('sub-doc-'))
+      .map(c => ({
+        ...c,
+        parent_id: c.parent_id ? c.parent_id : null
+      }));
     return full.sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
   });
 

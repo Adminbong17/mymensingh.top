@@ -19,8 +19,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   { id: 'cat-1', name_en: 'Restaurants', name_bn: 'রেস্টুরেন্ট', slug: 'restaurants', icon: 'Utensils', color: 'orange', order_index: 1, count: 0, parent_id: null },
   { id: 'cat-2', name_en: 'Hotels', name_bn: 'হোটেল', slug: 'hotels', icon: 'Bed', color: 'blue', order_index: 2, count: 0, parent_id: null },
   { id: 'cat-3', name_en: 'Hospitals', name_bn: 'হাসপাতাল', slug: 'hospitals', icon: 'PlusSquare', color: 'rose', order_index: 3, count: 0, parent_id: null },
-  { id: 'cat-doctor', name_en: 'Doctors', name_bn: 'ডাক্তার ও বিশেষজ্ঞ', slug: 'doctors', icon: 'Stethoscope', color: 'teal', order_index: 4, count: 0, parent_id: null },
-  { id: 'cat-4', name_en: 'Pharmacy', name_bn: 'ফার্মেসি', slug: 'pharmacy', icon: 'Pill', color: 'emerald', order_index: 5, count: 0, parent_id: null },
+  { id: 'cat-4', name_en: 'Pharmacy', name_bn: 'ফার্মেসি', slug: 'pharmacy', icon: 'Pill', color: 'emerald', order_index: 4, count: 0, parent_id: null },
   { id: 'cat-5', name_en: 'Blood Bank', name_bn: 'ব্লাড ব্যাংক', slug: 'blood-bank', icon: 'Droplets', color: 'red', order_index: 5, count: 0, parent_id: null },
   { id: 'cat-6', name_en: 'Tuition Media', name_bn: 'টিউশন মিডিয়া', slug: 'tuition-media', icon: 'GraduationCap', color: 'purple', order_index: 6, count: 0, parent_id: null },
   { id: 'cat-7', name_en: 'To Let', name_bn: 'বাসা ভাড়া / টু-লেট', slug: 'to-let', icon: 'Home', color: 'orange', order_index: 7, count: 0, parent_id: null },
@@ -59,21 +58,7 @@ export const INITIAL_SUBCATEGORIES: Category[] = [
   { id: 'sub-304', name_en: 'Dental Care', name_bn: 'ডেন্টাল ক্লিনিক', slug: 'dental-care', icon: 'Stethoscope', color: 'sky', parent_id: 'cat-3', order_index: 4, count: 0 },
   { id: 'sub-305', name_en: 'Eye Hospital', name_bn: 'চক্ষু হাসপাতাল', slug: 'eye-hospital', icon: 'Glasses', color: 'sky', parent_id: 'cat-3', order_index: 5, count: 0 },
 
-  // Doctors & Specialists
-  { id: 'sub-doc-1', name_en: 'Medicine Specialist', name_bn: 'মেডিসিন বিশেষজ্ঞ', slug: 'medicine-specialist', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 1, count: 0 },
-  { id: 'sub-doc-2', name_en: 'Child & Pediatrician', name_bn: 'শিশু ও নবজাতক রোগ', slug: 'child-pediatrician', icon: 'Baby', color: 'teal', parent_id: 'cat-doctor', order_index: 2, count: 0 },
-  { id: 'sub-doc-3', name_en: 'Gynecology & Obstetrics', name_bn: 'গাইনি ও প্রসূতি বিশেষজ্ঞ', slug: 'gynecology-obstetrics', icon: 'HeartPulse', color: 'teal', parent_id: 'cat-doctor', order_index: 3, count: 0 },
-  { id: 'sub-doc-4', name_en: 'Cardiology (Heart)', name_bn: 'হৃদরোগ বিশেষজ্ঞ (কার্ডিওলজি)', slug: 'cardiology', icon: 'HeartPulse', color: 'teal', parent_id: 'cat-doctor', order_index: 4, count: 0 },
-  { id: 'sub-doc-5', name_en: 'Orthopedics', name_bn: 'অর্থোপেডিক ও হাড় জোড়া', slug: 'orthopedics', icon: 'Hammer', color: 'teal', parent_id: 'cat-doctor', order_index: 5, count: 0 },
-  { id: 'sub-doc-6', name_en: 'Skin, Allergy & VD', name_bn: 'চর্ম, অ্যালার্জি ও যৌন রোগ', slug: 'skin-allergy-vd', icon: 'Sparkles', color: 'teal', parent_id: 'cat-doctor', order_index: 6, count: 0 },
-  { id: 'sub-doc-7', name_en: 'Dental Surgeon', name_bn: 'ডেন্টাল সার্জন ও দন্ত বিশেষজ্ঞ', slug: 'dental-surgeon', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 7, count: 0 },
-  { id: 'sub-doc-8', name_en: 'Eye Specialist', name_bn: 'চক্ষু বিশেষজ্ঞ (অপথ্যালমোলজি)', slug: 'eye-specialist', icon: 'Glasses', color: 'teal', parent_id: 'cat-doctor', order_index: 8, count: 0 },
-  { id: 'sub-doc-9', name_en: 'ENT Specialist', name_bn: 'নাক, কান ও গলা বিশেষজ্ঞ', slug: 'ent-specialist', icon: 'Stethoscope', color: 'teal', parent_id: 'cat-doctor', order_index: 9, count: 0 },
-  { id: 'sub-doc-10', name_en: 'Urology & Kidney', name_bn: 'ইউরোলজি ও কিডনি রোগ', slug: 'urology-kidney', icon: 'Activity', color: 'teal', parent_id: 'cat-doctor', order_index: 10, count: 0 },
-  { id: 'sub-doc-11', name_en: 'Neurology & Brain', name_bn: 'নিউরোমেডিসিন ও স্নায়ুরোগ', slug: 'neurology', icon: 'Brain', color: 'teal', parent_id: 'cat-doctor', order_index: 11, count: 0 },
-  { id: 'sub-doc-12', name_en: 'Oncology / Cancer', name_bn: 'ক্যান্সার ও টিউমার বিশেষজ্ঞ', slug: 'oncology-cancer', icon: 'ShieldAlert', color: 'teal', parent_id: 'cat-doctor', order_index: 12, count: 0 },
-  { id: 'sub-doc-13', name_en: 'Gastroenterology & Liver', name_bn: 'গ্যাস্ট্রোএন্টারোলজি ও লিভার', slug: 'gastroenterology-liver', icon: 'HeartPulse', color: 'teal', parent_id: 'cat-doctor', order_index: 13, count: 0 },
-  { id: 'sub-doc-14', name_en: 'Surgery & Laparoscopy', name_bn: 'সার্জারি ও ল্যাপারোস্কপিক', slug: 'surgery-laparoscopy', icon: 'Scissors', color: 'teal', parent_id: 'cat-doctor', order_index: 14, count: 0 },
+
 
   // Pharmacy
   { id: 'sub-401', name_en: 'Retail Pharmacy', name_bn: 'খুচরা ফার্মেসি', slug: 'retail-pharmacy', icon: 'Pill', color: 'emerald', parent_id: 'cat-4', order_index: 1, count: 0 },

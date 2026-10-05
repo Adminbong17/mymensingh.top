@@ -14,8 +14,6 @@ const SHORT_BN_NAMES: Record<string, string> = {
   'restaurants': 'রেস্টুরেন্ট',
   'hotels': 'হোটেল',
   'hospitals': 'হাসপাতাল',
-  'doctors': 'ডাক্তার',
-  'doctor': 'ডাক্তার',
   'pharmacy': 'ফার্মেসি',
   'blood-bank': 'রক্ত ব্যাংক',
   'tuition-media': 'টিউশন মিডিয়া',
