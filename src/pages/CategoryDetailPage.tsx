@@ -18,6 +18,8 @@ import { renderCategoryIcon } from '../lib/categoryIcons';
 import { ALL_DIVISION_UPAZILAS } from '../data/initialData';
 import type { Business } from '../types';
 import { BusinessDetailModal } from '../components/BusinessDetailModal';
+import { generateBrandBannerSvg } from '../lib/brandBannerUtils';
+import { generateDoctorBannerSvg } from '../lib/doctorBannerUtils';
 
 export const CategoryDetailPage: React.FC = () => {
   const { categorySlug, subCategorySlug } = useParams<{ categorySlug: string; subCategorySlug?: string }>();
@@ -489,6 +491,14 @@ export const CategoryDetailPage: React.FC = () => {
             {filteredBusinesses.map((biz) => {
               const favorite = isFavorite(biz.id);
               const subcatName = subcategoriesList.find(s => s.slug === biz.subcategory_slug)?.name_bn || biz.subcategory;
+              const isDoctor =
+                biz.category_slug === 'doctor' ||
+                biz.category_slug === 'doctors' ||
+                biz.category?.toLowerCase() === 'doctor' ||
+                biz.category?.toLowerCase() === 'doctors';
+              const bannerFallback = isDoctor
+                ? generateDoctorBannerSvg(biz.name_bn || biz.name, biz.name_en || biz.name, subcatName || biz.category, biz.location)
+                : generateBrandBannerSvg(biz.name_bn || biz.name, biz.name_en || biz.name, biz.category, biz.location, biz.phone);
 
               return (
                 <div
@@ -499,9 +509,12 @@ export const CategoryDetailPage: React.FC = () => {
                   {/* Image Container */}
                   <div className="relative aspect-16/10 w-full bg-slate-100 overflow-hidden">
                     <img
-                      src={biz.image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80'}
+                      src={biz.image_url || bannerFallback}
                       alt={biz.name_bn || biz.name}
                       loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = bannerFallback;
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

@@ -15,6 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import type { Business } from '../../../types';
+import { generateBrandBannerSvg } from '../../../lib/brandBannerUtils';
 
 interface BusinessesTabProps {
   businesses: Business[];
@@ -54,7 +55,7 @@ export const BusinessesTab: React.FC<BusinessesTabProps> = ({
     isFeatured: !!b.is_featured,
     joinedDate: '28 Sep 2026',
     joinedAgo: `${idx + 1} hours ago`,
-    logo: b.image_url || 'https://images.unsplash.com/photo-1586015555751-63c2c77f0a99?auto=format&fit=crop&w=80&q=80',
+    logo: b.image_url || generateBrandBannerSvg(b.name_bn || b.name, b.name, b.category, b.location, b.phone),
     original: b
   }));
 

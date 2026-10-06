@@ -66,9 +66,7 @@ export const ListBusinessModal: React.FC<ListBusinessModalProps> = ({ isOpen, on
       upazila,
       union_ward: unionWard,
       phone: phone || '+880 1700-000000',
-      image_url:
-        imageUrl ||
-        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+      image_url: imageUrl || '',
       description,
       is_featured: false,
       latitude: 24.755,

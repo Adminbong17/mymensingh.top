@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import type { Business } from '../types';
 import { useData } from '../context/DataContext';
+import { generateBrandBannerSvg } from '../lib/brandBannerUtils';
+import { generateDoctorBannerSvg } from '../lib/doctorBannerUtils';
 
 interface BusinessDetailModalProps {
   business: Business | null;
@@ -118,20 +120,37 @@ export const BusinessDetailModal: React.FC<BusinessDetailModalProps> = ({
         <div className="overflow-y-auto p-6 space-y-6">
           
           {/* Main Photo */}
-          <div className="relative aspect-16/9 rounded-2xl overflow-hidden bg-slate-100 shadow-inner">
-            <img
-              src={business.image_url}
-              alt={business.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-sm font-bold">
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-              <span>{business.rating}</span>
-              <span className="text-slate-300 text-xs font-normal">
-                ({business.review_count} reviews)
-              </span>
-            </div>
-          </div>
+          {(() => {
+            const isDoctor = 
+              business.category_slug === 'doctor' || 
+              business.category_slug === 'doctors' || 
+              business.category?.toLowerCase() === 'doctor' || 
+              business.category?.toLowerCase() === 'doctors';
+
+            const defaultBanner = isDoctor
+              ? generateDoctorBannerSvg(business.name_bn || business.name, business.name_en || business.name, business.subcategory || business.category, business.location)
+              : generateBrandBannerSvg(business.name_bn || business.name, business.name_en || business.name, business.category, business.location, business.phone);
+
+            return (
+              <div className="relative aspect-16/9 rounded-2xl overflow-hidden bg-slate-100 shadow-inner">
+                <img
+                  src={business.image_url || defaultBanner}
+                  alt={business.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = defaultBanner;
+                  }}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-sm font-bold">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span>{business.rating}</span>
+                  <span className="text-slate-300 text-xs font-normal">
+                    ({business.review_count} reviews)
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Title & Location */}
           <div className="space-y-1">

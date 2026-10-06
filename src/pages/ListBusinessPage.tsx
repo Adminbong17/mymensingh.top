@@ -36,7 +36,7 @@ export const ListBusinessPage: React.FC = () => {
     description: '',
     opening_hours: '10:00 AM - 10:00 PM',
     price_range: '৳৳ - Moderate',
-    image_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+    image_url: '',
     facilities: ['WiFi', 'Parking', 'AC']
   });
 

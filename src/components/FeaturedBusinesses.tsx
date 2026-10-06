@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { Business } from '../types';
 import { useData } from '../context/DataContext';
+import { generateBrandBannerSvg } from '../lib/brandBannerUtils';
 
 const DOTS_COUNT = 5;
 
@@ -244,6 +245,13 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({
             >
               {displayBusinesses.map((biz) => {
                 const favorited = isFavorite(biz.id);
+                const defaultBanner = generateBrandBannerSvg(
+                  biz.name_bn || biz.name,
+                  biz.name_en || biz.name,
+                  biz.category,
+                  biz.location,
+                  biz.phone
+                );
 
                 return (
                   <div
@@ -255,8 +263,11 @@ export const FeaturedBusinesses: React.FC<FeaturedBusinessesProps> = ({
                       {/* Photo */}
                       <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
                         <img
-                          src={biz.image_url}
+                          src={biz.image_url || defaultBanner}
                           alt={biz.name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = defaultBanner;
+                          }}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         

@@ -51,6 +51,8 @@ import {
   cpanelUpdateReview,
   cpanelDeleteReview
 } from '../lib/cpanelApi';
+import { generateBrandBannerSvg } from '../lib/brandBannerUtils';
+import { generateDoctorBannerSvg } from '../lib/doctorBannerUtils';
 
 interface DataContextType {
   businesses: Business[];
@@ -469,6 +471,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Business / Place CRUD
   const addBusiness = async (newBizData: Omit<Business, 'id'>): Promise<boolean> => {
     const newId = `biz-${Date.now()}`;
+    const isDoctor = 
+      newBizData.category_slug === 'doctor' || 
+      newBizData.category_slug === 'doctors' || 
+      newBizData.category?.toLowerCase() === 'doctor' || 
+      newBizData.category?.toLowerCase() === 'doctors';
+
+    const defaultBanner = isDoctor
+      ? generateDoctorBannerSvg(newBizData.name_bn || newBizData.name, newBizData.name_en || newBizData.name, newBizData.subcategory || newBizData.category, newBizData.location)
+      : generateBrandBannerSvg(newBizData.name_bn || newBizData.name, newBizData.name_en || newBizData.name, newBizData.category, newBizData.location, newBizData.phone);
+
     const newBusiness: Business = {
       ...newBizData,
       id: newId,
@@ -476,7 +488,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       category: newBizData.category || 'Services',
       category_slug: newBizData.category_slug || 'services',
       location: newBizData.location || 'ময়মনসিংহ',
-      image_url: newBizData.image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+      image_url: newBizData.image_url || defaultBanner,
       phone: newBizData.phone || '+880 1700-000000',
       rating: newBizData.rating || 5.0,
       review_count: newBizData.review_count || 0,

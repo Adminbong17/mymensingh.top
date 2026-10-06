@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { generateBrandBannerSvg } from '../src/lib/brandBannerUtils.ts';
 
 const SUPABASE_URL = 'https://oxdywhgcdqkdxmnzlofg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94ZHl3aGdjZHFrZHhtbnpsb2ZnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDU4MjkyOCwiZXhwIjoyMTA2MTU4OTI4fQ.1NWqRMe_VQnkXtlUMEscuwUvHnolwt7HWjpdJitW5Is';
@@ -594,6 +595,13 @@ const BRAND_SHOPS = [
 async function seed() {
   console.log(`Seeding ${BRAND_SHOPS.length} top brand shops in Mymensingh...`);
   for (const shop of BRAND_SHOPS) {
+    shop.image_url = generateBrandBannerSvg(
+      shop.name_bn,
+      shop.name,
+      shop.category,
+      shop.location,
+      shop.phone
+    );
     const { error } = await supabase.from('businesses').upsert(shop, { onConflict: 'id' });
     if (error) {
       console.error(`Error inserting ${shop.name}:`, error);

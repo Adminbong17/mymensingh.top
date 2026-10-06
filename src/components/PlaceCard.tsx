@@ -3,6 +3,7 @@ import { Heart, Star, MapPin, ExternalLink, ArrowRight } from 'lucide-react';
 import type { Place } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
+import { generateBrandBannerSvg } from '../lib/brandBannerUtils';
 
 interface PlaceCardProps {
   place: Place;
@@ -42,9 +43,13 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place, onSelect }) => {
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
-              // Fallback to high-quality unsplash placeholder if image fails
-              (e.target as HTMLImageElement).src =
-                'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=800&q=80';
+              (e.target as HTMLImageElement).src = generateBrandBannerSvg(
+                place.name_bn || place.name_en || '',
+                place.name_en || '',
+                place.category,
+                place.area,
+                place.phone
+              );
             }}
           />
 
